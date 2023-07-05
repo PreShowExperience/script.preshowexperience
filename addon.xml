@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="script.preshowexperience" name="PreShow Experience" version="0.2.1" provider-name="PreShow Experience">
+    <requires>
+        <import addon="xbmc.python" version="3.0.0"/>
+        <import addon="script.module.beautifulsoup4" version="4.9.3"/>
+        <import addon="script.module.requests" version="2.22.0.1"/>
+    </requires>
+    <extension point="xbmc.python.script" library="addon.py">
+        <provides>executable</provides>
+    </extension>
+	  <extension point="kodi.context.item" library="context.py">
+    <item>
+      <label>32000</label>
+      <visible>Container.Content(movies) | Container.Content(episodes) | Container.Content(seasons) | Container.Content(tvshows) | Container.Content(playlists)</visible>
+    </item>
+  </extension>
+  <extension point="xbmc.service" library="resources/lib/service.py" start="login" />
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en">Movie theater preshow experience</summary>
+        <description lang="en">Create a completely customizable movie preshow containing trivia, video bumpers or trailer for your home theater.</description>
+        <platform>all</platform>
+        <license>Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International</license>
+        <forum>https://preshowexperience.com/forums/</forum>
+        <website>https://preshowexperience.com/</website>
+        <assets>
+            <icon>icon.png</icon>
+            <screenshot>resources/screenshots/screenshot1.jpg</screenshot>
+            <screenshot>resources/screenshots/screenshot2.jpg</screenshot>
+            <screenshot>resources/screenshots/screenshot3.jpg</screenshot>
+        </assets>
+        <news>PreShow Experience for Kodi 20 Nexus</news>
+    </extension>
+</addon>

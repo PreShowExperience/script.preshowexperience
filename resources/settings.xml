@@ -1,0 +1,1010 @@
+<?xml version="1.0" ?>
+<settings version="1">
+	<section id="script.preshowexperience">
+		<category id="content" label="32001" help="">
+			<group id="1" >
+				<setting id="content.path" type="path" label="32008" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="path">
+						<heading>32008</heading>
+					</control>
+				</setting>
+				<setting id="update.allcontent" type="boolean" label="32715" help="">
+					<level>3</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="update.loadTrivia" type="boolean" label="32716" help="" parent="update.allcontent">
+					<level>3</level>
+					<default>true</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="update.allcontent">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>				
+				<setting id="update.loadVideoBumpers" type="boolean" label="32717" help="" parent="update.allcontent">
+					<level>3</level>
+					<default>true</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="update.allcontent">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>	
+				<setting id="update.loadRatingsBumpers" type="boolean" label="32718" help="" parent="update.allcontent">
+					<level>3</level>
+					<default>true</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="update.allcontent">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>				
+				<setting id="update.scrapeContent" type="boolean" label="32719" help="" parent="update.allcontent">
+					<level>3</level>
+					<default>true</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="update.allcontent">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>				
+				<setting id="update.loadAudioFormatBumpers" type="boolean" label="32720" help="" parent="update.allcontent">
+					<level>3</level>
+					<default>true</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="update.allcontent">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>				
+				<setting id="update.loadMusic" type="boolean" label="32721" help="" parent="update.allcontent">
+					<level>3</level>
+					<default>true</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="update.allcontent">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+							</setting>
+				<setting id="database.update" type="action" label="32009" help="">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,update.database,from.settings)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="action">
+						<close>true</close>
+					</control>
+				</setting>		
+			</group>
+			<group id="2" label="32111">
+				<setting id="database.autoUpdate" type="boolean" label="32010" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="service.database.update.kodiStartup" type="boolean" label="32105" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="service.database.update.scanFinished" type="boolean" label="32106" help="">
+					<level>0</level>
+					<default>0</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="service.database.update.interval" type="string" label="32107" help="">
+					<level>3</level>
+					<default>Disabled</default>
+					<constraints>
+						<options>
+							<option label="32623">Disabled</option>
+							<option label="32624">1</option>
+							<option label="32625">6</option>
+							<option label="32626">12</option>
+							<option label="32627">24</option>
+							<option label="32628">48</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+			</group>
+			<group id="3" label="32112">
+				<setting id="reset.database" type="action" label="32099" help="">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,reset.database)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="action"/>
+				</setting>
+				<setting id="trailer.CLEARBROKEN" type="action" label="32100" help="">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,trailer.clearBroken)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="action"/>
+				</setting>
+			</group>
+			<group id="4" label="32114">
+				<setting id="import.cvfiles" type="string" label="32115" help="">
+					<level>0</level>
+                    <default/>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+					<control type="button" format="action">
+                        <data>RunScript(script.preshowexperience,import.cvfiles)</data>
+                    </control>
+				</setting>
+			</group>
+		</category>
+		<category id="playback" label="32018" help="">
+			<group id="1">
+				<setting id="hide.queue.dialog" type="boolean" label="32019" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="hide.queue.dialog.single" type="boolean" label="32020" help="" parent="hide.queue.dialog">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="hide.queue.dialog">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>
+				<setting id="allow.video.skip" type="boolean" label="32021" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="video.preDelay" type="integer" label="32022" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<minimum>0</minimum>
+						<step>100</step>
+						<maximum>3000</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="video.volume" type="integer" label="32025" help="">
+					<level>1</level>
+					<default>100</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>100</maximum>
+					</constraints>
+					<control type="slider" format="percentage">
+						<popup>false</popup>
+					</control>
+				</setting>
+			</group>
+			<group id="2" label="32004">
+				<setting id="3D.tag.regex" type="string" label="32005" help="">
+					<level>3</level>
+					<default>(?i)3DSBS|3D.SBS|HSBS|H.SBS|H-SBS|[\. _]SBS[\. _]|FULL-SBS|FULL.SBS|FULLSBS|FSBS|HALF-SBS|3DTAB|3D.TAB|HTAB|H.TAB|3DOU|3D.OU|3D.HOU|[\. _]HOU[\. _]|[\. _]OU[\. _]|HALF-TAB</default>
+					<control type="edit" format="string">
+						<heading>32005</heading>
+					</control>
+				</setting>
+				<setting id="bumper.fallback2D" type="boolean" label="32006" help="">
+					<level>3</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+			<group id="3" label="32113">
+				<setting id="scope" type="string" label="32092" help="Set this to the aspect ratio of your screen if you have a scope screen.">
+					<level>3</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32617">16:9</option>
+							<option label="32618">2.35:1</option>
+							<option label="32619">2.40:1</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+			</group>
+		</category>
+		<category id="trivia" label="32026" help="">
+			<group id="1">
+				<setting id="trivia.format" type="integer" label="32030" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32046">0</option>
+							<option label="32023">1</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="trivia.duration" type="integer" label="32031" help="">
+					<level>0</level>
+					<default>10</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>60</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="trivia.qDuration" type="integer" label="32032" help="">
+					<level>0</level>
+					<default>8</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>60</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="trivia.cDuration" type="integer" label="32033" help="">
+					<level>0</level>
+					<default>6</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>60</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="trivia.aDuration" type="integer" label="32034" help="">
+					<level>0</level>
+					<default>6</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>60</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="trivia.sDuration" type="integer" label="32035" help="">
+					<level>0</level>
+					<default>10</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>60</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="trivia.transition" type="integer" label="32036" help="">
+					<level>0</level>
+					<default>1</default>
+					<constraints>
+						<options>
+							<option label="32037">0</option>
+							<option label="32038">1</option>
+							<option label="32039">2</option>
+							<option label="32040">3</option>
+							<option label="32041">4</option>
+							<option label="32042">5</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="trivia.transitionDuration" type="integer" label="32043" help="">
+					<level>0</level>
+					<default>400</default>
+					<constraints>
+						<minimum>100</minimum>
+						<step>100</step>
+						<maximum>2000</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+			</group>
+			<group id="2" label="32027">
+			<setting id="trivia.music" type="integer" label="32027" help="">
+					<level>0</level>
+					<default>1</default>
+					<constraints>
+						<options>
+							<option label="32037">0</option>
+							<option label="32007">1</option>
+							<option label="32047">2</option>
+							<option label="32048">3</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="trivia.musicDir" type="path" label="32044" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="path">
+						<heading>32044</heading>
+					</control>
+				</setting>
+				<setting id="trivia.musicFile" type="path" label="32045" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="file">
+						<heading>32045</heading>
+					</control>
+				</setting>
+				<setting id="trivia.musicVolume" type="integer" label="32025" help="">
+					<level>1</level>
+					<default>75</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>100</maximum>
+					</constraints>
+					<control type="slider" format="percentage">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="trivia.musicFadeIn" type="number" label="32028" help="">
+					<level>3</level>
+					<default>3.0</default>
+					<constraints>
+						<minimum>0</minimum>
+						<step>0.2</step>
+						<maximum>10</maximum>
+					</constraints>
+					<control type="slider" format="number">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="trivia.musicFadeOut" type="number" label="32029" help="">
+					<level>0</level>
+					<default>3.0</default>
+					<constraints>
+						<minimum>0</minimum>
+						<step>0.2</step>
+						<maximum>10</maximum>
+					</constraints>
+					<control type="slider" format="number">
+						<popup>false</popup>
+					</control>
+				</setting>
+			</group>
+		</category>
+		<category id="trailers" label="32049" help="">
+			<group id="1" label="32011">
+				<setting id="scraper.trailers.Content" type="boolean" label="32012" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="scraper.trailers.KodiDB" label="32013" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="scraper.trailers.KodiDB.skipYouTube" type="boolean" label="32014" help="" parent="scraper.trailers.KodiDB">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible" setting="true">
+							<condition operator="is" setting="scraper.trailers.KodiDB">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle">
+						<heading>32013</heading>
+					</control>
+				</setting>
+				<setting id="scraper.trailers.KodiDB.markWatched" type="boolean" label="32015" help="" parent="scraper.trailers.KodiDB">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible" setting="true">
+							<condition operator="is" setting="scraper.trailers.KodiDB">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle">
+						<heading>32013</heading>
+					</control>
+				</setting>
+				<setting id="scraper.trailers.iTunes" type="boolean" label="32016" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="scraper.trailers.TMDB" type="boolean" label="32017" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+			<group id="2" label="32024">
+				<setting id="trailer.CLEAR" type="action" label="32051" help="">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,trailer.clearWatched)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="action"/>
+				</setting>
+				<setting id="trailer.preferUnwatched" type="boolean" label="32050" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="trailer.source" type="integer" label="32052" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32007">0</option>
+							<option label="32047">1</option>
+							<option label="32053">2</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="trailer.scrapers" type="string" label="32054" help="">
+					<level>0</level>
+					<default>Content,KodiDB,iTunes</default>
+					<dependencies>
+						<dependency type="visible" setting="true">
+							<condition operator="is" setting="trailer.source">0</condition>
+						</dependency>
+					</dependencies>							
+					<control type="button" format="action">
+						<data>RunScript(script.preshowexperience,trailer.scrapers)</data>
+					</control>
+				</setting>
+				<setting id="trailer.dir" type="path" label="32058" help="">
+					<level>0</level>
+					<default/>
+					<dependencies>
+						<dependency type="visible" setting="true">
+							<condition operator="is" setting="trailer.source">1</condition>
+						</dependency>
+					</dependencies>					
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="path">
+						<heading>32058</heading>
+					</control>
+				</setting>
+				<setting id="trailer.file" type="path" label="32059" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible" setting="true">
+							<condition operator="is" setting="trailer.source">2</condition>
+						</dependency>
+					</dependencies>							
+					<control type="button" format="file">
+						<heading>32059</heading>
+					</control>
+				</setting>
+				<setting id="trailer.count" type="integer" label="32060" help="">
+					<level>0</level>
+					<default>1</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>10</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="trailer.order" type="integer" label="32055" help="">
+					<level>3</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32056">0</option>
+							<option label="32057">1</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>				
+				<setting id="settings.ratings.initialized2" type="boolean" label="" help="">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition on="property" name="InfoBool">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>
+				<setting id="trailer.ratingLimit" type="integer" label="32061" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32037">0</option>
+							<option label="32062">1</option>
+							<option label="32063">2</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="trailer.ratingMax" type="string" label="32062" help="" parent="trailer.ratingLimit">
+					<level>0</level>
+					<default>MPAA.PG</default>
+					<constraints>
+						<options>
+							<option label="32642">MPAA.G</option>
+							<option label="32643">MPAA.PG</option>
+							<option label="32644">MPAA.PG_13</option>
+							<option label="32645">MPAA.R</option>
+							<option label="32646">MPAA.NC_17</option>
+							<option label="32647">MPAA.NR</option>
+						</options>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="trailer.ratingLimit">1</condition>
+						</dependency>
+					</dependencies>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="trailer.ratingMax.dummy" type="string" label="32064" help="" parent="trailer.ratingLimit">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<condition on="property" name="InfoBool">false</condition>
+						</dependency>
+						<dependency type="visible">
+							<condition operator="!is" setting="settings.ratings.initialized2">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="edit" format="string">
+						<heading>32064</heading>
+					</control>
+				</setting>
+				<setting id="trailer.limitGenre" type="boolean" label="32065" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="trailer.filter3D" type="boolean" label="32066" help="">
+					<level>3</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="trailer.quality" type="string" label="32067" help="">
+					<level>0</level>
+					<default>720p</default>
+					<constraints>
+						<options>
+							<option label="32620">480p</option>
+							<option label="32621">720p</option>
+							<option label="32622">1080p</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="trailer.volume" type="integer" label="32025" help="">
+					<level>1</level>
+					<default>100</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>100</maximum>
+					</constraints>
+					<control type="slider" format="percentage">
+						<popup>false</popup>
+					</control>
+				</setting>
+			</group>
+		</category>
+		<category id="features" label="32073" help="">
+			<group id="1">
+				<setting id="feature.count" type="integer" label="32060" help="">
+					<level>3</level>
+					<default>1</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>10</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+			</group>
+			<group id="2" label="32700">
+				<setting id="settings.ratings.initialized"  type="boolean" label="" help="">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition on="property" name="InfoBool">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>
+				<setting id="rating.system.default" type="string" label="32075" help="">
+					<level>0</level>
+					<default>MPAA</default>
+					<constraints>
+						<options>
+							<option label="32701">BBFC</option>
+							<option label="32702">DEJUS</option>
+							<option label="32703">FSK</option>
+							<option label="32704">MPAA</option>
+						</options>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="settings.ratings.initialized">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="rating.system.default.dummy" type="integer" label="32076" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32037">0</option>
+						</options>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<condition on="property" name="InfoBool">false</condition>
+						</dependency>
+						<dependency type="visible">
+							<condition operator="!is" setting="settings.ratings.initialized">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="feature.ratingBumper" type="integer" label="32077" help="">
+					<level>0</level>
+					<default>1</default>
+					<constraints>
+						<options>
+							<option label="32037">0</option>
+							<option label="32023">1</option>
+							<option label="32078">2</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="feature.ratingStyleSelection" type="integer" label="32080" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32057">0</option>
+							<option label="32079">1</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="feature.ratingStyle" type="string" label="32081" help="" parent="feature.ratingStyleSelection">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="feature.ratingStyleSelection">1</condition>
+						</dependency>
+					</dependencies>
+					<control type="button" format="action">
+						<data>RunScript(script.preshowexperience,feature.setRatingBumperStyle)</data>
+					</control>
+				</setting>
+				<setting id="feature.ratingStyle.dummy" type="integer" label="32082" help="" parent="feature.ratingStyleSelection">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32037">0</option>
+						</options>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<condition on="property" name="InfoBool">false</condition>
+						</dependency>
+						<dependency type="visible">
+							<condition operator="!is" setting="settings.ratings.initialized">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="feature.volume" type="integer" label="32025" help="">
+					<level>1</level>
+					<default>100</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>100</maximum>
+					</constraints>
+					<control type="slider" format="percentage">
+						<popup>false</popup>
+					</control>
+				</setting>
+			</group>
+			<group id="3" label="32074">
+				<setting id="audioformat.method" type="integer" label="32068" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32069">0</option>
+							<option label="32070">1</option>
+							<option label="32071">2</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="audioformat.fallback" type="integer" label="32072" help="" parent="audioformat.method">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32070">0</option>
+							<option label="32071">1</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="audioformat.format" type="integer" label="32030" help="" parent="audioformat.method">
+					<level>0</level>
+					<default>10</default>
+					<constraints>
+						<options>
+							<option label="32629">0</option>
+							<option label="32630">1</option>
+							<option label="32631">2</option>
+							<option label="32632">3</option>
+							<option label="32633">4</option>
+							<option label="32634">5</option>
+							<option label="32635">6</option>
+							<option label="32636">7</option>
+							<option label="32637">8</option>
+							<option label="32638">9</option>
+							<option label="32639">10</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="audioformat.file" type="path" label="32048" help="" parent="audioformat.method">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="file">
+						<heading>32048</heading>
+					</control>
+				</setting>
+				<setting id="audioformat.volume" type="integer" label="32025" help="">
+					<level>1</level>
+					<default>100</default>
+					<constraints>
+						<minimum>1</minimum>
+						<maximum>100</maximum>
+					</constraints>
+					<control type="slider" format="percentage">
+						<popup>false</popup>
+					</control>
+				</setting>
+			</group>
+		</category>
+		<category id="actions" label="32083" help="">
+			<group id="1">
+				<setting id="action.onPause" type="boolean" label="32084" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="action.onPause.file" type="path" label="32085" help="" parent="action.onPause">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<condition operator="is" setting="action.onPause">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="button" format="file">
+						<heading>32085</heading>
+					</control>
+				</setting>
+				<setting id="action.test.PAUSE" type="action" label="32089" help="" parent="action.onPause">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,test.actions,PAUSE)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<and>
+								<condition operator="is" setting="action.onPause">true</condition>
+								<condition operator="!is" setting="action.onPause.file"/>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="button" format="action"/>
+				</setting>
+				<setting id="action.onResume" type="integer" label="32086" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="32037">0</option>
+							<option label="32087">1</option>
+							<option label="32048">2</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="action.onResume.file" type="path" label="32085" help="" parent="action.onResume">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<condition operator="is" setting="action.onResume">2</condition>
+						</dependency>
+					</dependencies>
+					<control type="button" format="file">
+						<heading>32085</heading>
+					</control>
+				</setting>
+				<setting id="action.test.RESUME" type="action" label="32089" help="" parent="action.onResume">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,test.actions,RESUME)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<and>
+								<condition operator="is" setting="action.onResume">2</condition>
+								<condition operator="!is" setting="action.onResume.file"/>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="button" format="action"/>
+				</setting>
+				<setting id="action.onAbort" type="boolean" label="32088" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="action.onAbort.file" type="path" label="32085" help="" parent="action.onAbort">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<condition operator="is" setting="action.onAbort">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="button" format="file">
+						<heading>32085</heading>
+					</control>
+				</setting>
+				<setting id="action.test.ABORT" type="action" label="32089" help="" parent="action.onAbort">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,test.actions,ABORT)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<and>
+								<condition operator="is" setting="action.onAbort">true</condition>
+								<condition operator="!is" setting="action.onAbort.file"/>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="button" format="action"/>
+				</setting>
+				<setting id="action.test.runAbort" type="integer" label="32593" help="">
+					<level>0</level>
+					<default>2</default>
+					<constraints>
+						<options>
+							<option label="32594">0</option>
+							<option label="32595">1</option>
+							<option label="32596">2</option>
+						</options>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<and>
+								<condition operator="is" setting="action.onAbort">true</condition>
+								<condition operator="!is" setting="action.onAbort.file"/>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="spinner" format="string"/>
+				</setting>
+			</group>
+		</category>
+		<!-- <category id="advanced" label="32091" help="">
+			<group id="1" label="32093">
+				<setting id="debug.log" type="boolean" label="32094" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="pastebin.paste.log" type="action" label="32095" help="">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,pastebin.paste.log)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="action">
+						<close>true</close>
+					</control>
+				</setting>
+				<setting id="pastebin.user" type="string" label="32096" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32096</heading>
+					</control>
+				</setting>
+				<setting id="pastebin.delete.key" type="action" label="32097" help="">
+					<level>0</level>
+					<data>RunScript(script.preshowexperience,pastebin.delete.key)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="action"/>
+				</setting>
+			</group>
+		</category> -->
+	</section>
+</settings>

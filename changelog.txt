@@ -1,0 +1,42 @@
+Changelog for PreShow Experience
+
+
+[- 0.2.1 -]
+- add:      Added filter for content scanning
+- fix:      corrected module preview functionality in cases where other modules were already disabled
+- change:   Modified Queue Editor UI
+- change:   Modified file structure
+
+[- 0.2.0 -]
+- add:      option to play Auro-3D Sound Format bumpers if auro3d is in the filename
+- add:      option to store content databases in content folder
+- add:      option to preview individual module in sequence editor
+- add:      Filter for trivia folder in sequences
+- change:   Modified DTS-X to require 'dtsx' to be in the file name
+- fix:      Sleep not working in action files
+
+[- 0.1.3 -]
+- change:   Made tags a higher priority in sequence selection
+- fix:      Sequences with no name
+- fix:      Save As Sequences
+- fix:      Atmos in file name for Dolby Digital +
+
+[- 0.1.2 -]
+- updates:  Added more to the demo package
+- updates:  Updated backend code being deprecated in Kodi
+- change:   Added requirement for YouTube add-on
+- change:   Modified sequences to use only file name and not a separate name
+- change:   Modified default 2D & 3D sequences
+- change:   Added option for alternate sequence editor icons
+- fix:      iTunes trailer issue
+- fix:      Demo sequence no longer crashes     
+
+[- 0.1.1 -]
+- fix:      Trivia music fade not working properly and crashing sequence
+- fix:      Sequence buttons not working in order with arrow keys
+- fix:      Ratings not playing
+- fix:      Context menu rollovers not working correctly
+- change:   Sequence loading now only shows file name and not sequence name
+
+[- 0.1.0 -]
+- add:      First version

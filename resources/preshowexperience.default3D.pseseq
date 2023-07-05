@@ -1,0 +1,62 @@
+{
+ "items": [
+  {
+   "enabled": true, 
+   "type": "video", 
+   "name": "", 
+   "settings": {
+    "random": true, 
+    "count": 1, 
+    "vtype": "3D.intro", 
+    "play3D": true
+   }
+  }, 
+  {
+   "enabled": true, 
+   "type": "trailer", 
+   "name": "", 
+   "settings": {"scrapers": "iTunes,TMDB",
+    "count": 2}
+  }, 
+  {
+   "enabled": true, 
+   "type": "video", 
+   "name": "", 
+   "settings": {
+    "random": true, 
+    "count": 1, 
+    "vtype": "feature.intro", 
+    "play3D": true
+   }
+  }, 
+  {
+   "enabled": true, 
+   "type": "feature", 
+   "name": "", 
+   "settings": {}
+  }, 
+  {
+   "enabled": true, 
+   "type": "video", 
+   "name": "", 
+   "settings": {
+    "random": true, 
+    "count": 1, 
+    "vtype": "3D.outro", 
+    "play3D": true
+   }
+  }, 
+  {
+   "enabled": true, 
+   "type": "video", 
+   "name": "", 
+   "settings": {
+    "random": true, 
+    "count": 1, 
+    "vtype": "theater.outro", 
+    "play3D": true
+   }
+  }
+ ], 
+ "version": 1
+}
