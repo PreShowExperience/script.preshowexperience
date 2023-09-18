@@ -20,7 +20,7 @@ class Trailer(_scrapers.Trailer):
 
     @property
     def ID(self):
-        return 'itunes:{0}.{1}'.format(self.data['movie_id'], self.data['location'])
+        return 'imdb:{0}.{1}'.format(self.data['movie_id'], self.data['location'])
 
     @property
     def title(self):
@@ -49,7 +49,7 @@ class Trailer(_scrapers.Trailer):
     def getStaticURL(self):
         return None
 
-    def getPlayableURL(self, res='720p'):
+    def getPlayableURL(self, res='1080p'):
         try:
             return self._getPlayableURL(res)
         except:
@@ -58,12 +58,12 @@ class Trailer(_scrapers.Trailer):
 
         return None
 
-    def _getPlayableURL(self, res='720p'):
-        return ItunesTrailerScraper.getPlayableURL(self.data['location'], res)
+    def _getPlayableURL(self, res='1080p'):
+        return IMDBTrailerScraper.getPlayableURL(self.data['location'], res)
 
 
-class ItunesTrailerScraper(_scrapers.Scraper):
-    LAST_UPDATE_FILE = os.path.join(util.STORAGE_PATH, 'itunes.last')
+class IMDBTrailerScraper(_scrapers.Scraper):
+    LAST_UPDATE_FILE = os.path.join(util.STORAGE_PATH, 'imdb.last')
 
     RES = {
         '480p': 'sd',
@@ -76,36 +76,24 @@ class ItunesTrailerScraper(_scrapers.Scraper):
 
     @staticmethod
     def getPlayableURL(ID, res=None, url=None):
-        res = ItunesTrailerScraper.RES.get(res, 'hd720p')
+        res = IMDBTrailerScraper.RES.get(res, 'hd1080p')
 
         ts = scraper.Scraper()
         id_location = ID.split('.', 1)
         all_ = [t for t in ts.get_trailers(id_location[-1], id_location[0]) if t]
 
-        #util.DEBUG_LOG(all_)
+        #util.DEBUG_LOG('IMDB trailers : {0}'.format(all_))
 
         if not all_:
             return None
 
-        trailers = [t for t in all_ if t['title'] == 'Trailer']
-
         url = None
-        if trailers:
-            try:
-                version = [v for v in trailers if any(res in u for u in v['streams'])][0]
-                if version:
-                    url = [u for u in version['streams'] if res in u][0]
-            except:
-                import traceback
-                traceback.print_exc()
-
-        if not url:
-            try:
-                streams = all_[0]['streams']
-                url = streams.get(res, streams.get('hd720', streams.get('sd')))
-            except:
-                import traceback
-                traceback.print_exc()
+        try:
+            streams = all_[0]['streams']
+            url = streams.get(res, streams.get('hd1080', streams.get('sd')))
+        except:
+            import traceback
+            traceback.print_exc()
 
         return url
 
