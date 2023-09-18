@@ -2,7 +2,7 @@ from . import _scrapers
 from .. import util
 
 _SOURCES = {
-    'itunes': 'iTunes',
+    'imdb': 'IMDB',
     'kodidb': 'kodiDB',
     'tmdb': 'TMDB',
     'content': 'Content'
@@ -12,9 +12,9 @@ _SOURCES = {
 def getScraper(source=None):
     source = _SOURCES.get(source.lower().strip())
 
-    if source == 'iTunes':
-        from . import itunes
-        return itunes.ItunesTrailerScraper()
+    if source == 'IMDB':
+        from . import imdb
+        return imdb.IMDBTrailerScraper()
     elif source == 'kodiDB':
         from . import kodidb
         return kodidb.KodiDBTrailerScraper()

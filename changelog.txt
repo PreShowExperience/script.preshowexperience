@@ -1,5 +1,8 @@
 Changelog for PreShow Experience
 
+[- 0.2.2 -]
+- add:      Added IMDB trailers
+- change:   removed iTunes trailers
 
 [- 0.2.1 -]
 - add:      Added filter for content scanning
