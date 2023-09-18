@@ -1,19 +1,19 @@
 Changelog for PreShow Experience
 
 [- 0.2.2 -]
-- add:      Added IMDB trailers
-- change:   removed iTunes trailers
+- add:      Added IMDB trailers (currently only shows 1080 videos and doesn't include genre or rating)
+- change:   Removed iTunes trailers
 
 [- 0.2.1 -]
 - add:      Added filter for content scanning
-- fix:      corrected module preview functionality in cases where other modules were already disabled
+- fix:      Corrected module preview functionality in cases where other modules were already disabled
 - change:   Modified Queue Editor UI
 - change:   Modified file structure
 
 [- 0.2.0 -]
-- add:      option to play Auro-3D Sound Format bumpers if auro3d is in the filename
-- add:      option to store content databases in content folder
-- add:      option to preview individual module in sequence editor
+- add:      Option to play Auro-3D Sound Format bumpers if auro3d is in the filename
+- add:      Option to store content databases in content folder
+- add:      Option to preview individual module in sequence editor
 - add:      Filter for trivia folder in sequences
 - change:   Modified DTS-X to require 'dtsx' to be in the file name
 - fix:      Sleep not working in action files

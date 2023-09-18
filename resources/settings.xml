@@ -432,7 +432,7 @@
 						<heading>32013</heading>
 					</control>
 				</setting>
-				<setting id="scraper.trailers.iTunes" type="boolean" label="32016" help="">
+				<setting id="scraper.trailers.IMDB" type="boolean" label="32016" help="">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
@@ -471,7 +471,7 @@
 				</setting>
 				<setting id="trailer.scrapers" type="string" label="32054" help="">
 					<level>0</level>
-					<default>Content,KodiDB,iTunes</default>
+					<default>Content,KodiDB,IMDB</default>
 					<dependencies>
 						<dependency type="visible" setting="true">
 							<condition operator="is" setting="trailer.source">0</condition>
