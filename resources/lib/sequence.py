@@ -934,7 +934,7 @@ class Trailer(Item):
         'Content': T(32326, 'Trailers Folder'),
         'KodiDB': T(32318, 'Kodi Database'),
         'IMDB': 'IMDB',
-        'THMDB': 'The Movie Database'
+        'TMDB': 'The Movie Database'
     }
 
     def __init__(self):
