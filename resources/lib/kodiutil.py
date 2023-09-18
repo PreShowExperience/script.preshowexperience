@@ -70,7 +70,7 @@ def checkAPILevel():
     elif old < 3:
         LOG('API LEVEL < 3: Clearing trailers and updating DB')
         
-        last = os.path.join(PROFILE_PATH, 'itunes.last')
+        last = os.path.join(PROFILE_PATH, 'imdb.last')
         watched = os.path.join(PROFILE_PATH, 'watched.db')
         if os.path.exists(last):
             os.remove(last)
