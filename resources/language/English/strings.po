@@ -78,7 +78,7 @@ msgid "Mark watched if movie is watched"
 msgstr ""
 
 msgctxt "#32016"
-msgid "Trailers: Apple iTunes"
+msgid "Trailers: IMDB"
 msgstr ""
 
 msgctxt "#32017"
@@ -1340,4 +1340,3 @@ msgstr ""
 msgctxt "#32723"
 msgid "Return to Movies"
 msgstr ""
-
