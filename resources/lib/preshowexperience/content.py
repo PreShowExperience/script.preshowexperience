@@ -399,6 +399,8 @@ class UserContent:
                             ct += 1
                             url = t.getStaticURL()
                             #util.DEBUG_LOG(url)
+                            default_release_date = datetime.datetime.now()
+                            release_date = t.release if t.release else default_release_date
                             DB.Trailers.create(
                                 WID=t.ID,
                                 source=source,
@@ -409,7 +411,7 @@ class UserContent:
                                 rating=str(t.rating),
                                 genres=','.join(t.genres),
                                 thumb=t.thumb,
-                                release=t.release,
+                                release=release_date,  # Using the computed release_date
                                 is3D=t.is3D,
                                 verified=True
                             )
