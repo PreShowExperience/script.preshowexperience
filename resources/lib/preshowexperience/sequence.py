@@ -42,7 +42,7 @@ SETTINGS_DISPLAY = {
     'skip': T(32315, 'Skip'),
     'feature.queue=full': T(32316, 'Feature queue is full'),
     'feature.queue=empty': T(32317, 'Feature queue is empty'),
-    'itunes': 'Apple iTunes',
+    'imdb': 'IMDB',
     'kodidb': T(32318, 'Kodi Database'),
     'scrapers': T(32319, 'Scrapers'),
     'dir': T(32047, 'Directory'),
@@ -926,15 +926,15 @@ class Trailer(Item):
     _scrapers = [
         ['Content', T(32326, 'Trailers Folder'), 'content'],
         ['KodiDB', T(32318, 'Kodi Database'), 'kodidb'],
-        ['iTunes', 'Apple iTunes', 'itunes'],
+        ['IMDB', 'Internet Movie Database', 'imdb'],
         ['TMDB', 'The Movie Database', 'tmdb']
     ]
 
     _settingsDisplay = {
         'Content': T(32326, 'Trailers Folder'),
         'KodiDB': T(32318, 'Kodi Database'),
-        'iTunes': 'Apple iTunes',
-        'THMDB': 'The Movie Database'
+        'IMDB': 'IMDB',
+        'TMDB': 'The Movie Database'
     }
 
     def __init__(self):
@@ -979,7 +979,7 @@ class Trailer(Item):
             if self.getLive('source') != 'content':
                 return False
         elif attr == 'quality':
-            if self.getLive('source') != 'content' or 'iTunes' not in self.liveScrapers():
+            if self.getLive('source') != 'content' or 'IMDB' not in self.liveScrapers():
                 return False
         elif attr == 'ratingMax':
             if self.getLive('ratingLimit') != 'max':
