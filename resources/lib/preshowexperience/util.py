@@ -63,7 +63,7 @@ def _getSettingDefault(key):
         'trivia.musicFile': '',
         'trivia.musicDir': '',
         'trailer.source': 'content',
-        'trailer.scrapers': 'Content,KodiDB,iTunes',
+        'trailer.scrapers': 'Content,KodiDB,IMDB',
         'trailer.order': 'newest',
         'trailer.count': 1,
         'trailer.limitGenre': True,
@@ -240,7 +240,7 @@ try:
     def contentScrapers():
         ret = []
         for stype, scraper, default in (
-            ('trailers', 'iTunes', True),
+            ('trailers', 'IMDB', True),
             ('trailers', 'KodiDB', True),
             ('trailers', 'TMDB', True),
             ('trailers', 'Content', False)
