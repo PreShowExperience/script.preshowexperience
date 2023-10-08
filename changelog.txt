@@ -1,5 +1,9 @@
 Changelog for PreShow Experience
 
+[- 0.2.3 -]
+- fix:      Updated code to make sequences filter by date properly
+- fix:      Modified code to make linked python scripts work in action files
+
 [- 0.2.2 -]
 - add:      Added IMDB trailers (currently only shows 1080 videos and doesn't include genre or rating)
 - change:   Removed iTunes trailers
