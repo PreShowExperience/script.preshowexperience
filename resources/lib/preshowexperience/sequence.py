@@ -378,7 +378,8 @@ class SequenceData(object):
                 for date in dates:
                     ret = -1
                     if len(date) > 1:
-                        if datetime.date(now.year, date[0][0], date[0][1]) <= now <= datetime.date(now.year, date[1][0], date[1][1]):
+                        now_date = now.date()
+                        if datetime.date(now.year, date[0][0], date[0][1]) <= now_date <= datetime.date(now.year, date[1][0], date[1][1]):
                             return 5
                     else:
                         if date[0][0] == now.month and date[0][1] == now.day:
