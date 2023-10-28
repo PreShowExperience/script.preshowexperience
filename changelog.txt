@@ -1,6 +1,7 @@
 Changelog for PreShow Experience
 
 [- 0.2.3 -]
+- add:      Added new options for the command module, including number of loops, duration and time of day
 - fix:      Added genres, rating and resolution data for imdb trailers (Note this takes while to retrieve the trailer information)
 - fix:      Updated code to make sequences filter by date properly
 - fix:      Modified code to make linked python scripts work in action files
