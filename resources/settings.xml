@@ -198,7 +198,7 @@
 					</control>
 				</setting>
 			</group>
-			<group id="2" label="32004">
+<!-- 			<group id="2" label="32004">
 				<setting id="3D.tag.regex" type="string" label="32005" help="">
 					<level>3</level>
 					<default>(?i)3DSBS|3D.SBS|HSBS|H.SBS|H-SBS|[\. _]SBS[\. _]|FULL-SBS|FULL.SBS|FULLSBS|FSBS|HALF-SBS|3DTAB|3D.TAB|HTAB|H.TAB|3DOU|3D.OU|3D.HOU|[\. _]HOU[\. _]|[\. _]OU[\. _]|HALF-TAB</default>
@@ -211,7 +211,7 @@
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
-			</group>
+			</group> -->
 			<group id="3" label="32113">
 				<setting id="scope" type="string" label="32092" help="Set this to the aspect ratio of your screen if you have a scope screen.">
 					<level>3</level>
