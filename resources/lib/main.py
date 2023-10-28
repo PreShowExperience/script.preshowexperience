@@ -9,7 +9,8 @@ from .kodiutil import T
 from . import seqattreditor
 from . import kodiutil
 from . import kodigui
-
+from .preshowexperience import content
+from .preshowexperience import database as DB
 
 kodiutil.LOG('Version: {0}'.format(kodiutil.ADDON.getAddonInfo('version')))
 
@@ -212,9 +213,9 @@ class ItemSettingsWindow(kodigui.BaseDialog):
     def getLimits(self, sItem, attr):
         limits = sItem.getLimits(attr)
         if sItem._type == 'command':
-            if sItem.command == 'back':
+            if sItem.command == 'back' and attr not in ['nbLoops', 'duration', 'timeOfDay']:
                 return (limits[0], min(limits[1], self.leftOffset), limits[2])
-            elif sItem.command == 'skip':
+            elif sItem.command == 'skip' and attr not in ['nbLoops', 'duration', 'timeOfDay']:
                 return (limits[0], min(limits[1], self.rightOffset), limits[2])
 
         return limits
@@ -474,7 +475,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         elif controlID == self.MENU_LOAD_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Load Options[/B]: Load or import a sequence')
         elif controlID == self.MENU_PLAY_BUTTON_ID:
-            kodiutil.setGlobalProperty('option.hint', '[B]Play[/B]: Test the current sequence with a dummy feature')
+            kodiutil.setGlobalProperty('option.hint', '[B]Play[/B]: Test the current sequence with a placeholder feature')
         elif controlID == self.MENU_THEME_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Theme[/B]: Change icons for the sequence editor')
         elif controlID == self.MENU_CONDITIONS_BUTTON_ID:
