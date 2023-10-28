@@ -3,6 +3,7 @@ import os
 import re
 import datetime
 import calendar
+import time
 from . import ratings
 from . import exceptions
 from . import util
@@ -42,6 +43,9 @@ SETTINGS_DISPLAY = {
     'skip': T(32315, 'Skip'),
     'feature.queue=full': T(32316, 'Feature queue is full'),
     'feature.queue=empty': T(32317, 'Feature queue is empty'),
+    'feature.nbloops': T(32724, 'Number of loops'),
+    'feature.duration': T(32727, 'Duration'),
+    'feature.timeofday': T(32726, 'Time of day'),                                             
     'imdb': 'IMDB',
     'kodidb': T(32318, 'Kodi Database'),
     'scrapers': T(32319, 'Scrapers'),
@@ -93,6 +97,7 @@ def strToBoolWithDefault(val):
         return None
     return bool(val == 'True')
 
+    
 def parseRatingsList(rlist):
     for x in range(len(rlist)):
         r = rlist[x]
@@ -378,8 +383,7 @@ class SequenceData(object):
                 for date in dates:
                     ret = -1
                     if len(date) > 1:
-                        now_date = now.date()
-                        if datetime.date(now.year, date[0][0], date[0][1]) <= now_date <= datetime.date(now.year, date[1][0], date[1][1]):
+                        if datetime.date(now.year, date[0][0], date[0][1]) <= now <= datetime.date(now.year, date[1][0], date[1][1]):
                             return 5
                     else:
                         if date[0][0] == now.month and date[0][1] == now.day:
@@ -899,13 +903,13 @@ class Trailer(Item):
             'name': T(32065, 'Match feature genres'),
             'default': None
         },
-        {
-            'attr': 'filter3D',
-            'type': strToBoolWithDefault,
-            'limits': LIMIT_BOOL_DEFAULT,
-            'name': T(32066, 'Filter for 3D based on feature'),
-            'default': None
-        },
+        # {
+            # 'attr': 'filter3D',
+            # 'type': strToBoolWithDefault,
+            # 'limits': LIMIT_BOOL_DEFAULT,
+            # 'name': T(32066, 'Filter for 3D based on feature'),
+            # 'default': None
+        # },
         {
             'attr': 'quality',
             'type': None,
@@ -1094,13 +1098,13 @@ class Video(Item):
             'limits': LIMIT_FILE_DEFAULT,
             'name': T(32048, 'File'),
         },
-        {
-            'attr': 'play3D',
-            'type': strToBool,
-            'limits': LIMIT_BOOL,
-            'name': T(32328, 'Play 3D If 3D Feature'),
-            'default': False
-        },
+        # {
+            # 'attr': 'play3D',
+            # 'type': strToBool,
+            # 'limits': LIMIT_BOOL,
+            # 'name': T(32328, 'Play 3D If 3D Feature'),
+            # 'default': False
+        # },
         {
             'attr': 'volume',
             'type': int,
@@ -1203,13 +1207,13 @@ class AudioFormat(Item):
             'name': T(32030, 'Format'),
             'default': None
         },
-        {
-            'attr': 'play3D',
-            'type': strToBool,
-            'limits': LIMIT_BOOL,
-            'name': T(32328, 'Play 3D if 3D feature'),
-            'default': False
-        },
+        # {
+            # 'attr': 'play3D',
+            # 'type': strToBool,
+            # 'limits': LIMIT_BOOL,
+            # 'name': T(32328, 'Play 3D if 3D feature'),
+            # 'default': False
+        # },
         {
             'attr': 'volume',
             'type': int,
@@ -1285,6 +1289,26 @@ class Action(Item):
 ################################################################################
 # COMMAND
 ################################################################################
+
+def buildTimeOfDay():
+    tod = ['None']
+    for p in ['AM', 'PM']:
+        for h in ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']:
+            for m in ['00', '15', '30', '45']:
+                tod.append(h + ':' + m + ' ' + p)
+    return tod
+
+def buildDuration():
+    durations = []
+    for duration in range(5, 361, 5):  # 361 is exclusive, so we go from 5 to 360
+        hours = duration // 60
+        minutes = duration % 60
+        if hours == 0:
+            durations.append(f"{minutes}m")
+        else:
+            durations.append(f"{hours}h {minutes}m")
+    return durations
+    
 class Command(Item):
     _type = 'command'
     _elements = (
@@ -1295,16 +1319,36 @@ class Command(Item):
             'name': T(32331, 'Command')
         },
         {
+            'attr': 'condition',
+            'type': None,
+            'limits': ['feature.timeofday', 'feature.duration', 'feature.nbloops', 'feature.queue=full', 'feature.queue=empty', 'none'],
+            'name': T(32333, 'Condition')
+        },
+        {
             'attr': 'arg',
             'type': None,
             'limits': None,
-            'name': T(32332, 'Argument')
+            'name': T(32332, 'Offset')
         },
         {
-            'attr': 'condition',
+            'attr': 'nbLoops',
+            'type': int,
+            'limits': (0, 20, 1),
+            'name': T(32724, 'Number of loops'),
+            'default': 2
+        },
+        {
+            'attr': 'duration',
             'type': None,
-            'limits': ['feature.queue=full', 'feature.queue=empty', 'none'],
-            'name': T(32333, 'Condition')
+            'limits': buildDuration(),
+            'name': T(32725, 'Duration (in minutes)'),
+            'default': 30
+        },
+        {
+            'attr': 'timeOfDay',
+            'type': None,
+            'limits': buildTimeOfDay(),
+            'name': T(32726, 'Time of day')
         }
     )
     displayName = T(32331, 'Command')
@@ -1321,6 +1365,11 @@ class Command(Item):
         self.command = ''
         self.arg = ''
         self.condition = ''
+        self.nbLoops = 0
+        self.duration = 0 # In minutes
+        self.timeOfDay = 0
+        self.started = 0
+        self.until = 0 #added working duration                                      
 
     def getLimits(self, attr):
         e = self.getElement(attr)
@@ -1371,6 +1420,32 @@ class Command(Item):
         name = self.name or self.displayName
         command = self.command and ' ({0}:{1})'.format(self.command, self.arg) or ''
         return '{0}{1}'.format(name, command)
+        
+    def elementVisible(self, e):
+        attr = e['attr']
+        # If no condition is selected, hide these attributes by default
+        if not self.condition and attr in ['nbLoops', 'duration', 'timeOfDay']:
+            return False      
+        # Show 'nbLoops' only if its condition is selected
+        if attr == 'nbLoops' and self.condition != 'feature.nbloops':
+            return False     
+        # Show 'duration' only if its condition is selected
+        if attr == 'duration' and self.condition != 'feature.duration':
+            return False
+        # Show 'timeOfDay' only if its condition is selected
+        if attr == 'timeOfDay' and self.condition != 'feature.timeofday':
+            return False
+        # Check for attributes to hide based on the condition
+        if self.condition == 'feature.timeofday' and attr in ['nbLoops', 'duration']:
+            return False
+        if self.condition == 'feature.duration' and attr in ['nbLoops', 'timeOfDay']:
+            return False
+        if self.condition == 'feature.nbloops' and attr in ['duration', 'timeOfDay']:
+            return False
+        if (self.condition == 'feature.queue=full' or self.condition == 'feature.queue=empty') and attr in ['nbLoops', 'duration', 'timeOfDay']:
+            return False
+        return True
+            
 
 
 CONTENT_CLASSES = {
