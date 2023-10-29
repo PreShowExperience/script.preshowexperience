@@ -376,18 +376,19 @@ class SequenceData(object):
 
                 if not dates:
                     return 0
-
                 now = datetime.datetime.now()
+                current_date = now.date()
 
                 ret = 0
                 for date in dates:
                     ret = -1
                     if len(date) > 1:
-                        if datetime.date(now.year, date[0][0], date[0][1]) <= now <= datetime.date(now.year, date[1][0], date[1][1]):
+                        if datetime.date(now.year, date[0][0], date[0][1]) <= current_date <= datetime.date(now.year, date[1][0], date[1][1]):
                             return 5
                     else:
                         if date[0][0] == now.month and date[0][1] == now.day:
                             return 5
+
                 return ret
             elif attr == 'times':
                 times = self.get('times', [])
