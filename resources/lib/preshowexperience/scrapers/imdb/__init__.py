@@ -49,7 +49,7 @@ class Trailer(_scrapers.Trailer):
     def getStaticURL(self):
         return None
 
-    def getPlayableURL(self, res='1080p'):
+    def getPlayableURL(self, res='720p'):
         try:
             return self._getPlayableURL(res)
         except:
@@ -58,26 +58,18 @@ class Trailer(_scrapers.Trailer):
 
         return None
 
-    def _getPlayableURL(self, res='1080p'):
+    def _getPlayableURL(self, res='720p'):
         return IMDBTrailerScraper.getPlayableURL(self.data['location'], res)
 
 
 class IMDBTrailerScraper(_scrapers.Scraper):
     LAST_UPDATE_FILE = os.path.join(util.STORAGE_PATH, 'imdb.last')
 
-    RES = {
-        '480p': 'sd',
-        '720p': 'hd720',
-        '1080p': 'hd1080',
-    }
-
     def __init__(self):
         self.loadTimes()
 
     @staticmethod
     def getPlayableURL(ID, res=None, url=None):
-        res = IMDBTrailerScraper.RES.get(res, 'hd1080p')
-
         ts = scraper.Scraper()
         id_location = ID.split('.', 1)
         all_ = [t for t in ts.get_trailers(id_location[-1], id_location[0]) if t]
@@ -90,7 +82,7 @@ class IMDBTrailerScraper(_scrapers.Scraper):
         url = None
         try:
             streams = all_[0]['streams']
-            url = streams.get(res, streams.get('hd1080', streams.get('sd')))
+            url = streams.get(res, streams.get('hd720', streams.get('sd')))
         except:
             import traceback
             traceback.print_exc()
@@ -113,7 +105,7 @@ class IMDBTrailerScraper(_scrapers.Scraper):
             f.write('{0}\n{1}'.format(int(self.lastAllUpdate), int(self.lastRecentUpdate)))
 
     def allIsDue(self):
-        if time.time() - self.lastAllUpdate > 2592000:  # One month
+        if time.time() - self.lastAllUpdate > 604800:  # One week
             self.lastAllUpdate = time.time()
             self.saveTimes()
             return True

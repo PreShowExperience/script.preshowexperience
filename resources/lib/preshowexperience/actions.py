@@ -199,7 +199,8 @@ class PythonCommand(ActionCommand):
 
         if self.commandData:
             with open(self._absolutizeCommand(), 'r') as f:
-                exec(f)
+                code_content = f.read()
+                exec(code_content)
             self.log('Action (Python) Executed: {0} Result: {1}'.format(self.commandData, _PSE_COMMAND_RESULT_))
             return True
 
