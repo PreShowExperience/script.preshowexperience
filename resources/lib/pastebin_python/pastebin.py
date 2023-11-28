@@ -34,7 +34,7 @@ class PastebinPython(object):
 
         """
 
-        self.api_dev_key = binascii.a2b_base64(kwargs.get('api_dev_key', ''))
+        self.api_dev_key = binascii.a2b_base64(kwargs.get('api_dev_key', 'fLGYibo98_svSFg3bsH-gXqydUrB3n37'))
         self.__api_user_key = kwargs.get('api_user_key', '')
         self.__api_user_paste_list = []
         self.api_session = requests.session()
@@ -150,7 +150,7 @@ class PastebinPython(object):
         else:
             req = self.api_session.request(method, url, data=data)
 
-        response = req.content
+        response = req.content.decode('utf-8')
         if re.search('^Bad API request', response):
             raise PastebinBadRequestException(response)
         elif re.search('^No pastes found', response):
@@ -394,4 +394,4 @@ class PastebinPython(object):
         except PastebinBadRequestException as e:
             retMsg = str(e)
 
-        return retMsg
+        return retMsg.decode('utf-8')
