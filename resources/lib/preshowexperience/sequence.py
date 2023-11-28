@@ -45,7 +45,7 @@ SETTINGS_DISPLAY = {
     'feature.queue=empty': T(32317, 'Feature queue is empty'),
     'feature.nbloops': T(32724, 'Number of loops'),
     'feature.duration': T(32727, 'Duration'),
-    'feature.timeofday': T(32726, 'Time of day'),                                             
+    'feature.timeofday': T(32726, 'Time of day'),
     'imdb': 'IMDB',
     'kodidb': T(32318, 'Kodi Database'),
     'scrapers': T(32319, 'Scrapers'),
@@ -61,7 +61,7 @@ SETTINGS_DISPLAY = {
     'none': T(32037, 'None'),
     'fade': T(32038, 'Fade'),
     'max': T(32062, 'Max'),
-    'match': T(32063, 'Match features'),
+    'match': T(32063, 'Match feature'),
     'slideL': T(32039, 'Slide Left'),
     'slideR': T(32040, 'Slide Right'),
     'slideU': T(32041, 'Slide Up'),
@@ -376,6 +376,7 @@ class SequenceData(object):
 
                 if not dates:
                     return 0
+
                 now = datetime.datetime.now()
                 current_date = now.date()
 
@@ -388,7 +389,6 @@ class SequenceData(object):
                     else:
                         if date[0][0] == now.month and date[0][1] == now.day:
                             return 5
-
                 return ret
             elif attr == 'times':
                 times = self.get('times', [])
@@ -672,7 +672,7 @@ class Feature(Item):
             'default': 0
         }
     )
-    displayName = T(32073, 'Features')
+    displayName = T(32073, 'Feature')
     typeChar = 'Feature'
 
     def __init__(self):
@@ -940,7 +940,7 @@ class Trailer(Item):
         'Content': T(32326, 'Trailers Folder'),
         'KodiDB': T(32318, 'Kodi Database'),
         'IMDB': 'IMDB',
-        'TMDB': 'The Movie Database'
+        'THMDB': 'The Movie Database'
     }
 
     def __init__(self):
@@ -1298,17 +1298,6 @@ def buildTimeOfDay():
             for m in ['00', '15', '30', '45']:
                 tod.append(h + ':' + m + ' ' + p)
     return tod
-
-def buildDuration():
-    durations = []
-    for duration in range(5, 361, 5):  # 361 is exclusive, so we go from 5 to 360
-        hours = duration // 60
-        minutes = duration % 60
-        if hours == 0:
-            durations.append(f"{minutes}m")
-        else:
-            durations.append(f"{hours}h {minutes}m")
-    return durations
     
 class Command(Item):
     _type = 'command'
@@ -1317,19 +1306,19 @@ class Command(Item):
             'attr': 'command',
             'type': None,
             'limits': ['back', 'skip'],
-            'name': T(32331, 'Command')
+            'name': T(32729, 'Direction')
+        },
+        {
+            'attr': 'arg',
+            'type': None,
+            'limits': None,
+            'name': T(32332, 'Number of modules')
         },
         {
             'attr': 'condition',
             'type': None,
             'limits': ['feature.timeofday', 'feature.duration', 'feature.nbloops', 'feature.queue=full', 'feature.queue=empty', 'none'],
             'name': T(32333, 'Condition')
-        },
-        {
-            'attr': 'arg',
-            'type': None,
-            'limits': None,
-            'name': T(32332, 'Offset')
         },
         {
             'attr': 'nbLoops',
@@ -1340,10 +1329,10 @@ class Command(Item):
         },
         {
             'attr': 'duration',
-            'type': None,
-            'limits': buildDuration(),
+            'type': int,
+            'limits': (0, 1440, 1),
             'name': T(32725, 'Duration (in minutes)'),
-            'default': 30
+            'default': 5
         },
         {
             'attr': 'timeOfDay',
@@ -1352,7 +1341,7 @@ class Command(Item):
             'name': T(32726, 'Time of day')
         }
     )
-    displayName = T(32331, 'Command')
+    displayName = T(32728, 'Command/Loop')
     typeChar = 'Command'
 
     def _set(self, attr, value):
@@ -1366,11 +1355,11 @@ class Command(Item):
         self.command = ''
         self.arg = ''
         self.condition = ''
-        self.nbLoops = 0
-        self.duration = 0 # In minutes
+        self.nbLoops = 2
+        self.duration = 30 # In minutes
         self.timeOfDay = 0
         self.started = 0
-        self.until = 0 #added working duration                                      
+        self.until = 0
 
     def getLimits(self, attr):
         e = self.getElement(attr)
@@ -1399,7 +1388,7 @@ class Command(Item):
         if setting == 'command':
             if self.command == 'back':
                 if not self.condition:
-                    self.condition = 'feature.queue=full'
+                    self.condition = 'feature.duration'
                 if not self.arg:
                     self.arg = 2
             elif self.command == 'skip':
@@ -1426,17 +1415,7 @@ class Command(Item):
         attr = e['attr']
         # If no condition is selected, hide these attributes by default
         if not self.condition and attr in ['nbLoops', 'duration', 'timeOfDay']:
-            return False      
-        # Show 'nbLoops' only if its condition is selected
-        if attr == 'nbLoops' and self.condition != 'feature.nbloops':
-            return False     
-        # Show 'duration' only if its condition is selected
-        if attr == 'duration' and self.condition != 'feature.duration':
             return False
-        # Show 'timeOfDay' only if its condition is selected
-        if attr == 'timeOfDay' and self.condition != 'feature.timeofday':
-            return False
-        # Check for attributes to hide based on the condition
         if self.condition == 'feature.timeofday' and attr in ['nbLoops', 'duration']:
             return False
         if self.condition == 'feature.duration' and attr in ['nbLoops', 'timeOfDay']:
@@ -1445,8 +1424,8 @@ class Command(Item):
             return False
         if (self.condition == 'feature.queue=full' or self.condition == 'feature.queue=empty') and attr in ['nbLoops', 'duration', 'timeOfDay']:
             return False
+
         return True
-            
 
 
 CONTENT_CLASSES = {
@@ -1464,8 +1443,8 @@ ITEM_TYPES = [
     ('Trivia', T(32026, 'Trivia'), 'Trivia', Trivia),
     ('Trailer', T(32049, 'Trailers'), 'Trailer', Trailer),
     ('AudioFormatBumper', T(32329, 'Audio Format Bumper'), 'AudioFormatBumper', AudioFormat),
-    ('Feature', T(32073, 'Features'), 'Feature', Feature),
-    ('Command', T(32331, 'Command'), 'Command', Command),
+    ('Feature', T(32073, 'Feature'), 'Feature', Feature),
+    ('Command', T(32728, 'Command/Loop'), 'Command', Command),
     ('Action', T(32083, 'Actions'), 'Action', Action)
 ]
 
