@@ -30,9 +30,15 @@ class PlayableBase(dict):
 class Playable(PlayableBase):
     type = None
 
+    def __init__(self):
+        self['from'] = -1
+        
     @property
     def path(self):
         return self['path']
+        
+    def setFrom(self, pos):
+        self['from'] = pos
 
     def __repr__(self):
         return '{0}: {1}'.format(self.type, repr(self.path))
@@ -492,6 +498,53 @@ class Action(dict):
         self.processor.run()
 
 
+class Goto(Playable):
+    type = 'GOTO'
+
+    def __init__(self, command, *args, **kwargs):
+        util.DEBUG_LOG('[Goto] {0}'.format(command.condition))
+        self['command'] = command.command
+        self['arg'] = command.arg
+        self['condition'] = command.condition
+        self['duration'] = command.duration
+        self['timeOfDay'] = command.timeOfDay
+        self['started'] = 0
+        self['until'] = 0
+        Playable.__init__(self, *args, **kwargs)
+
+    def __repr__(self):
+        return '{0}: {1} {2} - {3} duration {4} time of day {5}'.format(self.type, self['command'], self['arg'], self['condition'], self['duration'], self['timeOfDay'])
+
+    def run(self):
+        now = time.time()
+        if self['started'] == 0:
+            self['started'] = now
+            if self['condition'] == 'feature.duration':
+                self['until'] = now + ( self['duration'] * 60 )
+            elif self['condition'] == 'feature.timeofday':
+                if str(self['timeOfDay']).find(':') != -1:
+                    n = datetime.datetime.fromtimestamp(now)
+                    v = datetime.datetime.strptime(self['timeOfDay'], '%I:%M %p')
+                    s = n.strftime('%m/%d/%Y')
+                    s = s + ' ' + v.strftime('%I:%M') + ':00' + ' ' + v.strftime('%p')
+                    r = datetime.datetime.strptime(s, '%m/%d/%Y %I:%M:%S %p')
+                    tod = int(r.strftime('%s'))
+                    if tod < now:
+                        # Given value is next day => add 24 hours
+                        tod = tod + (24 * 60 * 60)
+                else:
+                    tod = now
+                self['until'] = tod
+            util.DEBUG_LOG('Starting the loop at {0} with condition {1} until {2}'.format(str(now), self['condition'], self['until']))
+        if self['until'] > 0 and now >= self['until']:
+                util.DEBUG_LOG('Stopping the loop as the duration or time of day is reached')
+                self['until'] = 0
+                return 0
+        if self['command'] == 'back':
+            return self['arg'] * -1
+        elif self['command'] == 'skip':
+            return self['arg']        
+        
 class FeatureHandler:
     @DB.session
     def getRatingBumper(self, sItem, feature, image=False):
@@ -667,11 +720,11 @@ class TriviaHandler:
             else:
                 result = triviadirectory              
         triviadirectory = result
-        if '@' in contentPath:
+        if contentPath is not None and '@' in contentPath:
             index = contentPath.find('@')
             if index != -1:
                 result = contentPath[index + 1:]
-        else:
+        elif contentPath is not None:
             index = contentPath.find('//')
             if index != -1:
                 result = contentPath[index + 1:]
@@ -1342,11 +1395,23 @@ class SequenceProcessor:
             return 0
         if sItem.condition == 'feature.queue=empty' and self.featureQueue:
             return 0
+        if sItem.command == 'back' and sItem.condition == 'feature.nbloops':
+            if sItem.nbLoops > 0:
+                sItem.nbLoops = sItem.nbLoops - 1
+                if sItem.nbLoops == 0:
+                    util.DEBUG_LOG('Stopping the loop as the number of loops is reached')
+                    sItem.nbLoops = 0
+                    return 0
+                else:
+                    return sItem.arg * -1
+        if sItem.command == 'back' and ( sItem.condition == 'feature.duration' or sItem.condition == 'feature.timeofday' ):
+            return Goto(sItem)
         if sItem.command == 'back':
             return sItem.arg * -1
         elif sItem.command == 'skip':
             return sItem.arg
 
+    
     # SEQUENCE PROCESSING
     handlers = {
         'feature': FeatureHandler(),
@@ -1383,11 +1448,18 @@ class SequenceProcessor:
             if handler:
                 if sItem._type == 'command':
                     offset = handler(self, sItem)
-                    pos += offset
-                    if offset:
-                        continue
+                    if type(offset) == int:
+                        pos += offset
+                        if offset:
+                            continue
+                    else:
+                        offset.setFrom(pos)
+                        self.playables.append(offset)
                 else:
-                    self.playables += handler(self, sItem)
+                    playables = handler(self, sItem)
+                    for p in playables:
+                        p.setFrom(pos)
+                        self.playables.append(p)
 
             pos += 1
         self.playables.append(None)  # Keeps it from being empty until AFTER the last item
@@ -1447,7 +1519,7 @@ class SequenceProcessor:
 
         pos = self.pos + 1
         playable = self.playables[pos]
-        while not self.atEnd(pos) and playable and playable.type in ('ACTION', 'COMMAND'):
+        while not self.atEnd(pos) and playable and playable.type in ('ACTION', 'COMMAND', 'GOTO'):
             pos += 1
             playable = self.playables[pos]
         else:
@@ -1464,3 +1536,22 @@ class SequenceProcessor:
 
     def lastAction(self):
         return self._lastAction
+        
+    def seekToFirstPlayableAtOffset(self, offset):
+        pos = self.playables[self.pos]['from']
+        pos += offset
+        if pos < 0:
+            pos = 0
+        if pos > len(self.sequence) - 1:
+            return None
+        
+        i = 0
+        for p in self.playables:
+            if p['from'] >= pos:
+                self.pos = i - 1 # Position before the item that we want to go next as function next() will be called
+                if self.pos < 0:
+                    self.pos = 0
+                return p
+            i += 1
+                
+        return None
