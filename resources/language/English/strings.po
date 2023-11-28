@@ -266,7 +266,7 @@ msgid "Max"
 msgstr ""
 
 msgctxt "#32063"
-msgid "Match Features"
+msgid "Match Feature"
 msgstr ""
 
 msgctxt "#32064"
@@ -306,7 +306,7 @@ msgid "Fallback"
 msgstr ""
 
 msgctxt "#32073"
-msgid "Features"
+msgid "Feature"
 msgstr ""
 
 msgctxt "#32074"
@@ -628,7 +628,7 @@ msgid "Command"
 msgstr ""
 
 msgctxt "#32332"
-msgid "Argument"
+msgid "Number of modules"
 msgstr ""
 
 msgctxt "#32333"
@@ -887,16 +887,16 @@ msgid "Load the default or start a new sequence?"
 msgstr ""
 
 msgctxt "#32561"
-msgid "No Features"
+msgid "No Feature"
 msgstr ""
 
 msgctxt "#32562"
-msgid "No movies are in the Queue.  Please queue some features and try again."
+msgid "No movies are in the Queue.  Please queue a feature and try again."
 msgstr ""
 
 # Merged with line 32562 for Kodi 19 - Matrix
 msgctxt "#32563"
-msgid "Please queue some features and try again."
+msgid "Please queue a feature and try again."
 msgstr ""
 
 msgctxt "#32564"
@@ -1339,4 +1339,28 @@ msgstr ""
 
 msgctxt "#32723"
 msgid "Return to Movies"
+msgstr ""
+
+msgctxt "#32724"
+msgid "Number of loops"
+msgstr ""
+
+msgctxt "#32725"
+msgid "Duration (in minutes)"
+msgstr ""
+
+msgctxt "#32726"
+msgid "Time of day"
+msgstr ""
+
+msgctxt "#32727"
+msgid "Duration"
+msgstr ""
+
+msgctxt "#32728"
+msgid "Command/Loop"
+msgstr ""
+
+msgctxt "#32729"
+msgid "Direction"
 msgstr ""
