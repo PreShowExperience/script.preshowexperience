@@ -9,7 +9,7 @@ from . import kodiutil
 from . import preshowexperience
 from . import pseutil
 from . import pyqrcode
-
+from . import kodigui
 from .pastebin_python import PastebinPython
 from .preshowexperience import database as DB
 from .kodiutil import T
@@ -97,7 +97,7 @@ def _pasteLog(logName='kodi.log'):
         debug_log('Creating paste with stored API key')
 
     with kodiutil.Progress('Pastebin', T(32577, 'Creating paste...')):
-        with open(logPath, 'r') as f:
+        with open(logPath, 'r', encoding='utf-8') as f:
             content = f.read()
             for pattern, repl in replaces:
                 content = re.sub(pattern, repl, content)
