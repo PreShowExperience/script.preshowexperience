@@ -1277,6 +1277,9 @@ class ExperiencePlayer(xbmc.Player):
     def doAction(self, action):
         action.run()
 
+    def doGoto(self, goto):
+        return goto.run()
+
     def next(self, prev=False):
         if not self.processor or self.processor.atEnd():
             return
@@ -1298,7 +1301,7 @@ class ExperiencePlayer(xbmc.Player):
 
         DEBUG_LOG('Playing next item: {0}'.format(playable))
 
-        if playable.type not in ('ACTION', 'COMMAND'):
+        if playable.type not in ('ACTION', 'COMMAND', 'GOTO'):
             kodiutil.setGlobalProperty('module.current', playable.module._type)
             kodiutil.setGlobalProperty('module.current.name', playable.module.displayRaw())
             kodiutil.setGlobalProperty('module.next',
@@ -1333,6 +1336,18 @@ class ExperiencePlayer(xbmc.Player):
             self.doAction(playable)
             self.next()
 
+        elif playable.type == 'GOTO':
+            offset = self.doGoto(playable)
+            if offset == 0:
+                self.next()
+            else:
+                self.processor.seekToFirstPlayableAtOffset(offset)
+                if self.processor.pos == 0:
+                    # As we are already at the beginning, we have to make sure that next() will retrieve the first playable
+                    self.next(prev=True)
+                else:
+                    self.next()
+                                    
         else:
             DEBUG_LOG('NOT PLAYING: {0}'.format(playable))
             self.next()
