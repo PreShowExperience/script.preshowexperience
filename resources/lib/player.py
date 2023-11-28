@@ -30,8 +30,8 @@ CODEC_IMAGES = ('aac', )
 
 def showNoFeaturesDialog():
     xbmcgui.Dialog().ok(
-        T(32561, 'No Features'),
-        T(32562, 'No movies are in the Queue.  Please queue some features and try again.')
+        T(32561, 'No Feature'),
+        T(32562, 'No movies are in the Queue.  Please queue a feature and try again.')
     )
 
 
