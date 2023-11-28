@@ -471,15 +471,15 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         elif controlID == self.MENU_NEW_BUTTON_ID:
            kodiutil.setGlobalProperty('option.hint', '[B]New[/B]: Create a new empty sequence')
         elif controlID == self.MENU_SAVE_BUTTON_ID:
-            kodiutil.setGlobalProperty('option.hint', '[B]Save Options[/B]: Save or export the current sequence')
+            kodiutil.setGlobalProperty('option.hint', '[B]Save[/B]: Save or export the current sequence')
         elif controlID == self.MENU_LOAD_BUTTON_ID:
-            kodiutil.setGlobalProperty('option.hint', '[B]Load Options[/B]: Load or import a sequence')
+            kodiutil.setGlobalProperty('option.hint', '[B]Open[/B]: Load or import a sequence')
         elif controlID == self.MENU_PLAY_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Play[/B]: Test the current sequence with a placeholder feature')
         elif controlID == self.MENU_THEME_BUTTON_ID:
-            kodiutil.setGlobalProperty('option.hint', '[B]Theme[/B]: Change icons for the sequence editor')
+            kodiutil.setGlobalProperty('option.hint', '[B]Icons[/B]: Change icons for the sequence editor')
         elif controlID == self.MENU_CONDITIONS_BUTTON_ID:
-            kodiutil.setGlobalProperty('option.hint', '[B]Set Conditions[/B]: Set the conditions for auto-selecting the current sequence')
+            kodiutil.setGlobalProperty('option.hint', '[B] Conditions[/B]: Set the conditions for auto-selecting the current sequence')
         elif controlID == self.MENU_SEQUENCE_ACTIVE_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Auto Select[/B]: Set whether this sequnce is active for auto-selection')
         elif controlID == self.MENU_SHOW_OPTION_BUTTON_ID:
