@@ -63,7 +63,6 @@ def selectSequence(active=True, for_dialog=False):
     default2D = 2
     default3D = 3
 
-    contentPath = getSequencesContentPath()
     if not contentPath:
         xbmcgui.Dialog().ok(T(32500, 'Not Found'), T(32501, 'No sequences found.'))
         return None
@@ -79,7 +78,6 @@ def selectSequence(active=True, for_dialog=False):
 
     options = [('{0}.pseseq'.format(s.pathName), '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name) for s in sequences]
     options.append((default2D, '[ {0} ]'.format(T(32599, 'Default 2D'))))
-    options.append((default3D, '[ {0} ]'.format(T(32600, 'Default 3D'))))
 
     if not options:
         xbmcgui.Dialog().ok(T(32500, 'Not Found'), T(32501, 'No sequences found.'))
