@@ -59,9 +59,16 @@ def _getSettingDefault(key):
         'trivia.aDuration': 6,
         'trivia.sDuration': 10,
         'trivia.transition': 'fade',
-        'trivia.transitionDuration': 400,
+        'trivia.transitionDuration': 500,
         'trivia.musicFile': '',
         'trivia.musicDir': '',
+        'slideshow.format': 'slide',
+        'slideshow.duration': 5,
+        'slideshow.sDuration': 10,
+        'slideshow.transition': 'fade',
+        'slideshow.transitionDuration': 500,
+        'slideshow.musicFile': '',
+        'slideshow.musicDir': '',
         'trailer.source': 'content',
         'trailer.scrapers': 'Content,KodiDB,IMDB',
         'trailer.order': 'newest',
@@ -84,6 +91,10 @@ def _getSettingDefault(key):
         'trivia.musicVolume': 75,
         'trivia.musicFadeIn': 3.0,
         'trivia.musicFadeOut': 3.0,
+        'slideshow.music': 'content',
+        'slideshow.musicVolume': 75,
+        'slideshow.musicFadeIn': 3.0,
+        'slideshow.musicFadeOut': 3.0,
         'trailer.ratingMax': 'MPAA.G',
         'trailer.preferUnwatched': True,
         'rating.system.default': 'MPAA'
@@ -210,11 +221,17 @@ try:
             return ['slide', 'video'][int(default)]
         elif key == 'trivia.music':
             return ['off', 'content', 'dir', 'file'][int(default)]
+        elif key == 'slideshow.format':
+            return ['slide', 'video'][int(default)]
+        elif key == 'slideshow.music':
+            return ['off', 'content', 'dir', 'file'][int(default)]
         elif key == 'audioformat.method':
             return ['af.detect', 'af.format', 'af.file'][int(default)]
         elif key == 'audioformat.fallback':
             return ['af.format', 'af.file'][int(default)]
         elif key == 'trivia.transition':
+            return ['none', 'fade', 'slideL', 'slideR', 'slideU', 'slideD'][int(default)]
+        elif key == 'slideshow.transition':
             return ['none', 'fade', 'slideL', 'slideR', 'slideU', 'slideD'][int(default)]
         elif key == 'audioformat.format':
             return [

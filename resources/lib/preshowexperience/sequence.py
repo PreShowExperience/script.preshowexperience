@@ -859,14 +859,14 @@ class Slideshow(Item):
             'type': None,
             'limits': ['1 minute', '2 minutes', '3 minutes', '4 minutes', '5 minutes', '10 minutes', '15 minutes', '30 minutes', '1 hour', '2 hours', '3 hours', '4 hours'],
             'name': T(32031, 'Maximum Duration'),
-            'default': 0
+            'default': '5 minutes'
         },
         {
             'attr': 'slideDuration',
             'type': int,
             'limits': ['5 seconds', '6 seconds', '7 seconds', '8 seconds', '9 seconds', '10 seconds', '15 seconds', '30 seconds', '1 minute', '2 minutes', '5 minutes', '10 minutes', '15 minutes', '30 minutes', '1 hour', '2 hour', '3 hour', '4 hours'],
             'name': T(32731, 'Slide Duration (seconds)'), 
-            'default': 0
+            'default': '8 seconds'
         },
         {
             'attr': 'transition',
