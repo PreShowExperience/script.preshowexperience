@@ -110,7 +110,7 @@ class ImageQueue(PlayableQueue):
         self.maxDuration = s_item.getLive('duration') * 60
         self.pos = -1
         self.transition = None
-        self.transitionDuration = 400
+        self.transitionDuration = 500
         self.music = None
         self.musicVolume = 85
         self.musicFadeIn = 3.0
@@ -163,9 +163,12 @@ class ImageQueue(PlayableQueue):
         return self.queue[self.pos]
 
     def add(self, image):
+        util.DEBUG_LOG(f"Adding image to queue: {image.path}")
         self.queue.append(image)
+        self.duration += image.duration  # Update the queue's duration
 
     def next(self, start=0, count=1, extend=False):
+        util.DEBUG_LOG(f"Retrieving next image from queue. Current position: {self.pos}")
         overtime = start and time.time() - start >= self.maxDuration
         if overtime and not self.current().setNumber:
             return None
@@ -323,7 +326,6 @@ class VideoQueue(PlayableQueue):
     def mark(self, video):
         util.DEBUG_LOG('VideoQueue: Marking video as watched')
         self._handler.mark(video)
-
 
 class Feature(Video):
     type = 'FEATURE'
@@ -604,39 +606,25 @@ class FeatureHandler:
 
         return playables
 
-
 class TriviaHandler:
     def __init__(self):
         pass
 
     def __call__(self, caller, sItem):
         duration = sItem.getLive('duration')
-
         util.DEBUG_LOG('[{0}] {1}m'.format(sItem.typeChar, duration))
-
-        durationLimit = duration * 60
         queue = ImageQueue(self, sItem).fromModule(sItem)
         queue.transition = sItem.getLive('transition')
         queue.transitionDuration = sItem.getLive('transitionDuration')
 
-        vqueue = VideoQueue(self, sItem).fromModule(sItem)
 
         for slides in self.getTriviaImages(sItem):
-            if isinstance(slides, Video):
-                vqueue.append(slides)
-            else:
-                queue += slides
-
-            if queue.duration + vqueue.duration >= durationLimit:
-                break
+            queue += slides
 
         ret = []
 
         if queue.duration:
             ret.append(queue)
-            queue.maxDuration -= vqueue.duration
-        if vqueue.duration:
-            ret.append(vqueue)
 
         self.addMusic(sItem, queue)
 
@@ -704,40 +692,33 @@ class TriviaHandler:
     @DB.session
     @DB.sessionW
     
-    def getTriviaImages(self, sItem): 
-        triviadirectory = sItem.getLive('triviaDir')
-        contentPath = util.getSettingDefault('content.path')
-        util.DEBUG_LOG('Content Full Path: {0}'.format(contentPath))
-        util.DEBUG_LOG('Trivia Full Directory: {0}'.format(triviadirectory))
-        if '@' in triviadirectory:
-            index = triviadirectory.find('@')
-            if index != -1:
-                result = triviadirectory[index + 1:]
+    def extract_directory(path):
+        util.DEBUG_LOG('Content Full Path: {0}'.format(path))
+        if '@' in path:
+            result = path.split('@')[1]
+        elif '//' in path:
+            result = path.rsplit('//', 1)[1]
         else:
-            index = triviadirectory.find('//')
-            if index != -1:
-                result = triviadirectory[index + 1:]
-            else:
-                result = triviadirectory              
-        triviadirectory = result
-        if contentPath is not None and '@' in contentPath:
-            index = contentPath.find('@')
-            if index != -1:
-                result = contentPath[index + 1:]
-        elif contentPath is not None:
-            index = contentPath.find('//')
-            if index != -1:
-                result = contentPath[index + 1:]
-            else:
-                result = contentPath              
-        contentPath = result + 'Trivia/'
-        util.DEBUG_LOG('Content Truncated Path: {0}'.format(contentPath))
-        util.DEBUG_LOG('Trivia Truncated Directory: {0}'.format(triviadirectory))
-        result = triviadirectory.replace(contentPath, '')
-        triviadirectory = result 
-        util.DEBUG_LOG('Final Trivia Directory: {0}'.format(triviadirectory))
-        useVideo = sItem.getLive('format') == 'video'
+            result = path
+        return result
+        
+    def getTriviaImages(self, sItem): 
+        util.DEBUG_LOG('Select Trivia : {0}'.format(sItem.getLive('triviaSelect')))
+        if sItem.getLive('triviaSelect') == 'Directory':
+            triviadirectory = TriviaHandler.extract_directory(sItem.getLive('triviaDir'))
+            contentPath = util.getSettingDefault('content.path')
+            contentPath = TriviaHandler.extract_directory(contentPath) + 'Trivia/'
 
+            util.DEBUG_LOG('Content Full Path: {0}'.format(contentPath))
+            util.DEBUG_LOG('Trivia Full Directory: {0}'.format(triviadirectory))
+
+            triviadirectory = triviadirectory.replace(contentPath, '')
+            util.DEBUG_LOG('Final Trivia Directory: {0}'.format(triviadirectory))
+            
+        else:
+            triviadirectory = ''
+            util.DEBUG_LOG('Final Trivia Directory: {0}'.format(triviadirectory))
+        
         clue = sItem.getLive('cDuration')
         durations = (
             sItem.getLive('aDuration'),
@@ -746,12 +727,6 @@ class TriviaHandler:
         )
         for trivia in DB.Trivia.select().order_by(DB.fn.Random()):
             if triviadirectory in str(trivia.answerPath):
-                if useVideo:
-                    if trivia.type != 'video':
-                        continue
-                else:
-                    if trivia.type == 'video':
-                        continue
                 try:
                     DB.WatchedTrivia.get((DB.WatchedTrivia.WID == trivia.TID) & DB.WatchedTrivia.watched)
                 except DB.peewee.DoesNotExist:
@@ -765,13 +740,6 @@ class TriviaHandler:
                 trivia = DB.Trivia.get(DB.Trivia.TID == watched.WID)
             except DB.peewee.DoesNotExist:
                 continue
-
-            if useVideo:
-                if trivia.type != 'video':
-                    continue
-            else:
-                if trivia.type == 'video':
-                    continue
 
             pool.append(trivia)
 
@@ -787,26 +755,23 @@ class TriviaHandler:
                 yield self.createTriviaImages(sItem, t, durations)
 
     def createTriviaImages(self, sItem, trivia, durations):
-        if trivia.type == 'video':
-            return Video(trivia.answerPath, duration=trivia.duration, set_id=trivia.TID).fromModule(sItem)
-        else:
-            clues = [getattr(trivia, 'cluePath{0}'.format(x)) for x in range(9, -1, -1)]
-            paths = [trivia.answerPath] + clues + [trivia.questionPath]
-            # util.DEBUG_LOG('paths: {0}'.format(paths))
-            slides = []
-            setNumber = 0
-            for p, d in zip(paths, durations):
-                if p:
-                    slides.append(Image(p, d, setNumber, trivia.TID).fromModule(sItem))
-                    setNumber += 1
+        clues = [getattr(trivia, 'cluePath{0}'.format(x)) for x in range(9, -1, -1)]
+        paths = [trivia.answerPath] + clues + [trivia.questionPath]
+        # util.DEBUG_LOG('paths: {0}'.format(paths))
+        slides = []
+        setNumber = 0
+        for p, d in zip(paths, durations):
+            if p:
+                slides.append(Image(p, d, setNumber, trivia.TID).fromModule(sItem))
+                setNumber += 1
 
-            slides.reverse()  # Slides are backwards
-            # util.DEBUG_LOG('slides: {0}'.format(slides))
+        slides.reverse()  # Slides are backwards
+        # util.DEBUG_LOG('slides: {0}'.format(slides))
 
-            if len(slides) == 1:  # This is a still - set duration accordingly
-                slides[0].duration = sItem.getLive('sDuration')
+        if len(slides) == 1:  # This is a still - set duration accordingly
+            slides[0].duration = sItem.getLive('sDuration')
 
-            return slides
+        return slides
 
     def next(self, image_queue):
         for slides in self.getTriviaImages(image_queue.sItem):
@@ -822,6 +787,158 @@ class TriviaHandler:
             date=datetime.datetime.now()
         ).where(DB.WatchedTrivia.WID == image.setID).execute()
 
+
+class SlideshowHandler:
+    def __init__(self):
+        pass
+    
+    def __call__(self, caller, sItem):
+        duration = sItem.getLive('duration')     
+        util.DEBUG_LOG('[{0}] {1}'.format(sItem.typeChar, duration))
+        queue = ImageQueue(self, sItem).fromModule(sItem)
+        queue.transition = sItem.getLive('transition')
+        queue.transitionDuration = sItem.getLive('transitionDuration')
+
+        for slides in self.getSlideshowImages(sItem):
+            queue += slides
+
+        ret = []
+
+        if queue.duration:
+            ret.append(queue)
+
+        self.addMusic(sItem, queue)
+
+        return ret
+
+    @DB.session
+    def addMusic(self, sItem, queue):
+        mode = sItem.getLive('music')
+        if mode == 'off':
+            return
+
+        if mode == 'content':
+            queue.music = [Song(s.path, s.duration) for s in DB.Song.select().order_by(DB.fn.Random())]
+        elif mode == 'dir':
+            path = sItem.getLive('musicDir')
+            if not path:
+                return
+
+            import mutagen
+            mutagen.setFileOpener(util.vfs.File)
+
+            queue.music = []
+            for p in util.listFilePaths(path):
+                try:
+                    data = mutagen.File(p)
+                except:
+                    data = None
+                    util.ERROR()
+
+                d = 0
+                if data:
+                    d = data.info.length
+                queue.music.append(Song(p, d))
+
+            random.shuffle(queue.music)
+        elif mode == 'file':
+            path = sItem.getLive('musicFile')
+            if not path:
+                return
+
+            import mutagen
+            mutagen.setFileOpener(util.vfs.File)
+
+            data = mutagen.File(path)
+            d = 0
+            if data:
+                d = data.info.length
+            queue.music = [Song(path, d)]
+
+        duration = sum([s.duration for s in queue.music])
+
+        if duration:  # Maybe they were all zero - we'll be here forever :)
+            while duration < queue.duration:
+                for i in range(len(queue.music)):
+                    song = queue.music[i]
+                    duration += song.duration
+                    queue.music.append(song)
+                    if duration >= queue.duration:
+                        break
+
+        queue.musicVolume = util.getSettingDefault('slideshow.musicVolume')
+        queue.musicFadeIn = util.getSettingDefault('slideshow.musicFadeIn')
+        queue.musicFadeOut = util.getSettingDefault('slideshow.musicFadeOut')
+
+    @DB.session    
+    def getSlideshowImages(self, sItem):        
+        util.DEBUG_LOG('Select Slideshow : {0}'.format(sItem.getLive('slideshowSelect')))
+        if sItem.getLive('slideshowSelect') == 'Directory':
+            slideshowdirectory = SlideshowHandler.extract_directory(sItem.getLive('slideshowDir'))
+            contentPath = util.getSettingDefault('content.path')
+            contentPath = SlideshowHandler.extract_directory(contentPath) + 'Slideshow/'
+
+            util.DEBUG_LOG('Content Full Path: {0}'.format(contentPath))
+            util.DEBUG_LOG('Slideshow Full Directory: {0}'.format(slideshowdirectory))
+
+            slideshowdirectory = slideshowdirectory.replace(contentPath, '')
+            util.DEBUG_LOG('Final Slideshow Directory: {0}'.format(slideshowdirectory))
+            
+        else:
+            slideshowdirectory = ''
+            util.DEBUG_LOG('Final Slideshow Directory: {0}'.format(slideshowdirectory))
+            
+        sDuration = sItem.getLive('sDuration')
+        durations = (
+            sDuration,
+            sDuration
+        )
+        slideshow_order = sItem.getLive('slideshoworder')
+
+        if slideshow_order == 'Alphabetical':
+            for slidesimages in DB.Slideshow.select().order_by(DB.Slideshow.slidePath):
+                yield self.createSlideshowImages(sItem, slidesimages, durations)
+        elif slideshow_order == 'Random':
+            for slidesimages in DB.Slideshow.select().order_by(DB.fn.Random()):
+                yield self.createSlideshowImages(sItem, slidesimages, durations)
+
+    def extract_directory(path):
+        util.DEBUG_LOG('Content Full Path: {0}'.format(path))
+        if '@' in path:
+            result = path.split('@')[1]
+        elif '//' in path:
+            result = path.rsplit('//', 1)[1]
+        else:
+            result = path
+        return result
+
+    def createSlideshowImages(self, sItem, slidesimages, durations):
+        paths = [slidesimages.slidePath]
+        #util.DEBUG_LOG('paths: {0}'.format(paths))
+        slides = []
+        setNumber = 0
+        for p, d in zip(paths, durations):
+            if p:
+                slides.append(Image(p, d, setNumber, slidesimages.TID).fromModule(sItem))
+                setNumber += 1
+
+        slides.reverse()  # Slides are backwards
+        #util.DEBUG_LOG('slides: {0}'.format(slides))
+
+        if len(slides) == 1:  # This is a still - set duration accordingly
+            slides[0].duration = sItem.getLive('sDuration')
+
+        return slides
+
+    def next(self, image_queue):
+        for slides in self.getSlideshowImages(image_queue.sItem):
+            if slides not in image_queue:
+                return slides
+        return None
+        
+    def mark(self, image):
+        return None
+        
 class TrailerHandler:
     def __init__(self):
         self.caller = None
@@ -1416,6 +1533,7 @@ class SequenceProcessor:
     handlers = {
         'feature': FeatureHandler(),
         'trivia': TriviaHandler(),
+        'slideshow': SlideshowHandler(),
         'trailer': TrailerHandler(),
         'video': VideoBumperHandler(),
         'audioformat': AudioFormatHandler(),
@@ -1458,7 +1576,8 @@ class SequenceProcessor:
                 else:
                     playables = handler(self, sItem)
                     for p in playables:
-                        p.setFrom(pos)
+                        if hasattr(p, 'setFrom'):
+                            p.setFrom(pos)
                         self.playables.append(p)
 
             pos += 1
@@ -1555,3 +1674,4 @@ class SequenceProcessor:
             i += 1
                 
         return None
+

@@ -76,6 +76,7 @@ class UserContent:
         'Themes',
         'Trailers',
         'Trivia',
+        'Slideshow',
         ('Video Bumpers', (
             '3D Intro',
             '3D Outro',
@@ -103,6 +104,7 @@ class UserContent:
         self.setupDB(db_path)
         self.musicHandler = MusicHandler(self)
         self.triviaDirectoryHandler = TriviaDirectoryHandler(self.log)
+        self.slideshowDirectoryHandler = SlideshowDirectoryHandler(self.log)
         self.setContentDirectoryPath(content_dir)
         if not db_path:
             self.setupContentDirectory()
@@ -165,6 +167,7 @@ class UserContent:
         self.logHeading('CLEANING DATABASE')
         cleaned = self.musicHandler.clean(self._contentDirectory)
         cleaned = self.triviaDirectoryHandler.clean(self._contentDirectory) or cleaned
+        cleaned = self.slideshowDirectoryHandler.clean(self._contentDirectory) or cleaned
         cleaned = self.cleanBumpers() or cleaned
 
         if not cleaned:
@@ -192,6 +195,7 @@ class UserContent:
             util.DEBUG_LOG('Updating all content')
             self.loadMusic()        
             self.loadTrivia()
+            self.loadSlideshow()
             self.loadAudioFormatBumpers()
             self.loadVideoBumpers()
             self.loadRatingsBumpers()
@@ -206,6 +210,10 @@ class UserContent:
                 util.DEBUG_LOG('Updating Trivia')
                 self.loadTrivia()
 
+            if (ADDON.getSetting('update.Slideshow:') == 'true'):      
+                util.DEBUG_LOG('Updating Slideshow')
+                self.loadSlideshow()
+            
             if (ADDON.getSetting('update.loadAudioFormatBumpers') == 'true'):
                 util.DEBUG_LOG('Updating Audo Format Bumpers')
                 self.loadAudioFormatBumpers()
@@ -247,6 +255,26 @@ class UserContent:
             self.log('Processing trivia: {0}'.format(util.strRepr(os.path.basename(path))))
             self.triviaDirectoryHandler(path, prefix=sub)
 
+    def loadSlideshow(self):
+        self.logHeading('LOADING SLIDESHOW')
+
+        basePath = util.pathJoin(self._contentDirectory, 'Slideshow')
+        paths = util.vfs.listdir(basePath)
+
+        total = float(len(paths))
+        for ct, sub in enumerate(paths):
+            pct = 20 + int((ct / total) * 20)
+            if not self._callback(pct=pct):
+                break
+            path = os.path.join(basePath, sub)
+            if util.isDir(path):
+                if sub.startswith('_Exclude'):
+                    util.DEBUG_LOG('SKIPPING EXCLUDED DIR: {0}'.format(util.strRepr(sub)))
+                    continue
+
+            self.log('Processing Slideshow: {0}'.format(util.strRepr(os.path.basename(path))))
+            self.slideshowDirectoryHandler(path, prefix=sub)
+    
     def loadAudioFormatBumpers(self):
         self.logHeading('LOADING AUDIO FORMAT BUMPERS')
 
@@ -508,9 +536,9 @@ class TriviaDirectoryHandler:
     _clueNA = ('clue', 'format')
     _answerNA = ('answer', 'format')
 
-    _defaultQRegEx = '(?i)_q\.(?:jpg|png|gif|bmp)'
-    _defaultCRegEx = '(?i)_c(\d)?\.(?:jpg|png|gif|bmp)'
-    _defaultARegEx = '(?i)_a\.(?:jpg|png|gif|bmp)'
+    _defaultQRegEx = '(?i)_q\.(?:jpg|jepg|tif|tiff|png|gif|bmp)'
+    _defaultCRegEx = '(?i)_c(\d)?\.(?:jpg|jepg|tif|tiff|png|gif|bmp)'
+    _defaultARegEx = '(?i)_a\.(?:jpg|jepg|tif|tiff|png|gif|bmp)'
 
     def __init__(self, callback=None):
         self._callback = callback
@@ -701,5 +729,82 @@ class TriviaDirectoryHandler:
                 cleaned = True
                 t.delete_instance()
                 self._callback('Trivia Missing: {0} - REMOVED'.format(util.strRepr(path)))
+
+        return cleaned
+
+class SlideshowDirectoryHandler:
+    def __init__(self, callback=None):
+        self._callback = callback
+
+    @DB.session
+    def __call__(self, basePath, prefix=None):
+        self.doCall(basePath, prefix)
+
+    def doCall(self, basePath, prefix=None):
+        contents = util.vfs.listdir(basePath)
+
+        for c in contents:
+            path = util.pathJoin(basePath, c)
+
+            if util.isDir(path):
+                self.doCall(path, prefix=prefix and (prefix + ':' + c) or c)
+                continue
+
+            name, ext = os.path.splitext(c)
+            if ext.lower() in util.imageExtensions:
+                self.loadImageSlide(path, name, prefix)
+            elif ext.lower() in util.videoExtensions:
+                self.loadVideoSlide(path, name, prefix)
+
+    def loadImageSlide(self, path, name, prefix):
+        self._callback('Loading Slide Image: [ {0} ]'.format(util.strRepr(name)))
+        try:
+            DB.Slideshow.get_or_create(
+                slidePath=path,
+                defaults={
+                    'type': 'image',
+                    'TID': '{0}:{1}'.format(prefix, name),
+                    'name': name
+                }
+            )
+        except:
+            util.DEBUG_LOG('Error loading slide')
+            util.ERROR()
+
+    def loadVideoSlide(self, path, name, prefix):
+        duration = self.getVideoDuration(path)
+        self._callback('Loading Slideshow (Video): [ {0} ({1}) ]'.format(util.strRepr(name), duration))
+        try:
+            DB.Slideshow.get_or_create(
+                slidePath=path,
+                defaults={
+                    'type': 'video',
+                    'TID': '{0}:{1}'.format(prefix, name),
+                    'name': name,
+                    'duration': duration
+                }
+            )
+        except:
+            util.DEBUG_LOG('Error loading Slideshow video')
+            util.ERROR()
+
+    def getVideoDuration(self, path):
+        parser = hachoir.hachoir_parser.createParser(path)
+        metadata = hachoir.hachoir_metadata.extractMetadata(parser)
+        durationDT = None
+        if metadata:
+            durationDT = metadata.get('duration')
+            return durationDT and util.datetimeTotalSeconds(durationDT) or 0
+        return 0
+
+    def clean(self, base):
+        cleaned = False
+        self._callback('Cleaning: Slideshow')
+        for t in DB.Slideshow.select():
+            path = t.slidePath
+            if not path.startswith(base) or not util.vfs.exists(path):
+                cleaned = True
+                t.delete_instance()
+                self._callback('Slideshow Missing: {0} - REMOVED'.format(util.strRepr(path)))
 
         return cleaned
