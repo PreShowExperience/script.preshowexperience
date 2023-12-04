@@ -1604,6 +1604,14 @@ def sequenceHasFeature(items):
             return True
     return False
 
-
+def sequenceHasFeatures(items):
+    numFeatures = 0
+    for i in items:
+        if i._type == 'feature':
+            numFeatures = numFeatures + 1
+        if numFeatures > 1:
+            return True
+    return False
+    
 def loadSequence(path):
     return SequenceData.load(path)

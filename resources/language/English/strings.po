@@ -1400,3 +1400,7 @@ msgstr ""
 msgctxt "#32738"
 msgid "Max Slideshow duration"
 msgstr ""
+
+msgctxt "#32739"
+msgid "The PreShow must have a feature module."
+msgstr ""

@@ -260,12 +260,12 @@
                             <control type="image">
 							<posy>40</posy>
                                 <width>4</width>
-                                <height>165</height>
+                                <height>115</height>
                                 <texture>script.preshow-white_square.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                             <control type="image">
-                                <posy>205</posy>
+                                <posy>155</posy>
                                 <width>40</width>
                                 <height>4</height>
                                 <texture>script.preshow-white_square.png</texture>
@@ -277,12 +277,12 @@
                             <control type="image">
 							<posy>40</posy>
                                 <width>4</width>
-                                <height>245</height>
+                                <height>195</height>
                                 <texture>script.preshow-white_square.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                             <control type="image">
-                                <posy>285</posy>
+                                <posy>235</posy>
                                 <width>40</width>
                                 <height>4</height>
                                 <texture>script.preshow-white_square.png</texture>
@@ -294,12 +294,12 @@
                             <control type="image">
 							<posy>40</posy>
                                 <width>4</width>
-                                <height>325</height>
+                                <height>274</height>
                                 <texture>script.preshow-white_square.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                             <control type="image">
-                                <posy>365</posy>
+                                <posy>314</posy>
                                 <width>40</width>
                                 <height>4</height>
                                 <texture>script.preshow-white_square.png</texture>
@@ -311,12 +311,12 @@
                             <control type="image">
 							<posy>40</posy>
                                 <width>4</width>
-                                <height>405</height>
+                                <height>353</height>
                                 <texture>script.preshow-white_square.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                             <control type="image">
-                                <posy>445</posy>
+                                <posy>392</posy>
                                 <width>40</width>
                                 <height>4</height>
                                 <texture>script.preshow-white_square.png</texture>
@@ -328,12 +328,12 @@
                             <control type="image">
 							<posy>40</posy>
                                 <width>4</width>
-                                <height>485</height>
+                                <height>431</height>
                                 <texture>script.preshow-white_square.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                             <control type="image">
-                                <posy>525</posy>
+                                <posy>471</posy>
                                 <width>40</width>
                                 <height>4</height>
                                 <texture>script.preshow-white_square.png</texture>
@@ -345,12 +345,12 @@
                             <control type="image">
 							<posy>40</posy>
                                 <width>4</width>
-                                <height>565</height>
+                                <height>510</height>
                                 <texture>script.preshow-white_square.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                             <control type="image">
-                                <posy>605</posy>
+                                <posy>550</posy>
                                 <width>40</width>
                                 <height>4</height>
                                 <texture>script.preshow-white_square.png</texture>
@@ -362,12 +362,29 @@
                             <control type="image">
 							<posy>40</posy>
                                 <width>4</width>
-                                <height>645</height>
+                                <height>589</height>
                                 <texture>script.preshow-white_square.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                             <control type="image">
-                                <posy>685</posy>
+                                <posy>629</posy>
+                                <width>40</width>
+                                <height>4</height>
+                                <texture>script.preshow-white_square.png</texture>
+                                <aspectratio>stretch</aspectratio>
+                            </control>
+                        </control>
+						<control type="group">
+                            <visible>String.IsEqual(Container(202).Position,7)</visible>
+                            <control type="image">
+							<posy>40</posy>
+                                <width>4</width>
+                                <height>668</height>
+                                <texture>script.preshow-white_square.png</texture>
+                                <aspectratio>stretch</aspectratio>
+                            </control>
+                            <control type="image">
+                                <posy>708</posy>
                                 <width>40</width>
                                 <height>4</height>
                                 <texture>script.preshow-white_square.png</texture>
@@ -377,7 +394,7 @@
 <!-- Add Modules Section -->
                         <control type="list" id="202">
                             <posx>0</posx>
-                            <posy>168</posy>
+                            <posy>118</posy>
                             <width>800</width>
                             <height>700</height>
                             <orientation>vertical</orientation>
@@ -386,7 +403,7 @@
                             <ondown>203</ondown>
                             <onup>201</onup> -->
 
-                            <itemlayout height="80">
+                            <itemlayout height="79">
                                 <control type="image">
                                     <posx>20</posx>
                                     <posy>2</posy>
@@ -407,7 +424,7 @@
                                     <left>100</left>
                                     <top>2</top>
                                     <width>800</width>
-                                    <height>80</height>
+                                    <height>79</height>
                                     <font>font20</font>
                                     <textcolor>FF909090</textcolor>
                                     <align>left</align>
@@ -416,7 +433,7 @@
                                 </control>
                             </itemlayout>
 
-                            <focusedlayout height="80">
+                            <focusedlayout height="79">
                                 <control type="group">
                                     <posx>20</posx>
                                     <posy>2</posy>
@@ -448,7 +465,7 @@
                                         <left>80</left>
                                         <top>0</top>
                                         <width>800</width>
-                                        <height>80</height>
+                                        <height>79</height>
                                         <font>font20</font>
                                         <textcolor>FFFFFFFF</textcolor>
                                         <align>left</align>
@@ -607,7 +624,6 @@
                                 <aspectratio>stretch</aspectratio>
                             </control>
                         </control>	
-			    
                         <control type="list" id="203">
                             <posx>0</posx>
                             <posy>168</posy>
@@ -618,7 +634,6 @@
                             <onright>201</onright>
                             <ondown>200</ondown>
                             <onup>201</onup> -->
-
                             <itemlayout height="80">
                                 <control type="group">
                                     <visible>!String.IsEmpty(Window(10000).Property(script.preshowexperience.sequence.item.enabled))</visible>
@@ -665,7 +680,6 @@
                                     </control>
                                 </control>
                             </itemlayout>
-
                             <focusedlayout height="80">
                                 <control type="group">
                                     <posx>20</posx>
@@ -969,7 +983,6 @@
                                     </control>
                                     <control type="group">
                                         <visible>String.IsEmpty(ListItem.Property(enabled))</visible>
-
                                         <control type="image">
                                             <posx>-3</posx>
                                             <posy>-3</posy>
@@ -982,7 +995,6 @@
                                     </control>
                                 </control>
                             </control>
-
                         </control>
                     </itemlayout>
 

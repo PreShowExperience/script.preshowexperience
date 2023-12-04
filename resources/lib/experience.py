@@ -630,6 +630,10 @@ class ExperiencePlayer(xbmc.Player):
         self.pauseAction = None
         self.resumeAction = None
         self.abortAction = None
+        # self.beforeFeatureAction = None
+        # self.beginningAction = None
+        # self.lastChapterAction = None
+        # self.endAction = None
 
         if kodiutil.getSetting('action.onPause', False):
             actionFile = kodiutil.getSetting('action.onPause.file')
@@ -644,6 +648,22 @@ class ExperiencePlayer(xbmc.Player):
         if kodiutil.getSetting('action.onAbort', False):
             actionFile = kodiutil.getSetting('action.onAbort.file')
             self.abortAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+            
+        # if kodiutil.getSetting('action.onBeforeFeature', False):
+            # actionFile = kodiutil.getSetting('action.onBeforeFeature.file')
+            # self.beforeFeatureAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+            
+        # if kodiutil.getSetting('action.onBeginningAction', False):
+            # actionFile = kodiutil.getSetting('action.onBeginningAction.file')
+            # self.beginningAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+            
+        # if kodiutil.getSetting('action.onLastChapterAction', False):
+            # actionFile = kodiutil.getSetting('action.onLastChapterAction.file')
+            # self.lastChapterAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+            
+        # if kodiutil.getSetting('action.oneEndAction', False):
+            # actionFile = kodiutil.getSetting('action.onPause.file')
+            # self.endAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
 
     def formatStreamDetails(self, jsonstring):
         lines = json.dumps(jsonstring, indent=4, sort_keys=True).splitlines()
