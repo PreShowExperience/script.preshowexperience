@@ -982,7 +982,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
     def loadMenu(self):
         options = [('load', 'Load'), ('import', 'Import')]
 
-        idx = xbmcgui.Dialog().select('Loading Options', [x[1] for x in options])
+        idx = xbmcgui.Dialog().select('Load Options', [x[1] for x in options])
         if idx < 0:
             return
 
@@ -996,7 +996,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
     def saveMenu(self):
         options = [('save', 'Save'), ('saveas', 'Save as...'), ('export', 'Export')]
 
-        idx = xbmcgui.Dialog().select('Loading Options', [x[1] for x in options])
+        idx = xbmcgui.Dialog().select('Save Options', [x[1] for x in options])
         if idx < 0:
             return
 

@@ -33,6 +33,7 @@ W_DB = None
 DBVersion = None
 Song = None
 Trivia = None
+Slideshow = None                
 AudioFormatBumpers = None
 RatingsBumpers = None
 VideoBumpers = None
@@ -164,6 +165,7 @@ def initialize(path=None, callback=None):
     global DBVersion
     global Song
     global Trivia
+    global Slideshow                    
     global AudioFormatBumpers
     global RatingsBumpers
     global VideoBumpers
@@ -248,8 +250,19 @@ def initialize(path=None, callback=None):
 
     Trivia.create_table(fail_silently=True)
 
-    callback(' - AudioFormatBumpers')
+    callback(' - Slideshow')
+    
+    class Slideshow(ContentBase):
+        type = peewee.CharField()
+        TID = peewee.CharField(unique=True)
+        duration = peewee.FloatField(default=0)
+        slidePath = peewee.CharField(unique=True, null=True)
+        watched = peewee.IntegerField(default=0)
 
+    Slideshow.create_table(fail_silently=True)
+    
+    callback(' - AudioFormatBumpers')
+                              
     class BumperBase(ContentBase):
         is3D = peewee.BooleanField(default=False)
         isImage = peewee.BooleanField(default=False)

@@ -1358,9 +1358,45 @@ msgid "Duration"
 msgstr ""
 
 msgctxt "#32728"
-msgid "Command/Loop"
+msgid "Loop"
 msgstr ""
 
 msgctxt "#32729"
 msgid "Direction"
+msgstr ""
+
+msgctxt "#32730"
+msgid "Slideshow"
+msgstr ""
+
+msgctxt "#32731"
+msgid "Slide duration"
+msgstr ""
+
+msgctxt "#32732"
+msgid "Slideshow order"
+msgstr ""
+
+msgctxt "#32733"
+msgid "Alphabetical"
+msgstr ""
+
+msgctxt "#32734"
+msgid "Include Slideshow folder in updates"
+msgstr ""
+
+msgctxt "#32735"
+msgid "Select Slideshow Directory"
+msgstr ""
+
+msgctxt "#32736"
+msgid "Directory (in Slideshow folder)"
+msgstr ""
+
+msgctxt "#32737"
+msgid "Include Slideshow folder in updates"
+msgstr ""
+
+msgctxt "#32738"
+msgid "Max Slideshow duration"
 msgstr ""

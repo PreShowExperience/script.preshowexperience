@@ -719,14 +719,7 @@ class Feature(Item):
 ################################################################################
 class Trivia(Item):
     _type = 'trivia'
-    _elements = (
-        {
-            'attr': 'format',
-            'type': None,
-            'limits': [None, 'slide', 'video'],
-            'name': T(32030, 'Format'),
-            'default': None
-        },     
+    _elements = (   
         {
             'attr': 'triviaSelect',
             'type': None,
@@ -833,8 +826,156 @@ class Trivia(Item):
                 return False
 
         return True
+        
+################################################################################
+# Slideshow
+################################################################################
+class Slideshow(Item):
+    _type = 'slideshow'
+    _elements = (     
+        {
+            'attr': 'slideshoworder',
+            'type': None,
+            'limits': ['Alphabetical', 'Random'],
+            'name': T(32732, 'Slideshow Order'),
+            'default': None
+        }, 
+        {
+            'attr': 'slideshowSelect',
+            'type': None,
+            'limits': ['Default', 'Directory'],
+            'name': T(32735, 'Select Slideshow Directory'),
+            'default': None
+        },          
+        {
+            'attr': 'slideshowDir',
+            'type': None,
+            'limits': LIMIT_DIR,
+            'name': '- {0}'.format(T(32736, 'Directory (in Slideshow folder)')),
+            'default': ''
+        },         
+        {
+            'attr': 'slideshowduration', 
+            'type': None,
+            'limits': ['1 minute', '2 minutes', '3 minutes', '4 minutes', '5 minutes', '10 minutes', '15 minutes', '30 minutes', '1 hour', '2 hours', '3 hours', '4 hours'],
+            'name': T(32738, 'Max Slideshow Duration'),
+            'default': '5 minutes'
+        },
+        {
+            'attr': 'slideDuration',
+            'type': int,
+            'limits': ['5 seconds', '6 seconds', '7 seconds', '8 seconds', '9 seconds', '10 seconds', '15 seconds', '30 seconds', '1 minute', '2 minutes', '5 minutes', '10 minutes', '15 minutes', '30 minutes', '1 hour', '2 hour', '3 hour', '4 hours'],
+            'name': T(32731, 'Slide Duration'), 
+            'default': '8 seconds'
+        },
+        {
+            'attr': 'transition',
+            'type': None,
+            'limits': [None, 'none', 'fade', 'slideL', 'slideR', 'slideU', 'slideD'],
+            'name': T(32036, 'Transition'),
+            'default': None
+        },
+        {
+            'attr': 'transitionDuration',
+            'type': int,
+            'limits': (0, 2000, 100),
+            'name': T(32043, 'Transition: Duration (milliseconds)'),
+            'default': 0
+        },
+        {
+            'attr': 'music',
+            'type': None,
+            'limits': [None, 'off', 'content', 'dir', 'file'],
+            'name': T(32027, 'Music'),
+            'default': None
+        },
+        {
+            'attr': 'musicDir',
+            'type': None,
+            'limits': LIMIT_DIR,
+            'name': T(32044, 'Music: Path'),
+            'default': None
+        },
+        {
+            'attr': 'musicFile',
+            'type': None,
+            'limits': LIMIT_FILE_DEFAULT,
+            'name': T(32045, 'Music: File'),
+            'default': None
+        }
+    )
+    displayName = T(32730, 'Slideshow')
+    typeChar = 'Slideshow'
 
+    def __init__(self):
+        Item.__init__(self)
+        self.format = None
+        self.slideshoworder = 'Alphabetical'
+        self.slideshowSelect = None
+        self.slideshowDir = ''
+        self.duration = 0
+        self.slideshowduration = '10 minutes'
+        self.sDuration = 8
+        self.slideDuration = '8 seconds'
+        self.transition = None
+        self.transitionDuration = 0
+        self.music = None
+        self.musicDir = None
+        self.musicFile = None
+        
+    @staticmethod
+    def convert_duration_to_seconds(duration_option):
+        # Convert a human-readable duration option to seconds. 
+        time_mapping = {
+            'minute': 60,
+            'hour': 3600
+        }
 
+        parts = duration_option.split()
+        if len(parts) == 2:
+            quantity, unit = parts
+            unit = unit.rstrip('s')  # Remove 's' for plural form
+        else:  # For handling '1 hour' which doesn't have the quantity '1' explicitly
+            quantity, unit = '1', parts[0]
+
+        # Convert the quantity to an integer and multiply by the corresponding number of seconds
+        return int(quantity) * time_mapping.get(unit, 1)
+    
+    def set_duration(self, duration):
+        self.slideshowduration = slideshowduration
+        self.duration = self.convert_duration_to_seconds(slideshowduration)
+        self.slideduration = slideduration
+        self.sDuration = self.convert_duration_to_seconds(slideduration)
+    
+    def display(self):
+        name = self.name or self.displayName
+        return name
+
+    def getLive(self, attr):
+        if not attr == 'musicDir' or self.music is not None:
+            return Item.getLive(self, attr)
+
+        return util.getSettingDefault('{0}.{1}'.format(self._type, attr))
+
+    def elementVisible(self, e):
+        attr = e['attr']            
+        if attr == 'slideshowDir':
+            if self.getLive('slideshowSelect') != 'Directory':
+                return False            
+        if attr == 'musicDir':
+            if self.getLive('music') != 'dir':
+                return False
+        elif attr == 'musicFile':
+            if self.getLive('music') != 'file':
+                return False
+        elif attr == 'transitionDuration':
+            transition = self.getLive('transition')
+            if not transition or transition == 'none':
+                return False
+
+        return True
+        
+        
 ################################################################################
 # Trailer
 ################################################################################
@@ -1341,7 +1482,7 @@ class Command(Item):
             'name': T(32726, 'Time of day')
         }
     )
-    displayName = T(32728, 'Command/Loop')
+    displayName = T(32728, 'Loop')
     typeChar = 'Command'
 
     def _set(self, attr, value):
@@ -1434,6 +1575,7 @@ CONTENT_CLASSES = {
     'command': Command,
     'feature': Feature,
     'trivia': Trivia,
+    'slideshow': Slideshow,
     'trailer': Trailer,
     'video': Video
 }
@@ -1441,10 +1583,11 @@ CONTENT_CLASSES = {
 ITEM_TYPES = [
     ('VideoBumper', T(32334, 'Video Bumper'), 'VideoBumper', Video),
     ('Trivia', T(32026, 'Trivia'), 'Trivia', Trivia),
+    ('Slideshow', T(32730, 'Slideshow'), 'Slideshow', Slideshow),
     ('Trailer', T(32049, 'Trailers'), 'Trailer', Trailer),
     ('AudioFormatBumper', T(32329, 'Audio Format Bumper'), 'AudioFormatBumper', AudioFormat),
     ('Feature', T(32073, 'Feature'), 'Feature', Feature),
-    ('Command', T(32728, 'Command/Loop'), 'Command', Command),
+    ('Command', T(32728, 'Loop'), 'Command', Command),
     ('Action', T(32083, 'Actions'), 'Action', Action)
 ]
 

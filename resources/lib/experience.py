@@ -237,6 +237,7 @@ class ExperienceWindow(kodigui.BaseWindow):
         self.action = None
 
     def setImage(self, url):
+        kodiutil.DEBUG_LOG(f"ExperienceWindow: Setting image - {url}")
         self._paused = False
         self._pauseStart = 0
         self._pauseDuration = 0
@@ -1143,10 +1144,14 @@ class ExperiencePlayer(xbmc.Player):
                         self.window.finishPause()
 
             return True
+        except Exception as e:
+            kodiutil.DEBUG_LOG(f"Error encountered: {str(e)}")
         finally:
             self.window.clear()
+        
 
     def showImageFromQueue(self, image, info, first=None):
+        kodiutil.DEBUG_LOG(f"Displaying image: {image.path}, Duration: {image.duration}")
         self.window.setImage(image.path)
 
         stop = time.time() + image.duration
@@ -1244,6 +1249,8 @@ class ExperiencePlayer(xbmc.Player):
                         image = image_queue.next(start)
                 else:
                     return
+        except Exception as e:
+            kodiutil.DEBUG_LOG(f"Error encountered: {str(e)}")
         finally:
             kodiutil.setGlobalProperty('paused', '')
             xbmc.enableNavSounds(True)
@@ -1312,6 +1319,8 @@ class ExperiencePlayer(xbmc.Player):
         if playable.type == 'IMAGE':
             try:
                 action = self.showImage(playable)
+            except Exception as e:
+                kodiutil.DEBUG_LOG(f"Error encountered: {str(e)}")
             finally:
                 self.window.clear()
 
