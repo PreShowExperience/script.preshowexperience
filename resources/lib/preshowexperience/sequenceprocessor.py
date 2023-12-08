@@ -738,6 +738,8 @@ class TriviaHandler:
             # util.DEBUG_LOG('watched: {0}'.format(watched))
             try:
                 trivia = DB.Trivia.get(DB.Trivia.TID == watched.WID)
+                if triviadirectory not in str(trivia.answerPath):
+                    continue
             except DB.peewee.DoesNotExist:
                 continue
 
