@@ -724,7 +724,7 @@ class TriviaHandler:
             sItem.getLive('aDuration'),
             clue, clue, clue, clue, clue, clue, clue, clue, clue, clue,
             sItem.getLive('qDuration')
-        )
+        )     
         for trivia in DB.Trivia.select().order_by(DB.fn.Random()):
             if triviadirectory in str(trivia.answerPath):
                 try:
@@ -754,7 +754,7 @@ class TriviaHandler:
         if pool:
             random.shuffle(pool)
             for t in pool:
-                yield self.createTriviaImages(sItem, t, durations)
+                yield self.createTriviaImages(sItem, t, durations)  
 
     def createTriviaImages(self, sItem, trivia, durations):
         clues = [getattr(trivia, 'cluePath{0}'.format(x)) for x in range(9, -1, -1)]
@@ -875,6 +875,13 @@ class SlideshowHandler:
     @DB.session    
     def getSlideshowImages(self, sItem):        
         util.DEBUG_LOG('Select Slideshow : {0}'.format(sItem.getLive('slideshowSelect')))
+        slideshow_order = sItem.getLive('slideshoworder')
+        sDuration = sItem.getLive('sDuration')
+        durations = (
+            sDuration,
+            sDuration
+        )
+        
         if sItem.getLive('slideshowSelect') == 'Directory':
             slideshowdirectory = SlideshowHandler.extract_directory(sItem.getLive('slideshowDir'))
             contentPath = util.getSettingDefault('content.path')
@@ -886,23 +893,21 @@ class SlideshowHandler:
             slideshowdirectory = slideshowdirectory.replace(contentPath, '')
             util.DEBUG_LOG('Final Slideshow Directory: {0}'.format(slideshowdirectory))
             
+            if slideshow_order == 'Alphabetical':
+                for slidesimages in DB.Slideshow.select().where(DB.Slideshow.slidePath.contains(slideshowdirectory)).order_by(DB.Slideshow.slidePath):
+                    yield self.createSlideshowImages(sItem, slidesimages, durations)
+            elif slideshow_order == 'Random':
+                for slidesimages in DB.Slideshow.select().where(DB.Slideshow.slidePath.contains(slideshowdirectory)).order_by(DB.fn.Random()):
+                    yield self.createSlideshowImages(sItem, slidesimages, durations)            
         else:
             slideshowdirectory = ''
-            util.DEBUG_LOG('Final Slideshow Directory: {0}'.format(slideshowdirectory))
-            
-        sDuration = sItem.getLive('sDuration')
-        durations = (
-            sDuration,
-            sDuration
-        )
-        slideshow_order = sItem.getLive('slideshoworder')
-
-        if slideshow_order == 'Alphabetical':
-            for slidesimages in DB.Slideshow.select().order_by(DB.Slideshow.slidePath):
-                yield self.createSlideshowImages(sItem, slidesimages, durations)
-        elif slideshow_order == 'Random':
-            for slidesimages in DB.Slideshow.select().order_by(DB.fn.Random()):
-                yield self.createSlideshowImages(sItem, slidesimages, durations)
+            util.DEBUG_LOG('Final Slideshow Directory: {0}'.format(slideshowdirectory))                   
+            if slideshow_order == 'Alphabetical':
+                for slidesimages in DB.Slideshow.select().order_by(DB.Slideshow.slidePath):
+                    yield self.createSlideshowImages(sItem, slidesimages, durations)
+            elif slideshow_order == 'Random':
+                for slidesimages in DB.Slideshow.select().order_by(DB.fn.Random()):
+                    yield self.createSlideshowImages(sItem, slidesimages, durations)
 
     def extract_directory(path):
         util.DEBUG_LOG('Content Full Path: {0}'.format(path))
@@ -1565,6 +1570,7 @@ class SequenceProcessor:
                 continue
 
             handler = self.handlers.get(sItem._type)
+
             if handler:
                 if sItem._type == 'command':
                     offset = handler(self, sItem)
@@ -1572,7 +1578,7 @@ class SequenceProcessor:
                         pos += offset
                         if offset:
                             continue
-                    else:
+                    elif offset is not None:  # Add a check to ensure offset is not None
                         offset.setFrom(pos)
                         self.playables.append(offset)
                 else:
@@ -1676,4 +1682,3 @@ class SequenceProcessor:
             i += 1
                 
         return None
-
