@@ -637,7 +637,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         self.updateSpecials()
 
     def addItems(self, items):
-        kodiutil.DEBUG_LOG('addItems: Starting to add items')
+        #kodiutil.DEBUG_LOG('addItems: Starting to add items')
         final = []
         for sItem in items:
             mli = kodigui.ManagedListItem(sItem.display(), data_source=sItem)
@@ -1100,13 +1100,11 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         self.sequenceControl.reset()
         self.fillSequence()
         # Insert default feature module
-        # Assuming this is how you get a new 'Feature' type module
         new_feature = preshowexperience.sequence.getItem('Feature')()
-        new_feature.type = 'Feature'  # Setting type
-        new_feature.typeName = 'Feature'  # Setting type.name
-        new_feature.enabled = True  # Setting enabled property
+        new_feature.type = 'Feature'  
+        new_feature.typeName = 'Feature'  
+        new_feature.enabled = True  
 
-        # Assuming 'insertItem' is the correct method to add this item to your sequence
         self.insertItem(new_feature, 0, modify=False)
 
         self.updateFirstLast()
