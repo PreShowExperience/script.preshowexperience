@@ -231,6 +231,7 @@ class ItemSettingsWindow(kodigui.BaseDialog):
         self.fillSettingsList(update=True)
 
     def _editItemSetting(self):
+        contentPath = kodiutil.getPathSetting('content.path')
         item = self.settingsList.getSelectedItem()
         if not item or item.getProperty('type') == 'integer':
             return
@@ -261,7 +262,10 @@ class ItemSettingsWindow(kodigui.BaseDialog):
                     select = False
 
             if select:
-                value = xbmcgui.Dialog().browse(1, T(32521, 'Select File'), '', None, False, False, sItem.getSetting(attr))
+                if sItem.getSetting(attr):
+                    value = xbmcgui.Dialog().browse(1, T(32521, 'Select File'), '', None, False, False, sItem.getSetting(attr))
+                else:
+                    value = xbmcgui.Dialog().browse(1, T(32521, 'Select File'), '', None, False, False, contentPath)
                 if not value:
                     return
                 value = value
@@ -290,7 +294,7 @@ class ItemSettingsWindow(kodigui.BaseDialog):
                     select = False
 
             if select:
-                value = xbmcgui.Dialog().browse(0, T(32524, 'Select Directory'), 'files')
+                value = xbmcgui.Dialog().browse(0, T(32524, 'Select Directory'), 'files', defaultt=contentPath)
                 if not value:
                     return
                 value = value
@@ -637,18 +641,13 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         self.updateSpecials()
 
     def addItems(self, items):
-        #kodiutil.DEBUG_LOG('addItems: Starting to add items')
         final = []
         for sItem in items:
             mli = kodigui.ManagedListItem(sItem.display(), data_source=sItem)
             mli.setProperty('type', sItem.fileChar)
-            #kodiutil.DEBUG_LOG(f'addItems: Set type property to {sItem.fileChar} for {mli}')
             mli.setProperty('type.name', sItem.displayName)
-            #kodiutil.DEBUG_LOG(f'addItems: Set type.name property to {sItem.displayName} for {mli}')
             mli.setProperty('enabled', sItem.enabled and '1' or '')
-            #kodiutil.DEBUG_LOG(f'addItems: Set enabled property to {sItem.enabled} for {mli}')
             mli.setProperty('theme.path', THEME['theme.path'])
-            #kodiutil.DEBUG_LOG(f'addItems: Set theme.path property to {THEME["theme.path"]} for {mli}')
 
             if not self.updateItemSettings(mli):
                 mli.setProperty('error', '1')
@@ -657,7 +656,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
 
         self.sequenceControl.addItems(final)
 
-        # Navigation issue if this is not done
+        # Helix has navigation issue if this is not done
         dummy = kodigui.ManagedListItem()
         self.sequenceControl.addItem(dummy)
         self.sequenceControl.removeItem(dummy.pos())
@@ -820,11 +819,6 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('sequence.item.enabled', dataSource and dataSource.enabled and '1' or '')            
 
     def removeItem(self):
-        items = [li.dataSource for li in self.sequenceControl if li.dataSource]
-        if not preshowexperience.sequence.sequenceHasFeatures(items):
-            xbmcgui.Dialog().ok(T(32573, 'Failed'),T(32553, 'The preshow must have a feature module.'))
-            return
-        
         if not xbmcgui.Dialog().yesno(T(32527, 'Confirm'), T(32537, 'Do you really want to remove this module?')):
             return
 
@@ -1099,17 +1093,6 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('sequence.visible.dialog', self.sequenceData.visibleInDialog() and "1" or "")
         self.sequenceControl.reset()
         self.fillSequence()
-        # Insert default feature module
-        new_feature = preshowexperience.sequence.getItem('Feature')()
-        new_feature.type = 'Feature'  
-        new_feature.typeName = 'Feature'  
-        new_feature.enabled = True  
-
-        self.insertItem(new_feature, 0, modify=False)
-
-        self.updateFirstLast()
-        self.updateSpecials()
-
 
     def savePath(self, path=None, pathName=None):
         if pathName is None and self.sequenceData is not None:
