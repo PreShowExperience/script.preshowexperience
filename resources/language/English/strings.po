@@ -1428,3 +1428,15 @@ msgstr ""
 msgctxt "#32745"
 msgid "Fast Forward"
 msgstr ""
+
+msgctxt "#32746"
+msgid "Feature Required"
+msgstr ""
+
+msgctxt "#32747"
+msgid "Save Required"
+msgstr ""
+
+msgctxt "#32748"
+msgid "This setting can only be changed after the sequence has been saved."
+msgstr ""
