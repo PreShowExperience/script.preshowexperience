@@ -391,6 +391,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         self.addItemControl = kodigui.ManagedControlList(self, self.ADD_ITEM_LIST_ID, 22)
         self.itemOptionsControl = kodigui.ManagedControlList(self, self.ITEM_OPTIONS_LIST_ID, 22)
         self.start()
+                          
 
     def onClick(self, controlID):
         if self.editing:
@@ -472,26 +473,40 @@ class SequenceEditorWindow(kodigui.BaseWindow):
     def onFocus(self, controlID):
         if controlID == self.MENU_ADDON_SETTINGS_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Settings[/B]: Customize PreShow Experience to your needs')
+                                   
         elif controlID == self.MENU_NEW_BUTTON_ID:
            kodiutil.setGlobalProperty('option.hint', '[B]New[/B]: Create a new empty sequence')
+                                  
         elif controlID == self.MENU_SAVE_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Save[/B]: Save or export the current sequence')
+                                   
         elif controlID == self.MENU_LOAD_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Open[/B]: Load or import a sequence')
+                                   
         elif controlID == self.MENU_PLAY_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Play[/B]: Test the current sequence with a placeholder feature')
+                                   
         elif controlID == self.MENU_THEME_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Icons[/B]: Change icons for the sequence editor')
+                                   
         elif controlID == self.MENU_CONDITIONS_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B] Conditions[/B]: Set the conditions for auto-selecting the current sequence')
+                                   
         elif controlID == self.MENU_SEQUENCE_ACTIVE_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Auto Select[/B]: Set whether this sequnce is active for auto-selection')
+                                   
         elif controlID == self.MENU_SHOW_OPTION_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Show In Dialog[/B]: Set whether this sequence will be shown on the sequence selection dialog')
+                                   
         elif controlID == self.MENU_EDIT_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Edit[/B]: Bring up the sequence editor for the current sequence')
+                              
         elif controlID == self.MENU_EDIT_SEQ_NAME_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Name[/B]: Name or rename this sequence')
+                                   
+             
+                                                          
+                               
 
     def setEditMode(self, on=True):
         self.editing = on
@@ -563,6 +578,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         for i in preshowexperience.sequence.ITEM_TYPES:
             item = kodigui.ManagedListItem(
                 '{0}: {1}'.format(T(32530, 'Add'), i[1]),
+                     
                 thumbnailImage='{0}large/script.preshow-{1}.png'.format(THEME['theme.path'], i[2]),
                 data_source=i[0]
             )
@@ -641,13 +657,18 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         self.updateSpecials()
 
     def addItems(self, items):
+                                                             
         final = []
         for sItem in items:
             mli = kodigui.ManagedListItem(sItem.display(), data_source=sItem)
             mli.setProperty('type', sItem.fileChar)
+                                               
             mli.setProperty('type.name', sItem.displayName)
+                                                                                                     
             mli.setProperty('enabled', sItem.enabled and '1' or '')
+                                                
             mli.setProperty('theme.path', THEME['theme.path'])
+                                                                                                        
 
             if not self.updateItemSettings(mli):
                 mli.setProperty('error', '1')
@@ -656,7 +677,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
 
         self.sequenceControl.addItems(final)
 
-        # Helix has navigation issue if this is not done
+        # Navigation issue if this is not done
         dummy = kodigui.ManagedListItem()
         self.sequenceControl.addItem(dummy)
         self.sequenceControl.removeItem(dummy.pos())
@@ -819,6 +840,15 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('sequence.item.enabled', dataSource and dataSource.enabled and '1' or '')            
 
     def removeItem(self):
+        items = [li.dataSource for li in self.sequenceControl if li.dataSource]
+        if not preshowexperience.sequence.sequenceHasFeatures(items):
+            xbmcgui.Dialog().ok(T(32573, 'Failed'),T(32553, 'The preshow must have a feature module.'))
+            return
+        
+                                                                                                                  
+                  
+
+                                                        
         if not xbmcgui.Dialog().yesno(T(32527, 'Confirm'), T(32537, 'Do you really want to remove this module?')):
             return
 
@@ -1092,7 +1122,20 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('ACTIVE', self.sequenceData.active and '1' or '0')
         kodiutil.setGlobalProperty('sequence.visible.dialog', self.sequenceData.visibleInDialog() and "1" or "")
         self.sequenceControl.reset()
-        self.fillSequence()
+        self.fillSequence()                                                     
+                                                             
+                                                              
+        new_feature = preshowexperience.sequence.getItem('Feature')()
+        new_feature.type = 'Feature'  
+        new_feature.typeName = 'Feature'  
+        new_feature.enabled = True  
+                              
+                             
+        self.insertItem(new_feature, 0, modify=False)
+
+        self.updateFirstLast()
+        self.updateSpecials()
+        
 
     def savePath(self, path=None, pathName=None):
         if pathName is None and self.sequenceData is not None:
