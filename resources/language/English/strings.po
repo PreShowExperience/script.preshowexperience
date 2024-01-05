@@ -1400,3 +1400,43 @@ msgstr ""
 msgctxt "#32738"
 msgid "Max Slideshow duration"
 msgstr ""
+
+msgctxt "#32739"
+msgid "The PreShow must have a feature module."
+msgstr ""
+
+msgctxt "#32740"
+msgid "Prioritize Watched Trivia"
+msgstr ""
+
+msgctxt "#32741"
+msgid "Trailer"
+msgstr ""
+
+msgctxt "#32742"
+msgid "Action"
+msgstr ""
+
+msgctxt "#32743"
+msgid "Alternate Skip Button (Shield)"
+msgstr ""
+
+msgctxt "#32744"
+msgid "Select"
+msgstr ""
+
+msgctxt "#32745"
+msgid "Fast Forward"
+msgstr ""
+
+msgctxt "#32746"
+msgid "Feature Required"
+msgstr ""
+
+msgctxt "#32747"
+msgid "Save Required"
+msgstr ""
+
+msgctxt "#32748"
+msgid "This setting can only be changed after the sequence has been saved."
+msgstr ""

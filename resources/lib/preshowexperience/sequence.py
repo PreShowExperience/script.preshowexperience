@@ -1581,14 +1581,14 @@ CONTENT_CLASSES = {
 }
 
 ITEM_TYPES = [
-    ('VideoBumper', T(32334, 'Video Bumper'), 'VideoBumper', Video),
+    ('VideoBumper', T(32023, 'Video'), 'VideoBumper', Video),
+    ('Trailer', T(32741, 'Trailer'), 'Trailer', Trailer),
+    ('AudioFormatBumper', T(32074, 'Audio Format'), 'AudioFormatBumper', AudioFormat),
     ('Trivia', T(32026, 'Trivia'), 'Trivia', Trivia),
     ('Slideshow', T(32730, 'Slideshow'), 'Slideshow', Slideshow),
-    ('Trailer', T(32049, 'Trailers'), 'Trailer', Trailer),
-    ('AudioFormatBumper', T(32329, 'Audio Format Bumper'), 'AudioFormatBumper', AudioFormat),
-    ('Feature', T(32073, 'Feature'), 'Feature', Feature),
     ('Command', T(32728, 'Loop'), 'Command', Command),
-    ('Action', T(32083, 'Actions'), 'Action', Action)
+    ('Action', T(32742, 'Action'), 'Action', Action),
+    ('Feature', T(32073, 'Feature'), 'Feature', Feature)
 ]
 
 
@@ -1604,6 +1604,14 @@ def sequenceHasFeature(items):
             return True
     return False
 
-
+def sequenceHasFeatures(items):
+    numFeatures = 0
+    for i in items:
+        if i._type == 'feature':
+            numFeatures = numFeatures + 1
+        if numFeatures > 1:
+            return True
+    return False
+    
 def loadSequence(path):
     return SequenceData.load(path)

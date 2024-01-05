@@ -231,6 +231,7 @@ class ItemSettingsWindow(kodigui.BaseDialog):
         self.fillSettingsList(update=True)
 
     def _editItemSetting(self):
+        contentPath = kodiutil.getPathSetting('content.path')
         item = self.settingsList.getSelectedItem()
         if not item or item.getProperty('type') == 'integer':
             return
@@ -261,7 +262,10 @@ class ItemSettingsWindow(kodigui.BaseDialog):
                     select = False
 
             if select:
-                value = xbmcgui.Dialog().browse(1, T(32521, 'Select File'), '', None, False, False, sItem.getSetting(attr))
+                if sItem.getSetting(attr):
+                    value = xbmcgui.Dialog().browse(1, T(32521, 'Select File'), '', None, False, False, sItem.getSetting(attr))
+                else:
+                    value = xbmcgui.Dialog().browse(1, T(32521, 'Select File'), '', None, False, False, contentPath)
                 if not value:
                     return
                 value = value
@@ -290,7 +294,7 @@ class ItemSettingsWindow(kodigui.BaseDialog):
                     select = False
 
             if select:
-                value = xbmcgui.Dialog().browse(0, T(32524, 'Select Directory'), 'files')
+                value = xbmcgui.Dialog().browse(0, T(32524, 'Select Directory'), 'files', defaultt=contentPath)
                 if not value:
                     return
                 value = value
@@ -652,7 +656,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
 
         self.sequenceControl.addItems(final)
 
-        # Helix has navigation issue if this is not done
+        # Navigation issue if this is not done
         dummy = kodigui.ManagedListItem()
         self.sequenceControl.addItem(dummy)
         self.sequenceControl.removeItem(dummy.pos())
@@ -815,6 +819,10 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('sequence.item.enabled', dataSource and dataSource.enabled and '1' or '')            
 
     def removeItem(self):
+        items = [li.dataSource for li in self.sequenceControl if li.dataSource]
+        if not preshowexperience.sequence.sequenceHasFeatures(items):
+            xbmcgui.Dialog().ok(T(32746, 'Feature Required'),T(32739, 'The preshow must have a feature module.'))
+            return
         if not xbmcgui.Dialog().yesno(T(32527, 'Confirm'), T(32537, 'Do you really want to remove this module?')):
             return
 
@@ -962,14 +970,20 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         elif controlID == self.MENU_CONDITIONS_BUTTON_ID:
             self.setAttributes()
         elif controlID == self.MENU_SEQUENCE_ACTIVE_BUTTON_ID:
-            val = not self.sequenceData.active
-            self.sequenceData.active = val
-            kodiutil.setGlobalProperty('ACTIVE', self.sequenceData.active and '1' or '0')
-            self.modified = True
+            if self.sequenceData is None:
+                xbmcgui.Dialog().ok(T(32747, 'Save Required'),T(32748, 'This setting can only be changed after the sequence has been saved.'))
+            else:
+                val = not self.sequenceData.active
+                self.sequenceData.active = val
+                kodiutil.setGlobalProperty('ACTIVE', self.sequenceData.active and '1' or '0')
+                self.modified = True
         elif controlID == self.MENU_SHOW_OPTION_BUTTON_ID:
-            self.sequenceData.visibleInDialog(not self.sequenceData.visibleInDialog())
-            kodiutil.setGlobalProperty('sequence.visible.dialog', self.sequenceData.visibleInDialog() and "1" or "")
-            self.modified = True
+            if self.sequenceData is None:
+                xbmcgui.Dialog().ok(T(32747, 'Save Required'),T(32748, 'This setting can only be changed after the sequence has been saved.'))
+            else:        
+                self.sequenceData.visibleInDialog(not self.sequenceData.visibleInDialog())
+                kodiutil.setGlobalProperty('sequence.visible.dialog', self.sequenceData.visibleInDialog() and "1" or "")
+                self.modified = True
         elif controlID == self.MENU_EDIT_SEQ_NAME_ID:
             name = xbmcgui.Dialog().input(T(32616, 'Rename current sequence'), self.sequenceData.name)
             if not name:
@@ -1088,8 +1102,15 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('ACTIVE', self.sequenceData.active and '1' or '0')
         kodiutil.setGlobalProperty('sequence.visible.dialog', self.sequenceData.visibleInDialog() and "1" or "")
         self.sequenceControl.reset()
-        self.fillSequence()
-
+        self.fillSequence()                                                     
+        new_feature = preshowexperience.sequence.getItem('Feature')()
+        new_feature.type = 'Feature'  
+        new_feature.typeName = 'Feature'  
+        new_feature.enabled = True  
+        self.insertItem(new_feature, 0, modify=False)
+        self.updateFirstLast()
+        self.updateSpecials()
+        
     def savePath(self, path=None, pathName=None):
         if pathName is None and self.sequenceData is not None:
             pathName = self.sequenceData.pathName
@@ -1341,6 +1362,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
                 )
                 if new:
                     self.setName('')
+                    self.new()
                     return
                 else:
                     savePath = self.defaultSavePath()

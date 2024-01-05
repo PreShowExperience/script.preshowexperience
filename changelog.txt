@@ -1,11 +1,16 @@
 Changelog for PreShow Experience
 
+[- 0.2.5 -]
+- change:   New sequences include feature module and only additional feature modules can be deleted
+- add:      Added option for alternate next button on nVidia Shield
+- change:   Bunmper file and directory browse starts in PreShow content folder
+
 [- 0.2.4 -]
-- add:    Slideshow Module
+- add:      Slideshow Module
 
 [- 0.2.3 -]
-- add:    Added pastebin log posting
-- add:    Added new options for the command module, including number of loops, duration and time of day
+- add:      Added pastebin log posting
+- add:      Added new options for the command module, including number of loops, duration and time of day
 - fix:      Added genres, rating and resolution data for imdb trailers (Note this takes a while to retrieve the trailer information)
 - fix:      Updated code to make sequences filter by date properly
 - fix:      Modified code to make linked python scripts work in action files

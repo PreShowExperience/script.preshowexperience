@@ -319,6 +319,9 @@ class ExperienceWindow(kodigui.BaseWindow):
 
     def onAction(self, action):
         # print action.getId()
+        scriptAddon = xbmcaddon.Addon('script.preshowexperience')
+        shieldskipbutton = scriptAddon.getSetting('shieldskip.button')
+        DEBUG_LOG('Shield skip button: {0}'.format(shieldskipbutton))    
         try:
             if action == xbmcgui.ACTION_PREVIOUS_MENU or action == xbmcgui.ACTION_NAV_BACK or action == xbmcgui.ACTION_STOP:
                 self.volume.stop()
@@ -342,6 +345,10 @@ class ExperienceWindow(kodigui.BaseWindow):
                 self.action = 'BACK'
             elif action == xbmcgui.ACTION_PAUSE:
                 self.pause()
+            elif action == xbmcgui.ACTION_PLAYER_FORWARD and shieldskipbutton == "Fast Forward":
+                self.action = 'SKIP'
+            elif action == xbmcgui.ACTION_SELECT_ITEM and shieldskipbutton == "Select":
+                self.action = 'SKIP'
             elif action == xbmcgui.ACTION_CONTEXT_MENU:
                 return
         except:
@@ -350,6 +357,9 @@ class ExperienceWindow(kodigui.BaseWindow):
 
         kodigui.BaseWindow.onAction(self, action)
 
+    def onLastChapter(self):
+        self.player.onPlayLastChapter()
+        kodiutil.setGlobalProperty('lastChapter', '1')
     def onPause(self):
         self.player.onPlayBackPaused()
         kodiutil.setGlobalProperty('paused', '1')
@@ -361,6 +371,11 @@ class ExperienceWindow(kodigui.BaseWindow):
     def hasAction(self):
         return bool(self.action)
 
+    def on_lastchapter(self):
+        try:
+            return int(xbmc.getInfoLabel('Player.Chapter')) == self.totalchapters
+        except ValueError:
+            return False
     def pause(self):
         if xbmc.getCondVisibility('Player.HasAudio'):
             if xbmc.getCondVisibility('Player.Paused'):
@@ -521,6 +536,13 @@ class ExperiencePlayer(xbmc.Player):
             self.pauseAction.run()
 
     @requiresStart
+    def onPlayLastChapter(self):
+        DEBUG_LOG('Last Chapter')
+        if self.lastChapterAction:
+            DEBUG_LOG('Executing last chapter action: {0}'.format(self.lastChapterAction))
+            self.lastChapterAction.run()
+            
+    @requiresStart
     def onPlayBackResumed(self):
         DEBUG_LOG('PLAYBACK RESUMED')
         if self.resumeAction is True:
@@ -630,6 +652,10 @@ class ExperiencePlayer(xbmc.Player):
         self.pauseAction = None
         self.resumeAction = None
         self.abortAction = None
+        # self.beforeFeatureAction = None
+        # self.beginningAction = None
+        # self.lastChapterAction = None
+        # self.endAction = None
 
         if kodiutil.getSetting('action.onPause', False):
             actionFile = kodiutil.getSetting('action.onPause.file')
@@ -644,6 +670,22 @@ class ExperiencePlayer(xbmc.Player):
         if kodiutil.getSetting('action.onAbort', False):
             actionFile = kodiutil.getSetting('action.onAbort.file')
             self.abortAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+            
+        # if kodiutil.getSetting('action.onBeforeFeature', False):
+            # actionFile = kodiutil.getSetting('action.onBeforeFeature.file')
+            # self.beforeFeatureAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+            
+        # if kodiutil.getSetting('action.onBeginningAction', False):
+            # actionFile = kodiutil.getSetting('action.onBeginningAction.file')
+            # self.beginningAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+            
+        # if kodiutil.getSetting('action.onLastChapter', False):
+            # actionFile = kodiutil.getSetting('action.onLastChapterAction.file')
+            # self.lastChapterAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+            
+        # if kodiutil.getSetting('action.oneEnd', False):
+            # actionFile = kodiutil.getSetting('action.onPause.file')
+            # self.endAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
 
     def formatStreamDetails(self, jsonstring):
         lines = json.dumps(jsonstring, indent=4, sort_keys=True).splitlines()
@@ -921,19 +963,6 @@ class ExperiencePlayer(xbmc.Player):
             xbmc.sleep(100)
         self.hasFullscreened = True
         DEBUG_LOG('VIDEO HAS GONE FULLSCREEN')
-
-    # Currently not used. This is probably a better way to add to the playlist, but we lose
-    # the ability to have thumbnails and real titles
-    def addVideoToPlaylist(self, video):
-        path = video.path
-
-        if isURLFile(path):
-            path = resolveURLFile(path)
-        else:
-            if video.userAgent:
-                path += '|User-Agent=' + video.userAgent
-
-        rpc.Playlist.Add(playlistid=xbmc.PLAYLIST_VIDEO, item={'file': path})
 
     def addFeatureToPlaylist(self, feature):
         if feature.dbType == 'movie':
