@@ -28,6 +28,6 @@
             <screenshot>resources/screenshots/screenshot2.jpg</screenshot>
             <screenshot>resources/screenshots/screenshot3.jpg</screenshot>
         </assets>
-        <news>PreShow Experience for Kodi 20 Nexus</news>
+        <news>PreShow Experience for Kodi</news>
     </extension>
 </addon>
