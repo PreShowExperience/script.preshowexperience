@@ -147,24 +147,6 @@
 						<close>true</close>
 					</control>
 				</setting>
-				<!-- <setting id="pastebin.user" type="string" label="32096" help="">
-					<level>0</level>
-					<default/>
-					<constraints>
-						<allowempty>true</allowempty>
-					</constraints>
-					<control type="edit" format="string">
-						<heading>32096</heading>
-					</control>
-				</setting>
-				<setting id="pastebin.delete.key" type="action" label="32097" help="">
-					<level>0</level>
-					<data>RunScript(script.preshowexperience,pastebin.delete.key)</data>
-					<constraints>
-						<allowempty>true</allowempty>
-					</constraints>
-					<control type="button" format="action"/>
-				</setting> -->
 			</group>
 			<group id="4" label="32112">
 				<setting id="reset.database" type="action" label="32099" help="">
@@ -182,18 +164,6 @@
 						<allowempty>true</allowempty>
 					</constraints>
 					<control type="button" format="action"/>
-				</setting>
-			</group>
-			<group id="5" label="32114">
-				<setting id="import.cvfiles" type="string" label="32115" help="">
-					<level>0</level>
-                    <default/>
-                    <constraints>
-                        <allowempty>true</allowempty>
-                    </constraints>
-					<control type="button" format="action">
-                        <data>RunScript(script.preshowexperience,import.cvfiles)</data>
-                    </control>
 				</setting>
 			</group>
 		</category>
