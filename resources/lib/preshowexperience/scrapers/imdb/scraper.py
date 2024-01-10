@@ -73,8 +73,8 @@ class Scraper(object):
         threads = []
         movies = []
 
-        # Limiting the trailers to 40 arbitrarily
-        for movie in movies_to_scrape[:40]:
+        # Limiting the trailers to 60
+        for movie in movies_to_scrape[:60]:
             thread = threading.Thread(target=self.getDetailsThreaded, args=(movie, movies, details))
             threads.append(thread)
             thread.start()
