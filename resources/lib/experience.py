@@ -6,6 +6,7 @@ import threading
 import xbmc
 import xbmcgui
 import xbmcvfs
+import xbmcaddon
 
 from .kodijsonrpc import rpc
 
@@ -237,7 +238,7 @@ class ExperienceWindow(kodigui.BaseWindow):
         self.action = None
 
     def setImage(self, url):
-        kodiutil.DEBUG_LOG(f"ExperienceWindow: Setting image - {url}")
+        #kodiutil.DEBUG_LOG(f"ExperienceWindow: Setting image - {url}")
         self._paused = False
         self._pauseStart = 0
         self._pauseDuration = 0
@@ -321,7 +322,7 @@ class ExperienceWindow(kodigui.BaseWindow):
         # print action.getId()
         scriptAddon = xbmcaddon.Addon('script.preshowexperience')
         shieldskipbutton = scriptAddon.getSetting('shieldskip.button')
-        DEBUG_LOG('Shield skip button: {0}'.format(shieldskipbutton))    
+        #DEBUG_LOG('Shield skip button: {0}'.format(shieldskipbutton))    
         try:
             if action == xbmcgui.ACTION_PREVIOUS_MENU or action == xbmcgui.ACTION_NAV_BACK or action == xbmcgui.ACTION_STOP:
                 self.volume.stop()
@@ -1246,7 +1247,7 @@ class ExperiencePlayer(xbmc.Player):
 
         try:
             while image:
-                DEBUG_LOG(' -IMAGE.QUEUE: {0}'.format(image))
+                #DEBUG_LOG(' -IMAGE.QUEUE: {0}'.format(image))
 
                 action = self.showImageFromQueue(image, info, first=True)
 
