@@ -1,9 +1,12 @@
 Changelog for PreShow Experience
 
+[- 0.2.6 -]
+- change:   Removed watched database.  Requires trailers to be updated.
+
 [- 0.2.5 -]
 - change:   New sequences include feature module and only additional feature modules can be deleted
 - add:      Added option for alternate next button on nVidia Shield
-- change:   Bunmper file and directory browse starts in PreShow content folder
+- change:   Bumper file and directory browse starts in PreShow content folder
 
 [- 0.2.4 -]
 - add:      Slideshow Module
