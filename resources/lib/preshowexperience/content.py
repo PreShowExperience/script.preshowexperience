@@ -388,7 +388,7 @@ class UserContent:
                 system=system.name
             )
 
-    @DB.sessionW
+    @DB.session
     def scrapeContent(self):
         try:
             self._scrapeContent()
@@ -536,9 +536,9 @@ class TriviaDirectoryHandler:
     _clueNA = ('clue', 'format')
     _answerNA = ('answer', 'format')
 
-    _defaultQRegEx = '(?i)_q\.(?:jpg|jepg|tif|tiff|png|gif|bmp)'
-    _defaultCRegEx = '(?i)_c(\d)?\.(?:jpg|jepg|tif|tiff|png|gif|bmp)'
-    _defaultARegEx = '(?i)_a\.(?:jpg|jepg|tif|tiff|png|gif|bmp)'
+    _defaultQRegEx = '(?i)_q\.(?:jpg|jpeg|tif|tiff|png|gif|bmp)'
+    _defaultCRegEx = '(?i)_c(\d)?\.(?:jpg|jpeg|tif|tiff|png|gif|bmp)'
+    _defaultARegEx = '(?i)_a\.(?:jpg|jpeg|tif|tiff|png|gif|bmp)'
 
     def __init__(self, callback=None):
         self._callback = callback
