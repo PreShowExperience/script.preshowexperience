@@ -280,7 +280,7 @@ class SeekPoint(tuple):
     """
 
     def __new__(cls, first_sample, byte_offset, num_samples):
-        return super(cls, SeekPoint).__new__(
+        return super(SeekPoint, cls).__new__(
             cls, (first_sample, byte_offset, num_samples))
 
     def __getnewargs__(self):
@@ -373,7 +373,7 @@ class CueSheetTrackIndex(tuple):
     """
 
     def __new__(cls, index_number, index_offset):
-        return super(cls, CueSheetTrackIndex).__new__(
+        return super(CueSheetTrackIndex, cls).__new__(
             cls, (index_number, index_offset))
 
     index_number = property(lambda self: self[0])
@@ -387,7 +387,7 @@ class CueSheetTrack(object):
 
     For CD-DA, track_numbers must be 1-99, or 170 for the
     lead-out. Track_numbers must be unique within a cue sheet. There
-    must be atleast one index in every track except the lead-out track
+    must be at least one index in every track except the lead-out track
     which must have none.
 
     Attributes:
@@ -519,7 +519,7 @@ class CueSheet(MetadataBlock):
                 track_flags |= 0x40
             track_packed = struct.pack(
                 self.__CUESHEET_TRACK_FORMAT, track.start_offset,
-                track.track_number, track.isrc, track_flags,
+                track.track_number, track.isrc or b"\0", track_flags,
                 len(track.indexes))
             f.write(track_packed)
             for index in track.indexes:
@@ -712,7 +712,7 @@ class FLAC(mutagen.FileType):
         if block_type._distrust_size:
             # Some jackass is writing broken Metadata block length
             # for Vorbis comment blocks, and the FLAC reference
-            # implementaton can parse them (mostly by accident),
+            # implementation can parse them (mostly by accident),
             # so we have to too.  Instead of parsing the size
             # given, parse an actual Vorbis comment, leaving
             # fileobj in the right position.
@@ -846,6 +846,15 @@ class FLAC(mutagen.FileType):
 
         If no filename is given, the one most recently loaded is used.
         """
+        # add new cuesheet and seektable
+        if self.cuesheet and self.cuesheet not in self.metadata_blocks:
+            if not isinstance(self.cuesheet, CueSheet):
+                raise ValueError("Invalid cuesheet object type!")
+            self.metadata_blocks.append(self.cuesheet)
+        if self.seektable and self.seektable not in self.metadata_blocks:
+            if not isinstance(self.seektable, SeekTable):
+                raise ValueError("Invalid seektable object type!")
+            self.metadata_blocks.append(self.seektable)
 
         self._save(filething, self.metadata_blocks, deleteid3, padding)
 

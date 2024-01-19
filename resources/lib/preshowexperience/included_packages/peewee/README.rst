@@ -1,43 +1,36 @@
-.. image:: http://media.charlesleifer.com/blog/photos/p1423749536.32.png
+.. image:: https://media.charlesleifer.com/blog/photos/peewee3-logo.png
 
 peewee
 ======
 
 Peewee is a simple and small ORM. It has few (but expressive) concepts, making it easy to learn and intuitive to use.
 
-* A small, expressive ORM
-* Written in python with support for versions 2.6+ and 3.2+.
-* built-in support for sqlite, mysql and postgresql
-* tons of extensions available in the `playhouse <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html>`_
+* a small, expressive ORM
+* python 2.7+ and 3.4+
+* supports sqlite, mysql, postgresql and cockroachdb
+* tons of `extensions <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html>`_
 
-  * `Postgresql HStore, JSON, arrays and more <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#postgres-ext>`_
-  * `SQLite full-text search, user-defined functions, virtual tables and more <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#sqlite-ext>`_
-  * `Schema migrations <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#migrate>`_ and `model code generator <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#pwiz>`_
-  * `Connection pool <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#pool>`_
-  * `Encryption <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#sqlcipher-ext>`_
-  * `and much, much more... <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html>`_
+New to peewee? These may help:
 
-.. image:: https://api.travis-ci.org/coleifer/peewee.png?branch=master
-  :target: https://travis-ci.org/coleifer/peewee
-
-New to peewee? Here is a list of documents you might find most helpful when getting
-started:
-
-* `Quickstart guide <http://docs.peewee-orm.com/en/latest/peewee/quickstart.html#quickstart>`_ -- this guide covers all the essentials. It will take you between 5 and 10 minutes to go through it.
-* `Guide to the various query operators <http://docs.peewee-orm.com/en/latest/peewee/querying.html#query-operators>`_ describes how to construct queries and combine expressions.
-* `Field types table <http://docs.peewee-orm.com/en/latest/peewee/models.html#field-types-table>`_ lists the various field types peewee supports and the parameters they accept.
-
-For flask helpers, check out the `flask_utils extension module <http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#flask-utils>`_. You can also use peewee with the popular extension `flask-admin <http://flask-admin.readthedocs.org/en/latest/>`_ to provide a Django-like admin interface for managing peewee models.
+* `Quickstart <http://docs.peewee-orm.com/en/latest/peewee/quickstart.html#quickstart>`_
+* `Example twitter app <http://docs.peewee-orm.com/en/latest/peewee/example.html>`_
+* `Using peewee interactively <http://docs.peewee-orm.com/en/latest/peewee/interactive.html>`_
+* `Models and fields <http://docs.peewee-orm.com/en/latest/peewee/models.html>`_
+* `Querying <http://docs.peewee-orm.com/en/latest/peewee/querying.html>`_
+* `Relationships and joins <http://docs.peewee-orm.com/en/latest/peewee/relationships.html>`_
 
 Examples
 --------
 
-Defining models is similar to Django or SQLAlchemy::
+Defining models is similar to Django or SQLAlchemy:
+
+.. code-block:: python
 
     from peewee import *
     import datetime
 
-    db = SqliteDatabase('my_database.db', threadlocals=True)
+
+    db = SqliteDatabase('my_database.db')
 
     class BaseModel(Model):
         class Meta:
@@ -47,17 +40,21 @@ Defining models is similar to Django or SQLAlchemy::
         username = CharField(unique=True)
 
     class Tweet(BaseModel):
-        user = ForeignKeyField(User, related_name='tweets')
+        user = ForeignKeyField(User, backref='tweets')
         message = TextField()
         created_date = DateTimeField(default=datetime.datetime.now)
         is_published = BooleanField(default=True)
 
-Connect to the database and create tables::
+Connect to the database and create tables:
+
+.. code-block:: python
 
     db.connect()
     db.create_tables([User, Tweet])
 
-Create a few rows::
+Create a few rows:
+
+.. code-block:: python
 
     charlie = User.create(username='charlie')
     huey = User(username='huey')
@@ -67,22 +64,23 @@ Create a few rows::
     # will just use the default values we specified.
     Tweet.create(user=charlie, message='My first tweet')
 
-Queries are expressive and composable::
+Queries are expressive and composable:
+
+.. code-block:: python
 
     # A simple query selecting a user.
-    User.get(User.username == 'charles')
+    User.get(User.username == 'charlie')
 
-    # Get tweets created by one of several users. The "<<" operator
-    # corresponds to the SQL "IN" operator.
+    # Get tweets created by one of several users.
     usernames = ['charlie', 'huey', 'mickey']
-    users = User.select().where(User.username << usernames)
-    tweets = Tweet.select().where(Tweet.user << users)
+    users = User.select().where(User.username.in_(usernames))
+    tweets = Tweet.select().where(Tweet.user.in_(users))
 
     # We could accomplish the same using a JOIN:
     tweets = (Tweet
               .select()
               .join(User)
-              .where(User.username << usernames))
+              .where(User.username.in_(usernames)))
 
     # How many tweets were published today?
     tweets_today = (Tweet
@@ -103,35 +101,35 @@ Queries are expressive and composable::
              .group_by(User)
              .order_by(tweet_ct.desc()))
 
-    # Do an atomic update
-    Counter.update(count=Counter.count + 1).where(
-        Counter.url == request.url)
+    # Do an atomic update (for illustrative purposes only, imagine a simple
+    # table for tracking a "count" associated with each URL). We don't want to
+    # naively get the save in two separate steps since this is prone to race
+    # conditions.
+    Counter.update(count=Counter.count + 1).where(Counter.url == request.url)
 
-Check out the `example app <http://docs.peewee-orm.com/en/latest/peewee/example.html>`_ for a working Twitter-clone website written with Flask.
+Check out the `example twitter app <http://docs.peewee-orm.com/en/latest/peewee/example.html>`_.
 
 Learning more
 -------------
 
 Check the `documentation <http://docs.peewee-orm.com/>`_ for more examples.
 
-Specific question? Come hang out in the #peewee channel on freenode.irc.net, or post to the mailing list, http://groups.google.com/group/peewee-orm . If you would like to report a bug, `create a new issue <https://github.com/coleifer/peewee/issues/new>`_ on GitHub.
+Specific question? Come hang out in the #peewee channel on irc.libera.chat, or post to the mailing list, http://groups.google.com/group/peewee-orm . If you would like to report a bug, `create a new issue <https://github.com/coleifer/peewee/issues/new>`_ on GitHub.
 
 Still want more info?
 ---------------------
 
-.. image:: http://media.charlesleifer.com/blog/photos/wat.jpg
+.. image:: https://media.charlesleifer.com/blog/photos/wat.jpg
 
 I've written a number of blog posts about building applications and web-services with peewee (and usually Flask). If you'd like to see some real-life applications that use peewee, the following resources may be useful:
 
-* `Building a note-taking app with Flask and Peewee <http://charlesleifer.com/blog/saturday-morning-hack-a-little-note-taking-app-with-flask/>`_ as well as `Part 2 <http://charlesleifer.com/blog/saturday-morning-hacks-revisiting-the-notes-app/>`_ and `Part 3 <http://charlesleifer.com/blog/saturday-morning-hacks-adding-full-text-search-to-the-flask-note-taking-app/>`_.
-* `Analytics web service built with Flask and Peewee <http://charlesleifer.com/blog/saturday-morning-hacks-building-an-analytics-app-with-flask/>`_.
-* `Personalized news digest (with a boolean query parser!) <http://charlesleifer.com/blog/saturday-morning-hack-personalized-news-digest-with-boolean-query-parser/>`_.
-* `Using peewee to explore CSV files <http://charlesleifer.com/blog/using-peewee-to-explore-csv-files/>`_.
-* `Structuring Flask apps with Peewee <http://charlesleifer.com/blog/structuring-flask-apps-a-how-to-for-those-coming-from-django/>`_.
-* `Creating a lastpass clone with Flask and Peewee <http://charlesleifer.com/blog/creating-a-personal-password-manager/>`_.
-* `Building a web-based encrypted file manager with Flask, peewee and S3 <http://charlesleifer.com/blog/web-based-encrypted-file-storage-using-flask-and-aws/>`_.
-* `Creating a bookmarking web-service that takes screenshots of your bookmarks <http://charlesleifer.com/blog/building-bookmarking-service-python-and-phantomjs/>`_.
-* `Building a pastebin, wiki and a bookmarking service using Flask and Peewee <http://charlesleifer.com/blog/dont-sweat-small-stuff-use-flask-blueprints/>`_.
-* `Encrypted databases with Python and SQLCipher <http://charlesleifer.com/blog/encrypted-sqlite-databases-with-python-and-sqlcipher/>`_.
-* `Dear Diary: An Encrypted, Command-Line Diary with Peewee <http://charlesleifer.com/blog/dear-diary-an-encrypted-command-line-diary-with-python/>`_.
-* `Query Tree Structures in SQLite using Peewee and the Transitive Closure Extension <http://charlesleifer.com/blog/querying-tree-structures-in-sqlite-using-python-and-the-transitive-closure-extension/>`_.
+* `Building a note-taking app with Flask and Peewee <https://charlesleifer.com/blog/saturday-morning-hack-a-little-note-taking-app-with-flask/>`_ as well as `Part 2 <https://charlesleifer.com/blog/saturday-morning-hacks-revisiting-the-notes-app/>`_ and `Part 3 <https://charlesleifer.com/blog/saturday-morning-hacks-adding-full-text-search-to-the-flask-note-taking-app/>`_.
+* `Analytics web service built with Flask and Peewee <https://charlesleifer.com/blog/saturday-morning-hacks-building-an-analytics-app-with-flask/>`_.
+* `Personalized news digest (with a boolean query parser!) <https://charlesleifer.com/blog/saturday-morning-hack-personalized-news-digest-with-boolean-query-parser/>`_.
+* `Structuring Flask apps with Peewee <https://charlesleifer.com/blog/structuring-flask-apps-a-how-to-for-those-coming-from-django/>`_.
+* `Creating a lastpass clone with Flask and Peewee <https://charlesleifer.com/blog/creating-a-personal-password-manager/>`_.
+* `Creating a bookmarking web-service that takes screenshots of your bookmarks <https://charlesleifer.com/blog/building-bookmarking-service-python-and-phantomjs/>`_.
+* `Building a pastebin, wiki and a bookmarking service using Flask and Peewee <https://charlesleifer.com/blog/dont-sweat-small-stuff-use-flask-blueprints/>`_.
+* `Encrypted databases with Python and SQLCipher <https://charlesleifer.com/blog/encrypted-sqlite-databases-with-python-and-sqlcipher/>`_.
+* `Dear Diary: An Encrypted, Command-Line Diary with Peewee <https://charlesleifer.com/blog/dear-diary-an-encrypted-command-line-diary-with-python/>`_.
+* `Query Tree Structures in SQLite using Peewee and the Transitive Closure Extension <https://charlesleifer.com/blog/querying-tree-structures-in-sqlite-using-python-and-the-transitive-closure-extension/>`_.
