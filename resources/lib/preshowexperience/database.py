@@ -20,16 +20,15 @@ except TypeError:
 
     datetime.datetime = new_datetime
 
-from peewee import peewee # pylint: disable=E0401
+from peewee import peewee
 from . import util
 from resources.lib import kodiutil
+from . import content
 
-DATABASE_VERSION = 6
+DATABASE_VERSION = 7
 
 fn = peewee.fn
-
 DB = None
-W_DB = None
 DBVersion = None
 Song = None
 Trivia = None
@@ -40,8 +39,6 @@ VideoBumpers = None
 RatingSystem = None
 Rating = None
 Trailers = None
-WatchedTrivia = None
-
 
 def session(func):
     def inner(*args, **kwargs):
@@ -53,83 +50,40 @@ def session(func):
             DB.close()
     return inner
 
-
-def sessionW(func):
-    def inner(*args, **kwargs):
-        try:
-            W_DB.connect()
-            with W_DB.atomic():
-                return func(*args, **kwargs)
-        finally:
-            W_DB.close()
-    return inner
-
-
 def connect():
     DB.connect()
-
 
 def close():
     DB.close()
 
-
 def dummyCallback(*args, **kwargs):
     pass
 
-
 def migrateDB(DB, version):
     util.LOG('Migrating database from version {0} to {1}'.format(version, DATABASE_VERSION))
-    from peewee.playhouse import migrate # pylint: disable=E0401
+    from peewee.playhouse import migrate
     migrator = migrate.SqliteMigrator(DB)
-    migratorW = migrate.SqliteMigrator(W_DB)
 
-    if version < 1:
-        try:
-            migrate.migrate(
-                migrator.add_column('RatingsBumpers', 'style', peewee.CharField(default='Classic'))
-            )
-        except peewee.OperationalError:
-            util.MINOR_ERROR('Migration (RatingsBumpers: Add style column)')
-        except:
-            util.ERROR()
-            return False
-
-    if version < 2:
-        try:
-            migrate.migrate(
-                migrator.add_column('RatingSystem', 'regions', peewee.CharField(null=True)),
-                migrator.drop_not_null('RatingSystem', 'context'),
-            )
-        except peewee.OperationalError:
-            util.MINOR_ERROR('Migration (RatingSystem: Add region column)')
-        except:
-            util.ERROR()
-            return False
-
-    if version < 5:
-        try:
-            migrate.migrate(
-                migratorW.add_column('Trailers', 'is3D', peewee.BooleanField(default=False)),
-            )
-        except peewee.OperationalError:
-            util.MINOR_ERROR('Migration (Trailers: Add is3D column)')
-        except:
-            util.ERROR()
-            return False
-
-    if version < 6:
-        try:
-            migrate.migrate(
-                migratorW.add_column('Trailers', 'verified', peewee.BooleanField(default=True)),
-            )
-        except peewee.OperationalError:
-            util.MINOR_ERROR('Migration (Trailers: Add verified column)')
-        except:
-            util.ERROR()
-            return False
-
+    if version < 7:    
+        util.LOG('Updating Trivia accessed field')
+        migrate.migrate(
+            migrator.add_column('Trivia', 'accessed_temp', peewee.DateTimeField(default=datetime.date(2020, 1, 1))),
+            migrator.drop_column('Trivia', 'accessed'),
+            migrator.rename_column('Trivia', 'accessed_temp', 'accessed')
+        )
+        util.LOG('Removing watched.db & Trivia files')
+        dbDir = util.STORAGE_PATH
+        watched_db_path = util.pathJoin(dbDir, 'watched.db')
+        if util.vfs.exists(watched_db_path):
+            xbmcvfs.delete(watched_db_path)
+        tmdb_path = util.pathJoin(dbDir, 'tmdb.last')
+        if util.vfs.exists(tmdb_path):
+            xbmcvfs.delete(tmdb_path)
+        imdb_path = util.pathJoin(dbDir, 'imdb.last')
+        if util.vfs.exists(imdb_path):
+            xbmcvfs.delete(imdb_path)
+        xbmcgui.Dialog().ok('PreShow Experience Update', 'PreShow has been updated and requires that your trailer content is updated.')
     return True
-
 
 def checkDBVersion(DB):
     vm = DBVersion.get_or_create(id=1, defaults={'version': 0})[0]
@@ -137,31 +91,12 @@ def checkDBVersion(DB):
         if migrateDB(DB, vm.version):
             vm.update(version=DATABASE_VERSION).execute()
 
-
-def copyDatabases(dbDir):
-    addon_path = xbmcvfs.translatePath('special://masterprofile/')
-    
-    # Get Preshow Experience Add-On Dir and Files
-    psePath = os.path.join(addon_path,"addon_data/script.preshowexperience/")
-    # pseContents = os.listdir(psePath)
-    
-    # Remove all Preshow Experience Files
-    # for pseContent in pseContents:
-    shutil.copytree(psePath, dbDir, dirs_exist_ok=True)
-    settingfile = dbDir + '/settings.xml'
-    os.remove(settingfile)
-    
-    xbmc.log('Database files copied to central locations', xbmc.LOGINFO)
-
-
-
 def initialize(path=None, callback=None):
     callback = callback or dummyCallback
 
     callback(None, 'Creating/updating database...')
 
     global DB
-    global W_DB
     global DBVersion
     global Song
     global Trivia
@@ -172,7 +107,6 @@ def initialize(path=None, callback=None):
     global RatingSystem
     global Rating
     global Trailers
-    global WatchedTrivia
 
     ###########################################################################################
     # Version
@@ -185,7 +119,6 @@ def initialize(path=None, callback=None):
     dbExists = util.vfs.exists(dbPath)
 
     DB = peewee.SqliteDatabase(dbPath)
-    W_DB = peewee.SqliteDatabase(util.pathJoin(path or util.STORAGE_PATH, 'watched.db'))
 
     DB.connect()
 
@@ -205,7 +138,7 @@ def initialize(path=None, callback=None):
     ###########################################################################################
     class ContentBase(peewee.Model):
         name = peewee.CharField()
-        accessed = peewee.DateTimeField(null=True)
+        accessed = peewee.DateTimeField(default=datetime.date(2020, 1, 1))
         pack = peewee.TextField(null=True)
 
         class Meta:
@@ -318,22 +251,22 @@ def initialize(path=None, callback=None):
     Rating.create_table(fail_silently=True)
 
     ###########################################################################################
-    # Watched Database
+    # Trailers Database
     ###########################################################################################
-    class WatchedBase(peewee.Model):
+    class TrailerBase(peewee.Model):
         WID = peewee.CharField(unique=True)
         watched = peewee.BooleanField(default=False)
-        date = peewee.DateTimeField(default=datetime.date(1900, 1, 1))
+        date = peewee.DateTimeField(default=datetime.date(2020, 1, 1))
 
         class Meta:
-            database = W_DB
+            database = DB
 
-    class Trailers(WatchedBase):
+    class Trailers(TrailerBase):
         source = peewee.CharField()
         rating = peewee.CharField(null=True)
         genres = peewee.CharField(null=True)
         title = peewee.CharField()
-        release = peewee.DateTimeField(default=datetime.date(1900, 1, 1))
+        release = peewee.DateTimeField(default=datetime.date(2020, 1, 1))
         url = peewee.CharField(null=True)
         userAgent = peewee.CharField(null=True)
         thumb = peewee.CharField(null=True)
@@ -344,14 +277,6 @@ def initialize(path=None, callback=None):
     Trailers.create_table(fail_silently=True)
 
     callback(' - Trailers')
-
-    class WatchedTrivia(WatchedBase):
-        pass
-
-    WatchedTrivia.create_table(fail_silently=True)
-
-    callback(' - Trivia (watched status)')
-
     callback(None, 'Database created')
 
     DB.close()

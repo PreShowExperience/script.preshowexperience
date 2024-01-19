@@ -12,7 +12,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         args = sys.argv[1:] or False
         arg = args.pop(0)
-        # print '[- PreShow Experience -]: Passed args: {0}'.format(repr(sys.argv))
 
     if arg == 'trailer.clearWatched':
         settings.clearDBWatchedStatus()
@@ -49,10 +48,6 @@ if __name__ == '__main__':
         settings.setScrapers()
     elif arg == 'test.actions':
         settings.testEventActions(args[0])
-    elif arg == 'install.contextMenu':
-        settings.installContextMenu()
-    elif arg == 'import.cvfiles':
-        settings.importCVfiles()
     elif str(arg).startswith('sequence.'):
         settings.setDefaultSequence(arg)
     else:

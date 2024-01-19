@@ -74,7 +74,7 @@ def _getSettingDefault(key):
         'trailer.order': 'newest',
         'trailer.count': 1,
         'trailer.limitGenre': True,
-        'trailer.filter3D': True,
+        #'trailer.filter3D': True,
         'trailer.quality': '720p',
         'trailer.dir': '',
         'trailer.file': '',
@@ -101,7 +101,6 @@ def _getSettingDefault(key):
     }
 
     return defaults.get(key)
-
 
 try:
     import xbmcvfs
@@ -303,7 +302,7 @@ except:
     vfs.mkdirs = os.makedirs
 
     def exists(path):
-        if '.zip' in path:  # This would fail in an uncontrolled setting
+        if '.zip' in path:
             zippath, inpath = path.split('.zip', 1)
             zippath = zippath + '.zip'
             inpath = inpath.lstrip(os.path.sep)
@@ -319,7 +318,7 @@ except:
     vfs.exists = exists
 
     def File(path, mode):
-        if '.zip' in path:  # This would fail in an uncontrolled setting
+        if '.zip' in path:
             zippath, inpath = path.split('.zip', 1)
             zippath = zippath + '.zip'
             inpath = inpath.lstrip(os.path.sep)
@@ -366,8 +365,7 @@ except:
 
     videoExtensions = ('.mp4',)
     musicExtensions = ('.mp3', '.wav')
-    imageExtensions = ('.jpg', '.png')
-
+    imageExtensions = ('.jpg', '.png', '.tif')
 
 def listFilePaths(path):
     ret = []
@@ -377,27 +375,22 @@ def listFilePaths(path):
             ret.append(full)
     return ret
 
-
 def strRepr(str_obj):
     ret = repr(str_obj).lstrip('u')
     return ret.endswith('"') and ret.strip('"') or ret.strip("'")
 
-
 def datetimeTotalSeconds(td):
     return float((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6)) / 10**6
-
 
 def DEBUG_LOG(msg):
     if DEBUG:
         LOG(msg)
-
 
 def ERROR(msg=None):
     if msg:
         LOG(msg)
     import traceback
     traceback.print_exc()
-
 
 def MINOR_ERROR(msg=''):
     short = str(sys.exc_info()[1])

@@ -14,7 +14,6 @@ from .pastebin_python import PastebinPython
 from .preshowexperience import database as DB
 from .kodiutil import T
 
-
 def clearDBWatchedStatus():
     rows = DB.Trailers.update(watched=False).where(
         DB.Trailers.watched == 1
@@ -23,7 +22,6 @@ def clearDBWatchedStatus():
     import xbmcgui
     xbmcgui.Dialog().ok(T(32515, 'Done'), T(32564, 'Removed watched status from {0} trailers.').format(rows))
 
-
 def clearDBBrokenStatus():
     rows = DB.Trailers.update(broken=False).where(
         DB.Trailers.broken == 1
@@ -31,7 +29,6 @@ def clearDBBrokenStatus():
 
     import xbmcgui
     xbmcgui.Dialog().ok(T(32515, 'Done'), T(32565, 'Removed broken status from {0} trailers.').format(rows))
-
 
 def pasteLog():
     yes = xbmcgui.Dialog().yesno(
@@ -44,7 +41,6 @@ def pasteLog():
         _pasteLog('kodi.old.log')
     else:
         _pasteLog()
-
 
 def _pasteLog(logName='kodi.log'):
     logPath = os.path.join(xbmcvfs.translatePath('special://logpath'), logName)
@@ -121,7 +117,6 @@ def _pasteLog(logName='kodi.log'):
 
     return True
 
-
 def showQRCode(url):
     class ImageWindow(kodigui.BaseDialog):
         xmlFile = 'script.preshowexperience-image.xml'
@@ -146,13 +141,11 @@ def showQRCode(url):
     # rpc.Player.Open(item={'path': QRDir})
     ImageWindow.open(image=QR)
 
-
 def deleteUserKey():
     apiUserKeyFile = os.path.join(kodiutil.PROFILE_PATH, 'settings.pb.key')
     if os.path.exists(apiUserKeyFile):
         os.remove(apiUserKeyFile)
     xbmcgui.Dialog().ok(T(32515, 'Done'), T(32585, 'User key deleted.'))
-
 
 def removeContentDatabase():
     dbFile = os.path.join(kodiutil.PROFILE_PATH, 'content.db')
@@ -160,9 +153,7 @@ def removeContentDatabase():
         os.remove(dbFile)
 
     kodiutil.setSetting('content.initialized', False)
-
     xbmcgui.Dialog().ok(T(32515, 'Done'), T(32584, 'Database reset.'))
-
 
 def setDefaultSequence(setting):
     selection = pseutil.selectSequence()
@@ -170,7 +161,6 @@ def setDefaultSequence(setting):
         return
 
     kodiutil.setSetting(setting, selection['name'])
-
 
 def setScrapers():
     selected = [s.strip().lower() for s in kodiutil.getSetting('trailer.scrapers', '').split(',')]
@@ -191,7 +181,6 @@ def setScrapers():
 
     kodiutil.setSetting('trailer.scrapers', result)
 
-
 def testEventActions(action):
     path = None
 
@@ -210,41 +199,3 @@ def testEventActions(action):
         return
 
     pseutil.evalActionFile(path)
-
-
-def installContextMenu():
-    xbmc.executebuiltin('PlayMedia(plugin://context.preshowexperience)')
-    
-def importCVfiles():    
-    addon_path = xbmcvfs.translatePath('special://masterprofile/')
-    
-    # Get Preshow Experience Add-On Dir and Files
-    psePath = os.path.join(addon_path,"addon_data/script.preshowexperience/")
-    pseContents = os.listdir(psePath)
-    
-    # Remove all Preshow Experience Files
-    for pseContent in pseContents:
-        if os.path.isfile(psePath+pseContent):
-            # remove file
-            os.remove(psePath+pseContent)
-        elif os.path.isdir(psePath+pseContent):
-            # remove directory and all its content
-            shutil.rmtree(psePath+pseContent)
-    
-    xbmc.log('Preshow Experience directory has been emptied!', xbmc.LOGINFO)
-    
-    # Get Cinemavision Add-On Dir and Files
-    cvPath = os.path.join(addon_path,'addon_data/script.cinemavision/')
-    cvContents = os.listdir(cvPath)
-    
-    xbmc.log('Files/Directories to copy: {0}'.format(cvContents), xbmc.LOGINFO)
-    
-    for cvContent in cvContents:
-        if os.path.isfile(cvPath+cvContent):
-            # remove file
-            shutil.copy(cvPath+cvContent, psePath+cvContent)
-        elif os.path.isdir(cvPath+cvContent):
-            # remove directory and all its content
-            shutil.copytree(cvPath+cvContent, psePath+cvContent)
-    
-    xbmcgui.Dialog().ok(T(32116, 'CinemaVision Settings Imported!'), T(32117, 'You must hit cancel on the settings window in order for the settings file to not be overwritten!  Hitting OK will overwrite the imported settings file.'))

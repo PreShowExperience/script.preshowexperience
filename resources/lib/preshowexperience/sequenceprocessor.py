@@ -26,7 +26,6 @@ class PlayableBase(dict):
         self['module'] = module._type
         return self
 
-
 class Playable(PlayableBase):
     type = None
 
@@ -43,10 +42,8 @@ class Playable(PlayableBase):
     def __repr__(self):
         return '{0}: {1}'.format(self.type, repr(self.path))
 
-
 class PlayableQueue(PlayableBase):
     pass
-
 
 class Image(Playable):
     type = 'IMAGE'
@@ -82,7 +79,6 @@ class Image(Playable):
     def fade(self):
         return self['fade']
 
-
 class Song(Playable):
     type = 'SONG'
 
@@ -98,7 +94,6 @@ class Song(Playable):
     @property
     def durationInt(self):
         return int(self['duration'])
-
 
 class ImageQueue(PlayableQueue):
     type = 'IMAGE.QUEUE'
@@ -168,7 +163,7 @@ class ImageQueue(PlayableQueue):
         self.duration += image.duration  # Update the queue's duration
 
     def next(self, start=0, count=1, extend=False):
-        util.DEBUG_LOG(f"Retrieving next image from queue. Current position: {self.pos}")
+        #util.DEBUG_LOG(f"Retrieving next image from queue. Current position: {self.pos}")
         overtime = start and time.time() - start >= self.maxDuration
         if overtime and not self.current().setNumber:
             return None
@@ -499,7 +494,6 @@ class Action(dict):
     def run(self):
         self.processor.run()
 
-
 class Goto(Playable):
     type = 'GOTO'
 
@@ -617,7 +611,6 @@ class TriviaHandler:
         queue.transition = sItem.getLive('transition')
         queue.transitionDuration = sItem.getLive('transitionDuration')
 
-
         for slides in self.getTriviaImages(sItem):
             queue += slides
 
@@ -690,7 +683,6 @@ class TriviaHandler:
         queue.musicFadeOut = util.getSettingDefault('trivia.musicFadeOut')
 
     @DB.session
-    @DB.sessionW
     
     def extract_directory(path):
         util.DEBUG_LOG('Content Full Path: {0}'.format(path))
@@ -724,25 +716,18 @@ class TriviaHandler:
             sItem.getLive('aDuration'),
             clue, clue, clue, clue, clue, clue, clue, clue, clue, clue,
             sItem.getLive('qDuration')
-        )     
-        for trivia in DB.Trivia.select().order_by(DB.fn.Random()):
+        )  
+        # Calculate the date 3 months ago from now
+        trivia_refresh_period = datetime.datetime.now() - datetime.timedelta(days=30)
+        util.DEBUG_LOG('Trivia Refresh Time: {0}'.format(trivia_refresh_period))
+
+        for trivia in DB.Trivia.select().where(DB.Trivia.accessed < trivia_refresh_period).order_by(DB.fn.Random()):
             if triviadirectory in str(trivia.answerPath):
-                try:
-                    DB.WatchedTrivia.get((DB.WatchedTrivia.WID == trivia.TID) & DB.WatchedTrivia.watched)
-                except DB.peewee.DoesNotExist:
-                    yield self.createTriviaImages(sItem, trivia, durations)
+                yield self.createTriviaImages(sItem, trivia, durations)
 
         # Grab the oldest 4 trivias, shuffle and yield... repeat
         pool = []
-        for watched in DB.WatchedTrivia.select().where(DB.WatchedTrivia.watched).order_by(DB.WatchedTrivia.date):
-            # util.DEBUG_LOG('watched: {0}'.format(watched))
-            try:
-                trivia = DB.Trivia.get(DB.Trivia.TID == watched.WID)
-                if triviadirectory not in str(trivia.answerPath):
-                    continue
-            except DB.peewee.DoesNotExist:
-                continue
-
+        for trivia in DB.Trivia.select().where(DB.Trivia.accessed >= trivia_refresh_period).order_by(DB.Trivia.accessed):
             pool.append(trivia)
 
             if len(pool) > 3:
@@ -781,14 +766,11 @@ class TriviaHandler:
                 return slides
         return None
 
-    @DB.sessionW
+    @DB.session
     def mark(self, image):
-        trivia = DB.WatchedTrivia.get_or_create(WID=image.setID)[0]
-        trivia.update(
-            watched=True,
-            date=datetime.datetime.now()
-        ).where(DB.WatchedTrivia.WID == image.setID).execute()
-
+        trivia = DB.Trivia.get(TID=image.setID)  
+        trivia.accessed = datetime.datetime.now()
+        trivia.save()
 
 class SlideshowHandler:
     def __init__(self):
@@ -1008,8 +990,8 @@ class TrailerHandler:
                 DB.fn.Random()
             ]
 
-        if self.sItem.getLive('filter3D'):
-            where.append(DB.Trailers.is3D == self.caller.nextQueuedFeature.is3D)
+        #if self.sItem.getLive('filter3D'):
+            #where.append(DB.Trailers.is3D == self.caller.nextQueuedFeature.is3D)
 
         if ratingLimitMethod and ratingLimitMethod != 'none':
             if ratingLimitMethod == 'max':
@@ -1151,7 +1133,7 @@ class TrailerHandler:
 
             util.DEBUG_LOG('    - {0} trailers added to database'.format(ct))
 
-    @DB.sessionW
+    @DB.session
     def scraperHandler(self, source, count, unwatched=False, watched=False):
         trailers = []
 
@@ -1184,8 +1166,8 @@ class TrailerHandler:
 
         try:
             files = [f for f in util.vfs.listdir(path) if os.path.splitext(f)[-1].lower() in util.videoExtensions]
-            if self.sItem.getLive('filter3D'):
-                files = [f for f in files if self.caller.nextQueuedFeature.is3D == util.pathIs3D(f)]
+            #if self.sItem.getLive('filter3D'):
+                #files = [f for f in files if self.caller.nextQueuedFeature.is3D == util.pathIs3D(f)]
             files = random.sample(files, min((count, len(files))))
             [util.DEBUG_LOG('    - Using: {0}'.format(repr(f))) for f in files] or util.DEBUG_LOG('    - No matching files')
             return [Video(util.pathJoin(path, p), volume=sItem.getLive('volume')).fromModule(sItem) for p in files]
@@ -1199,9 +1181,7 @@ class TrailerHandler:
             return []
 
         util.DEBUG_LOG('[{0}] File: {1}'.format(sItem.typeChar, repr(path)))
-
         return [Video(path, volume=sItem.getLive('volume')).fromModule(sItem)]
-
 
 class VideoBumperHandler:
     def __init__(self):
@@ -1354,7 +1334,6 @@ class VideoBumperHandler:
             util.ERROR()
             return []
 
-
 class AudioFormatHandler:
     _atmosRegex = re.compile('atmos', re.IGNORECASE)
     _dtsxRegex = re.compile('dtsx', re.IGNORECASE)
@@ -1465,7 +1444,6 @@ class ActionHandler:
         processor = actions.ActionFileProcessor(sItem.file)
         return [Action(processor)]
 
-
 class SequenceProcessor:
     def __init__(self, sequence_path, db_path=None, content_path=None):
         DB.initialize(db_path)
@@ -1535,7 +1513,6 @@ class SequenceProcessor:
         elif sItem.command == 'skip':
             return sItem.arg
 
-    
     # SEQUENCE PROCESSING
     handlers = {
         'feature': FeatureHandler(),
