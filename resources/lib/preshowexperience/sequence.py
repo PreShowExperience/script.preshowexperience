@@ -863,7 +863,7 @@ class Slideshow(Item):
         },
         {
             'attr': 'slideDuration',
-            'type': int,
+            'type': None,
             'limits': ['5 seconds', '6 seconds', '7 seconds', '8 seconds', '9 seconds', '10 seconds', '15 seconds', '30 seconds', '1 minute', '2 minutes', '5 minutes', '10 minutes', '15 minutes', '30 minutes', '1 hour', '2 hour', '3 hour', '4 hours'],
             'name': T(32731, 'Slide Duration'), 
             'default': '8 seconds'
