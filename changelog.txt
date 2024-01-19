@@ -1,5 +1,8 @@
 Changelog for PreShow Experience
 
+[- 0.2.7 -]
+- change:   Miscelaneous backend code updated and improvements
+
 [- 0.2.6 -]
 - change:   Removed watched database.  Requires trailers to be updated.
 
