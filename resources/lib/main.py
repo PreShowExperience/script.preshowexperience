@@ -746,6 +746,13 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         if item.dataSource == 'enable':
             self.toggleItemEnabled()
         elif item.dataSource == 'remove':
+            selectedItem = self.sequenceControl.getSelectedItem()
+            kodiutil.DEBUG_LOG('Module Type: {0}'.format(selectedItem.dataSource._type))
+            if selectedItem.dataSource._type == 'feature':
+                items = [li.dataSource for li in self.sequenceControl if li.dataSource]
+                if not preshowexperience.sequence.sequenceHasFeatures(items):
+                    xbmcgui.Dialog().ok(T(32573, 'Failed'),T(32739, 'The preshow must have a feature module.'))
+                    return
             self.removeItem()
             self.updateFocus()
         elif item.dataSource == 'copy':
@@ -819,10 +826,6 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('sequence.item.enabled', dataSource and dataSource.enabled and '1' or '')            
 
     def removeItem(self):
-        items = [li.dataSource for li in self.sequenceControl if li.dataSource]
-        if not preshowexperience.sequence.sequenceHasFeatures(items):
-            xbmcgui.Dialog().ok(T(32746, 'Feature Required'),T(32739, 'The preshow must have a feature module.'))
-            return
         if not xbmcgui.Dialog().yesno(T(32527, 'Confirm'), T(32537, 'Do you really want to remove this module?')):
             return
 
