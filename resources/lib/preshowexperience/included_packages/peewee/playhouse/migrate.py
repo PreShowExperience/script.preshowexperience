@@ -117,18 +117,18 @@ import functools
 import hashlib
 import re
 
-from peewee import *
-from peewee import CommaNodeList
-from peewee import EnclosedNodeList
-from peewee import Entity
-from peewee import Expression
-from peewee import Node
-from peewee import NodeList
-from peewee import OP
-from peewee import callable_
-from peewee import sort_models
-from peewee import sqlite3
-from peewee import _truncate_constraint_name
+from peewee.peewee import *
+from peewee.peewee import CommaNodeList
+from peewee.peewee import EnclosedNodeList
+from peewee.peewee import Entity
+from peewee.peewee import Expression
+from peewee.peewee import Node
+from peewee.peewee import NodeList
+from peewee.peewee import OP
+from peewee.peewee import callable_
+from peewee.peewee import sort_models
+from peewee.peewee import sqlite3
+from peewee.peewee import _truncate_constraint_name
 try:
     from playhouse.cockroachdb import CockroachDatabase
 except ImportError:
