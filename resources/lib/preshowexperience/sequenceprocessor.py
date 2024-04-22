@@ -228,9 +228,9 @@ class ImageQueue(PlayableQueue):
         return self.current()
 
     def mark(self, image):
-        if not image.setNumber:
-            util.DEBUG_LOG('ImageQueue: Marking image as watched')
-            self._handler.mark(image)
+        if not image.setNumber and os.environ.get('isTestOrPreview') != 'True':
+                util.DEBUG_LOG('ImageQueue: Marking image as watched')
+                self._handler.mark(image)
 
     def onFirst(self):
         return self.pos == 0
@@ -327,7 +327,7 @@ class Feature(Video):
 
     def __repr__(self):
         return ('FEATURE [ {0} ]:\n    Path: {1}\n    Rating: {2}\n    Year: {3}\n    Studios: {4}\n    ' +
-                'Directors: {5}\n    Cast: {6}\n    Genres: {7}\n    Tags: {8}\n    3D: {9}\n    Audio: {10}').format(
+                'Directors: {5}\n    Cast: {6}\n    Genres: {7}\n    Tags: {8}\n    Audio: {9}\n    Aspect Ratio: {10}').format(
             util.strRepr(self.title),
             util.strRepr(self.path),
             util.strRepr(self.rating),
@@ -337,8 +337,8 @@ class Feature(Video):
             ', '.join([util.strRepr(c['name']) for c in self.cast]),
             ', '.join([util.strRepr(g) for g in self.genres]),
             ', '.join([util.strRepr(t) for t in self.tags]),
-            self.is3D and 'Yes' or 'No',
-            util.strRepr(self.audioFormat)
+            util.strRepr(self.audioFormat),
+            util.strRepr(self.videoaspect)
         )
 
     @property
@@ -412,12 +412,20 @@ class Feature(Video):
         self['cast'] = val
 
     @property
-    def is3D(self):
-        return self.get('is3D', False)
+    def featuretitle(self):
+        return self.get('featuretitle', '')
 
-    @is3D.setter
-    def is3D(self, val):
-        self['is3D'] = val
+    @featuretitle.setter
+    def featuretitle(self, val):
+        self['featuretitle'] = val   
+
+    @property
+    def videoaspect(self):
+        return self.get('videoaspect', '')
+
+    @videoaspect.setter
+    def videoaspect(self, val):
+        self['videoaspect'] = val   
 
     @property
     def audioFormat(self):
@@ -552,7 +560,6 @@ class FeatureHandler:
                 return DB.RatingsBumpers.select().where(
                     (DB.RatingsBumpers.system == feature.rating.system) &
                     (DB.RatingsBumpers.name == feature.rating.name) &
-                    (DB.RatingsBumpers.is3D == feature.is3D) &
                     (DB.RatingsBumpers.isImage == image) &
                     (DB.RatingsBumpers.style == sItem.getLive('ratingStyle'))
                 )[0]
@@ -563,7 +570,6 @@ class FeatureHandler:
                         x for x in DB.RatingsBumpers.select().where(
                             (DB.RatingsBumpers.system == feature.rating.system) &
                             (DB.RatingsBumpers.name == feature.rating.name) &
-                            (DB.RatingsBumpers.is3D == feature.is3D) &
                             (DB.RatingsBumpers.isImage == image)
                         )
                     ]
@@ -593,7 +599,7 @@ class FeatureHandler:
             if mediaType == 'image' or mediaType == 'video' and not bumper:
                 bumper = self.getRatingBumper(sItem, f, image=True)
                 if bumper:
-                    playables.append(Image(bumper.path, duration=10, fade=3000).fromModule(sItem))
+                    playables.append(Image(bumper.path, duration=8, fade=1000).fromModule(sItem))
                     util.DEBUG_LOG('    - Image Rating: {0}'.format(repr(bumper.path)))
 
             playables.append(f)
@@ -767,7 +773,7 @@ class TriviaHandler:
         return None
 
     @DB.session
-    def mark(self, image):
+    def mark(self, image):        
         trivia = DB.Trivia.get(TID=image.setID)  
         trivia.accessed = datetime.datetime.now()
         trivia.save()
@@ -970,7 +976,7 @@ class TrailerHandler:
 
     def _getTrailersFromDBRating(self, source, watched=False):
         ratingLimitMethod = self.sItem.getLive('ratingLimit')
-        false = False  # To make my IDE happy about == and false
+        false = False
 
         where = [
             DB.Trailers.source == source,
@@ -989,9 +995,6 @@ class TrailerHandler:
             orderby = [
                 DB.fn.Random()
             ]
-
-        #if self.sItem.getLive('filter3D'):
-            #where.append(DB.Trailers.is3D == self.caller.nextQueuedFeature.is3D)
 
         if ratingLimitMethod and ratingLimitMethod != 'none':
             if ratingLimitMethod == 'max':
@@ -1085,8 +1088,9 @@ class TrailerHandler:
 
         watched = t.watched
 
-        t.watched = True
-        t.date = datetime.datetime.now()
+        if os.environ.get('isTestOrPreview') != 'True':
+            t.watched = True
+            t.date = datetime.datetime.now()
         t.url = url
         t.broken = not url
         t.save()
@@ -1166,8 +1170,6 @@ class TrailerHandler:
 
         try:
             files = [f for f in util.vfs.listdir(path) if os.path.splitext(f)[-1].lower() in util.videoExtensions]
-            #if self.sItem.getLive('filter3D'):
-                #files = [f for f in files if self.caller.nextQueuedFeature.is3D == util.pathIs3D(f)]
             files = random.sample(files, min((count, len(files))))
             [util.DEBUG_LOG('    - Using: {0}'.format(repr(f))) for f in files] or util.DEBUG_LOG('    - No matching files')
             return [Video(util.pathJoin(path, p), volume=sItem.getLive('volume')).fromModule(sItem) for p in files]
@@ -1187,8 +1189,6 @@ class VideoBumperHandler:
     def __init__(self):
         self.caller = None
         self.handlers = {
-            '3D.intro': self._3DIntro,
-            '3D.outro': self._3DOutro,
             'preshow': self.preshow,
             'sponsors': self.sponsors,
             'commercials': self.commercials,            
@@ -1206,6 +1206,23 @@ class VideoBumperHandler:
             'trivia.outro': self.triviaOutro,
             'dir': self.dir,
             'file': self.file
+        }
+        self.default_youtube_links = {
+            'preshow': 'plugin://plugin.video.youtube/play/?video_id=Duoy0gd-PAU',
+            'sponsors': 'plugin://plugin.video.youtube/play/?video_id=9bVilFsFlRk',
+            'commercials': 'plugin://plugin.video.youtube/play/?video_id=Q70dMEHV-Vo',     
+            'countdown': 'plugin://plugin.video.youtube/play/?video_id=5ivgwp8AYac',
+            'courtesy': 'plugin://plugin.video.youtube/play/?video_id=dwEIxiMfQJY',
+            'feature.intro': 'plugin://plugin.video.youtube/play/?video_id=q__lEWLxSm8',
+            'feature.outro': 'plugin://plugin.video.youtube/play/?video_id=Kpm8FmBWSw0',
+            'intermission': 'plugin://plugin.video.youtube/play/?video_id=-EmyFEamvN8',
+            'short.film': 'plugin://plugin.video.youtube/play/?video_id=-EmyFEamvN8',
+            'theater.intro': 'plugin://plugin.video.youtube/play/?video_id=AA6u3aO1oDM',
+            'theater.outro': 'plugin://plugin.video.youtube/play/?video_id=KTYDIiUffZw',
+            'trailers.intro': 'plugin://plugin.video.youtube/play/?video_id=oFoY0m1T_nk',
+            'trailers.outro': 'plugin://plugin.video.youtube/play/?video_id=c6ys96aZ0sQ',
+            'trivia.intro': 'plugin://plugin.video.youtube/play/?video_id=VmIyAIo4k-0',
+            'trivia.outro': 'plugin://plugin.video.youtube/play/?video_id=5BesAADNV6M'
         }
 
     def __call__(self, caller, sItem):
@@ -1227,24 +1244,19 @@ class VideoBumperHandler:
 
     @DB.session
     def defaultHandler(self, sItem):
-        is3D = self.caller.nextQueuedFeature.is3D and sItem.play3D
 
         if sItem.random:
             util.DEBUG_LOG('    - Random')
 
-            bumpers = [x for x in DB.VideoBumpers.select().where((DB.VideoBumpers.type == sItem.vtype) & (DB.VideoBumpers.is3D == is3D))]
+            bumpers = [x for x in DB.VideoBumpers.select().where((DB.VideoBumpers.type == sItem.vtype))]
             bumpers = random.sample(bumpers, min(sItem.count, len(bumpers)))
             bumpers = [Video(bumper.path, volume=sItem.getLive('volume')).fromModule(sItem) for bumper in bumpers]
 
-            if not bumpers and is3D and util.getSettingDefault('bumper.fallback2D'):
-                util.DEBUG_LOG('    - Falling back to 2D bumper')
-
-                bumpers = [x for x in DB.VideoBumpers.select().where((DB.VideoBumpers.type == sItem.vtype))]
-                bumpers = random.sample(bumpers, min(sItem.count, len(bumpers)))
-                bumpers = [Video(bumper.path, volume=sItem.getLive('volume')).fromModule(sItem) for bumper in bumpers]
-
             if not bumpers:
-                util.DEBUG_LOG('    - No matches!')
+                util.DEBUG_LOG('    - No matches! Using default YouTube link.')
+                default_link = self.default_youtube_links.get(sItem.vtype)
+                if default_link:
+                    return [Video(default_link, volume=sItem.getLive('volume')).fromModule(sItem)]
 
             return bumpers
 
@@ -1256,16 +1268,6 @@ class VideoBumperHandler:
                 util.DEBUG_LOG('    - Empty path!')
 
         return []
-
-    def _3DIntro(self, sItem):
-        if not self.caller.nextQueuedFeature.is3D:
-            return []
-        return self.defaultHandler(sItem)
-
-    def _3DOutro(self, sItem):
-        if not self.caller.nextQueuedFeature.is3D:
-            return []
-        return self.defaultHandler(sItem)
 
     def countdown(self, sItem):
         return self.defaultHandler(sItem)
@@ -1335,6 +1337,19 @@ class VideoBumperHandler:
             return []
 
 class AudioFormatHandler:
+    def __init__(self):
+        self.default_youtube_links = {
+            'Auro-3D': 'plugin://plugin.video.youtube/play/?video_id=4uUy-rhIrw4',
+            'Datasat': 'plugin://plugin.video.youtube/play/?video_id=O6Jiv_U5rPU',
+            'Dolby Atmos': 'plugin://plugin.video.youtube/play/?video_id=pd_6WN9GVtQ',
+            'Dolby Digital': 'plugin://plugin.video.youtube/play/?video_id=zwul5nW9xHU',
+            'Dolby Digital Plus': 'plugin://plugin.video.youtube/play/?video_id=zwul5nW9xHU',
+            'Dolby TrueHD': 'plugin://plugin.video.youtube/play/?video_id=77fAMqoYPPM',
+            'DTS': 'plugin://plugin.video.youtube/play/?video_id=slDSieDA7EE',
+            'DTS-HD Master Audio': 'plugin://plugin.video.youtube/play/?video_id=nU_lXddJPvE',
+            'DTS-X': 'plugin://plugin.video.youtube/play/?video_id=qEbRNeOcf9c',
+            'THX': 'plugin://plugin.video.youtube/play/?video_id=_s-6pSdoctI',
+        }
     _atmosRegex = re.compile('atmos', re.IGNORECASE)
     _dtsxRegex = re.compile('dtsx', re.IGNORECASE)
     _auro3dRegex = re.compile('auro3d', re.IGNORECASE)      
@@ -1366,8 +1381,6 @@ class AudioFormatHandler:
 
         util.DEBUG_LOG('[{0}] Method: {1} Fallback: {2} Format: {3}'.format(sItem.typeChar, method, fallback, format_))
 
-        is3D = caller.nextQueuedFeature.is3D and sItem.play3D
-
         if method == 'af.detect':
             util.DEBUG_LOG('    - Detect')
             audioFormat = self._checkFileNameForFormat(caller.nextQueuedFeature)
@@ -1375,22 +1388,12 @@ class AudioFormatHandler:
                 try:
                     bumper = random.choice(
                         [x for x in DB.AudioFormatBumpers.select().where(
-                            (DB.AudioFormatBumpers.format == audioFormat) & (DB.AudioFormatBumpers.is3D == is3D)
+                            (DB.AudioFormatBumpers.format == audioFormat)
                         )]
                     )
                     util.DEBUG_LOG('    - Detect: Using bumper based on feature codec info ({0})'.format(repr(caller.nextQueuedFeature.title)))
                 except IndexError:
                     util.DEBUG_LOG('    - Detect: No codec matches!')
-                    if is3D and util.getSettingDefault('bumper.fallback2D'):
-                        try:
-                            bumper = random.choice(
-                                [x for x in DB.AudioFormatBumpers.select().where(DB.AudioFormatBumpers.format == audioFormat)]
-                            )
-                            util.DEBUG_LOG(
-                                '    - Using bumper based on feature codec info and falling back to 2D ({0})'.format(repr(caller.nextQueuedFeature.title))
-                            )
-                        except IndexError:
-                            pass
             else:
                 util.DEBUG_LOG('    - No feature audio format!')
 
@@ -1405,18 +1408,12 @@ class AudioFormatHandler:
             try:
                 bumper = random.choice(
                     [x for x in DB.AudioFormatBumpers.select().where(
-                        (DB.AudioFormatBumpers.format == format_) & (DB.AudioFormatBumpers.is3D == is3D)
+                        (DB.AudioFormatBumpers.format == format_)
                     )]
                 )
                 util.DEBUG_LOG('    - Format: Using bumper based on setting ({0})'.format(repr(caller.nextQueuedFeature.title)))
             except IndexError:
                 util.DEBUG_LOG('    - Format: No matches!')
-                if is3D and util.getSettingDefault('bumper.fallback2D'):
-                    try:
-                        bumper = random.choice([x for x in DB.AudioFormatBumpers.select().where(DB.AudioFormatBumpers.format == format_)])
-                        util.DEBUG_LOG('    - Using bumper based on format setting and falling back to 2D ({0})'.format(repr(caller.nextQueuedFeature.title)))
-                    except IndexError:
-                        pass
         if (
             sItem.getLive('file') and not bumper and (
                 method == 'af.file' or (
@@ -1429,6 +1426,18 @@ class AudioFormatHandler:
 
         if bumper:
             return [Video(bumper.path, volume=sItem.getLive('volume')).fromModule(sItem)]
+            
+        if not bumper:
+            util.DEBUG_LOG('    - No bumper found. Checking for default YouTube link.')
+            # Use the detected audio format or the format specified in the settings
+            audio_format_to_use = audioFormat if method == 'af.detect' else format_
+            default_link = self.default_youtube_links.get(audio_format_to_use)
+
+            if default_link:
+                util.DEBUG_LOG('    - Using default YouTube link for {0}'.format(audio_format_to_use))
+                return [Video(default_link, volume=sItem.getLive('volume')).fromModule(sItem)]
+            else:
+                util.DEBUG_LOG('    - No default YouTube link found for {0}'.format(audio_format_to_use))
 
         util.DEBUG_LOG('    - NOT SHOWING')
         return []
@@ -1579,7 +1588,7 @@ class SequenceProcessor:
             util.DEBUG_LOG('[- Non-Module Defaults -]')
 
             for sett in (
-                'bumper.fallback2D', 'trivia.music', 'trivia.musicVolume', 'trivia.musicFadeIn', 'trivia.musicFadeOut',
+                'trivia.music', 'trivia.musicVolume', 'trivia.musicFadeIn', 'trivia.musicFadeOut',
                 'trailer.preferUnwatched', 'trailer.ratingMax', 'rating.system.default'
             ):
                 util.DEBUG_LOG('{0}: {1}'.format(sett, repr(util.getSettingDefault(sett))))

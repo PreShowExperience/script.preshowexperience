@@ -20,6 +20,7 @@ except TypeError:
 
     datetime.datetime = new_datetime
 
+from peewee import *
 from peewee import peewee
 from . import util
 from resources.lib import kodiutil
@@ -64,12 +65,15 @@ def migrateDB(DB, version):
     from peewee.playhouse import migrate
     migrator = migrate.SqliteMigrator(DB)
 
-    if version < 7:    
+    if 1 < version < 7:    
         util.LOG('Updating Trivia accessed field')
         migrate.migrate(
             migrator.add_column('Trivia', 'accessed_temp', peewee.DateTimeField(default=datetime.date(2020, 1, 1))),
             migrator.drop_column('Trivia', 'accessed'),
-            migrator.rename_column('Trivia', 'accessed_temp', 'accessed')
+            migrator.rename_column('Trivia', 'accessed_temp', 'accessed'),
+            migrator.drop_column('AudioFormatBumpers', 'is3d'),
+            migrator.drop_column('Trailers', 'is3D'),
+            migrator.drop_column('RatingsBumpers', 'is3d')            
         )
         util.LOG('Removing watched.db & Trivia files')
         dbDir = util.STORAGE_PATH
@@ -197,7 +201,6 @@ def initialize(path=None, callback=None):
     callback(' - AudioFormatBumpers')
                               
     class BumperBase(ContentBase):
-        is3D = peewee.BooleanField(default=False)
         isImage = peewee.BooleanField(default=False)
         path = peewee.CharField(unique=True)
 
@@ -271,7 +274,6 @@ def initialize(path=None, callback=None):
         userAgent = peewee.CharField(null=True)
         thumb = peewee.CharField(null=True)
         broken = peewee.BooleanField(default=False)
-        is3D = peewee.BooleanField(default=False)
         verified = peewee.BooleanField(default=True)
 
     Trailers.create_table(fail_silently=True)

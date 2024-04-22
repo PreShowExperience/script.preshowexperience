@@ -17,8 +17,6 @@ except:
 mutagen.setFileOpener(util.vfs.File)
 
 TYPE_IDS = {
-    '3D Intro': '3D.intro',
-    '3D Outro': '3D.outro',
     'PreShow': 'preshow',
     'Sponsors': 'sponsors', 
     'Commercials': 'commercials',     
@@ -36,9 +34,6 @@ TYPE_IDS = {
     'Trivia Outro': 'trivia.outro'
 }
 
-CONTENT_3D_RE = '\([^\)]*3D[^\)]*\)'
-
-
 def getBumperDir(ID):
     for dirname, tid in list(TYPE_IDS.items()):
         if tid == ID:
@@ -47,7 +42,6 @@ def getBumperDir(ID):
         return None
 
     return ('Video Bumpers', dirname)
-
 
 class UserContent:
     _tree = (
@@ -78,8 +72,6 @@ class UserContent:
         'Trivia',
         'Slideshow',
         ('Video Bumpers', (
-            '3D Intro',
-            '3D Outro',
             'PreShow',
             'Sponsors', 
             'Commercials',             
@@ -334,10 +326,6 @@ class UserContent:
                 continue
 
             name, ext = os.path.splitext(v)
-            is3D = '3D' in name
-            if is3D and type_name == 'system':  # Remove tags from rating bumpers
-                name = re.sub(CONTENT_3D_RE, '', name).strip()
-
             isImage = False
             if ext in util.videoExtensions:
                 isImage = False
@@ -351,16 +339,15 @@ class UserContent:
             defaults = {
                 type_name: TYPE_IDS.get(type_, type_),
                 'name': name,
-                'is3D': is3D,
                 'isImage': isImage
             }
 
             if sub_name:
                 sub_val = sub_val or sub_default
                 defaults[sub_name] = sub_val
-                self.log('Loading {0} ({1} - {2}): [ {3}{4} ]'.format(model.__name__, util.strRepr(sub), sub_val, util.strRepr(name), is3D and ': 3D' or ''))
+                self.log('Loading {0} ({1} - {2}): [ {3} ]'.format(model.__name__, util.strRepr(sub), sub_val, util.strRepr(name)))
             else:
-                self.log('Loading {0} ({1}): [ {2}{3} ]'.format(model.__name__, util.strRepr(sub), util.strRepr(name), is3D and ': 3D' or ''))
+                self.log('Loading {0} ({1}): [ {2} ]'.format(model.__name__, util.strRepr(sub), util.strRepr(name)))
 
             model.get_or_create(
                 path=vpath,
@@ -418,6 +405,27 @@ class UserContent:
 
                     for t in trailers:
                         allct += 1
+                        # Check if the trailer source is 'Content' and watched is True
+                        file_path = t.getStaticURL()  # Assuming this gets the file path
+
+                        util.DEBUG_LOG('Checking trailer: ID={0}, Source={1}, Watched={2}, File Path={3}'.format(t.ID, source, t.watched, file_path))
+                        
+                        is_watched = t.watched
+                        
+                        util.DEBUG_LOG('The watched status is: {0}'.format(is_watched))
+
+                        if source == 'Content' and is_watched:
+                            if os.path.exists(file_path):
+                                try:
+                                    os.remove(file_path)
+                                    util.DEBUG_LOG('Deleted watched trailer file: {}'.format(file_path))
+
+                                    # Remove the entry from the database
+                                    DB.Trailers.delete().where(DB.Trailers.WID == t.ID).execute()
+                                    util.DEBUG_LOG('Removed database entry for watched trailer: {}'.format(t.ID))
+
+                                except OSError as e:
+                                    util.DEBUG_LOG('Error deleting file: {} - {}'.format(file_path, e))
                         try:
                             dt = DB.Trailers.get(DB.Trailers.WID == t.ID)
                             dt.verified = True
@@ -439,8 +447,7 @@ class UserContent:
                                 rating=str(t.rating),
                                 genres=','.join(t.genres),
                                 thumb=t.thumb,
-                                release=release_date,  # Using the computed release_date
-                                is3D=t.is3D,
+                                release=release_date,                                         
                                 verified=True
                             )
                         pct = int((allct / total) * 100)
@@ -458,12 +465,11 @@ class UserContent:
                             DB.Trailers.release < datetime.datetime.now() - datetime.timedelta(days=scraper.REMOVE_DAYS_OLD),
                             DB.Trailers.source == source
                         ).execute()
-
+                        
                     util.DEBUG_LOG(' - {0} new {1} trailers added to database'.format(ct, source))
                     util.DEBUG_LOG(' - {0} {1} trailers removed from database'.format(removed, source))
                 else:
                     util.DEBUG_LOG(' - No new {0} trailers added to database'.format(source))
-
 
 class MusicHandler:
     def __init__(self, owner=None):
@@ -527,7 +533,6 @@ class MusicHandler:
                 self.owner.log('Song Missing: {0} - REMOVED'.format(util.strRepr(path)))
 
         return cleaned
-
 
 class TriviaDirectoryHandler:
     _formatXML = 'slides.xml'

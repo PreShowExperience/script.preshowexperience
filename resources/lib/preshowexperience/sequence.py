@@ -22,8 +22,6 @@ LIMIT_ACTION = 7
 
 
 SETTINGS_DISPLAY = {
-    '3D.intro': T(32300, '3D Intro'),
-    '3D.outro': T(32301, '3D Outro'),
     'preshow': T(32710, 'PreShow'),
     'sponsors': T(32708, 'Sponsors'),
     'commercials': T(32709, 'Commercials'),
@@ -47,6 +45,7 @@ SETTINGS_DISPLAY = {
     'feature.duration': T(32727, 'Duration'),
     'feature.timeofday': T(32726, 'Time of day'),
     'imdb': 'IMDB',
+    'preshowtrailers': 'PreShow Trailers',
     'kodidb': T(32318, 'Kodi Database'),
     'scrapers': T(32319, 'Scrapers'),
     'dir': T(32047, 'Directory'),
@@ -71,10 +70,10 @@ SETTINGS_DISPLAY = {
     'slide': T(32046, 'Slide'),
     'random': T(32057, 'Random'),
     'newest': T(32056, 'Newest'),
+    'newest': T(32004, 'Oldest'),
     'style': T(32079, 'Style'),
     'DTS-X': 'DTS:X'
 }
-
 
 def settingDisplay(setting):
     if setting == None or setting == 0:
@@ -87,17 +86,14 @@ def settingDisplay(setting):
 
     return setting
 
-
 def strToBool(val):
     return bool(val == 'True')
-
 
 def strToBoolWithDefault(val):
     if val == None:
         return None
     return bool(val == 'True')
 
-    
 def parseRatingsList(rlist):
     for x in range(len(rlist)):
         r = rlist[x]
@@ -204,8 +200,7 @@ class SequenceData(object):
                     util.DEBUG_LOG(repr(dstring[:100]))
                     util.ERROR('Error parsing sequence: {0}'.format(repr(self.pathName)))
                     raise exceptions.BadSequenceFileException()
-
-        self._attrs['type'] = self._attrs.get('type')
+                    
         self._attrs['genres'] = self._attrs.get('genres') or []
         self._attrs['directors'] = self._attrs.get('directors') or []
         self._attrs['studios'] = self._attrs.get('studios') or []
@@ -215,6 +210,8 @@ class SequenceData(object):
         self._attrs['times'] = self._attrs.get('times') or []
         self._attrs['year'] = self._attrs.get('year') or []
         self._attrs['ratings'] = parseRatingsList(self._attrs.get('ratings') or [])
+        self._attrs['videoaspect'] = self._attrs.get('videoaspect') or []
+        self._attrs['featuretitle'] = self._attrs.get('featuretitle') or []
 
     def conditionsStr(self):
         ret = 'Sequence [{0}]:\n'.format(util.strRepr(self.name))
@@ -304,18 +301,7 @@ class SequenceData(object):
 
     def matchesFeatureAttr(self, attr, feature):
         try:
-            if attr == 'type':
-                if self.get('type') == '3D':
-                    if feature.is3D:
-                        return 5
-                    else:
-                        return -1
-                elif self.get('type') == '2D':
-                    if not feature.is3D:
-                        return 5
-                    else:
-                        return -1
-            elif attr == 'studio':
+            if attr == 'studio':
                 sMatch = [s.lower() for s in self.get('studios', []) if s]
                 if not sMatch:
                     return 0
@@ -324,8 +310,17 @@ class SequenceData(object):
                         return 5
                 else:
                     return -1
+            elif attr == 'featuretitle':
+                titleMatch = [t.lower() for t in self.get('featuretitle', []) if t]
+                if not titleMatch:
+                    return 0
+                featureTitle = feature.title.lower()
+                for title in titleMatch:
+                    if title in featureTitle:
+                        return 5
+                return -1
             elif attr == 'director':
-                dMatch = [s.lower() for s in self.get('directors', []) if s]
+                dMatch = [d.lower() for d in self.get('directors', []) if d]
                 if not dMatch:
                     return 0
                 for director in feature.directors:
@@ -333,6 +328,19 @@ class SequenceData(object):
                         return 5
                 else:
                     return -1
+            elif attr == 'videoaspect':
+                videoaspect_options = self.get('videoaspect', [])
+                if not videoaspect_options:
+                    return 0
+                vMatch = [v.lower() for v in videoaspect_options if v]
+                if not vMatch:
+                    return 0
+                # Assuming feature.videoaspect is a single value, not a list
+                feature_videoaspect = feature.videoaspect.lower()
+                for videoaspect in vMatch:
+                    if videoaspect == feature_videoaspect:
+                        return 5
+                return -1
             elif attr == 'actor':
                 aMatch = [a.lower() for a in self.get('actors', []) if a]
                 if not aMatch:
@@ -353,10 +361,8 @@ class SequenceData(object):
                     return -1
             elif attr == 'year':
                 years = self.get('year', [])
-
                 if not years:
                     return 0
-
                 ret = 0
                 for year in years:
                     ret = -1
@@ -373,13 +379,10 @@ class SequenceData(object):
                 return ret
             elif attr == 'dates':
                 dates = self.get('dates', [])
-
                 if not dates:
                     return 0
-
                 now = datetime.datetime.now()
                 current_date = now.date()
-
                 ret = 0
                 for date in dates:
                     ret = -1
@@ -454,7 +457,6 @@ class SequenceData(object):
             util.ERROR()
 
         return 0
-
 
 ################################################################################
 # BASE class for all content items
@@ -628,7 +630,6 @@ class Item(object):
 
     def elementVisible(self, e):
         return True
-
 
 ################################################################################
 # FEATURE PRESENTATION
@@ -1046,19 +1047,12 @@ class Trailer(Item):
             'default': None
         },
         # {
-            # 'attr': 'filter3D',
-            # 'type': strToBoolWithDefault,
-            # 'limits': LIMIT_BOOL_DEFAULT,
-            # 'name': T(32066, 'Filter for 3D based on feature'),
+            # 'attr': 'quality',
+            # 'type': None,
+            # 'limits': [None, '480p', '720p', '1080p'],
+            # 'name': T(32067, 'Quality'),
             # 'default': None
         # },
-        {
-            'attr': 'quality',
-            'type': None,
-            'limits': [None, '480p', '720p', '1080p'],
-            'name': T(32067, 'Quality'),
-            'default': None
-        },
         {
             'attr': 'volume',
             'type': int,
@@ -1071,14 +1065,14 @@ class Trailer(Item):
     typeChar = 'Trailer'
 
     _scrapers = [
-        ['Content', T(32326, 'Trailers Folder'), 'content'],
+        ['Content', T(32326, 'PreShow Trailers Folder'), 'content'],
         ['KodiDB', T(32318, 'Kodi Database'), 'kodidb'],
         ['IMDB', 'Internet Movie Database', 'imdb'],
         ['TMDB', 'The Movie Database', 'tmdb']
     ]
 
     _settingsDisplay = {
-        'Content': T(32326, 'Trailers Folder'),
+        'Content': T(32326, 'PreShow Trailers Folder'),
         'KodiDB': T(32318, 'Kodi Database'),
         'IMDB': 'IMDB',
         'THMDB': 'The Movie Database'
@@ -1095,7 +1089,6 @@ class Trailer(Item):
         self.ratingLimit = None
         self.ratingMax = None
         self.limitGenre = None
-        self.filter3D = None
         self.quality = None
         self.volume = 0
 
@@ -1118,9 +1111,6 @@ class Trailer(Item):
                 return False
         elif attr == 'count':
             if self.getLive('source') not in ('dir', 'content'):
-                return False
-        elif attr == 'filter3D':
-            if self.getLive('source') not in ('content', 'dir'):
                 return False
         elif attr in ('scrapers', 'order', 'limitRating', 'limitGenre'):
             if self.getLive('source') != 'content':
@@ -1200,9 +1190,7 @@ class Video(Item):
                 'trailers.intro',
                 'trailers.outro',
                 'trivia.intro',
-                'trivia.outro',
-                '3D.intro',
-                '3D.outro',                
+                'trivia.outro',              
                 'dir',
                 'file'
             ],
@@ -1240,13 +1228,6 @@ class Video(Item):
             'limits': LIMIT_FILE_DEFAULT,
             'name': T(32048, 'File'),
         },
-        # {
-            # 'attr': 'play3D',
-            # 'type': strToBool,
-            # 'limits': LIMIT_BOOL,
-            # 'name': T(32328, 'Play 3D If 3D Feature'),
-            # 'default': False
-        # },
         {
             'attr': 'volume',
             'type': int,
@@ -1266,7 +1247,6 @@ class Video(Item):
         self.dir = ''
         self.count = 1
         self.file = ''
-        self.play3D = True
         self.volume = 0
 
     def elementVisible(self, e):
@@ -1280,10 +1260,7 @@ class Video(Item):
         elif attr == 'file':
             return self.vtype == 'file'
         elif attr == 'random':
-            return self.vtype != 'file'
-        elif attr == 'play3D':
-            return self.random and self.vtype not in ('3D.intro', '3D.outro', 'dir', 'file')
-
+            return self.vtype != 'file'         
         return True
 
     def display(self):
@@ -1349,13 +1326,6 @@ class AudioFormat(Item):
             'name': T(32030, 'Format'),
             'default': None
         },
-        # {
-            # 'attr': 'play3D',
-            # 'type': strToBool,
-            # 'limits': LIMIT_BOOL,
-            # 'name': T(32328, 'Play 3D if 3D feature'),
-            # 'default': False
-        # },
         {
             'attr': 'volume',
             'type': int,
@@ -1373,7 +1343,6 @@ class AudioFormat(Item):
         self.fallback = None
         self.format = None
         self.file = None
-        self.play3D = True
         self.volume = 0
 
     def elementVisible(self, e):
@@ -1384,11 +1353,8 @@ class AudioFormat(Item):
             return self.getLive('method') == 'af.file' or (self.getLive('method') == 'af.detect' and self.getLive('fallback') == 'af.file')
         elif attr == 'format':
             return self.getLive('method') == 'af.format' or (self.getLive('method') == 'af.detect' and self.getLive('fallback') == 'af.format')
-        elif attr == 'play3D':
-            return self.getLive('method') in (None, 'af.detect', 'af.format')
 
         return True
-
 
 ################################################################################
 # ACTION
@@ -1426,7 +1392,6 @@ class Action(Item):
             return bool(self.file)
 
         return True
-
 
 ################################################################################
 # COMMAND
@@ -1568,7 +1533,6 @@ class Command(Item):
 
         return True
 
-
 CONTENT_CLASSES = {
     'action': Action,
     'audioformat': AudioFormat,
@@ -1591,12 +1555,10 @@ ITEM_TYPES = [
     ('Feature', T(32073, 'Feature'), 'Feature', Feature)
 ]
 
-
 def getItem(token):
     for i in ITEM_TYPES:
         if i[0] == token:
             return i[3]
-
 
 def sequenceHasFeature(items):
     for i in items:

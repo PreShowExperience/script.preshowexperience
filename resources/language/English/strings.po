@@ -26,15 +26,15 @@ msgid "Sequence"
 msgstr ""
 
 msgctxt "#32003"
-msgid "2D sequence"
+msgid "PreShow Trailers"
 msgstr ""
 
 msgctxt "#32004"
-msgid "3D sequence"
+msgid "Oldest"
 msgstr ""
 
 msgctxt "#32005"
-msgid "3D tag detection regex"
+msgid "Selection Order"
 msgstr ""
 
 msgctxt "#32006"
@@ -62,11 +62,11 @@ msgid "Content Scrapers"
 msgstr ""
 
 msgctxt "#32012"
-msgid "Trailers: PreShow Trailers Folder"
+msgid "PreShow Trailers Folder"
 msgstr ""
 
 msgctxt "#32013"
-msgid "Trailers: Kodi Database"
+msgid "Kodi Database (YouTube)"
 msgstr ""
 
 msgctxt "#32014"
@@ -78,11 +78,11 @@ msgid "Mark watched if movie is watched"
 msgstr ""
 
 msgctxt "#32016"
-msgid "Trailers: IMDB"
+msgid "IMDB"
 msgstr ""
 
 msgctxt "#32017"
-msgid "Trailers: The Movie Database"
+msgid "TMDB (YouTube)"
 msgstr ""
 
 msgctxt "#32018"
@@ -278,7 +278,7 @@ msgid "Match feature genres"
 msgstr ""
 
 msgctxt "#32066"
-msgid "Filter for 3D based on feature"
+msgid "Delete watched trailer files"
 msgstr ""
 
 msgctxt "#32067"
@@ -470,11 +470,11 @@ msgid "Import"
 msgstr ""
 
 msgctxt "#32115"
-msgid "Import CinemaVision Settings"
+msgid "Filter for 3D in feature filename"
 msgstr ""
 
 msgctxt "#32116"
-msgid "CinemaVision Settings Imported!"
+msgid ""
 msgstr ""
 
 msgctxt "#32117"
@@ -497,14 +497,13 @@ msgctxt "#32121"
 msgid "Move DB to Content Directory"
 msgstr ""
 
-
 #Sequence
 msgctxt "#32300"
-msgid "3D Intro"
+msgid ""
 msgstr ""
 
 msgctxt "#32301"
-msgid "3D Outro"
+msgid ""
 msgstr ""
 
 msgctxt "#32302"
@@ -612,7 +611,7 @@ msgid "Type"
 msgstr ""
 
 msgctxt "#32328"
-msgid "Play 3D If 3D Feature"
+msgid ""
 msgstr ""
 
 msgctxt "#32329"
@@ -870,7 +869,7 @@ msgid "Would you like to set this as the default for playback?"
 msgstr ""
 
 msgctxt "#32557"
-msgid "For 2D or 3D?"
+msgid ""
 msgstr ""
 
 msgctxt "#32558"
@@ -1041,11 +1040,11 @@ msgid "Run abort action?"
 msgstr ""
 
 msgctxt "#32599"
-msgid "Default 2D"
+msgid "Default"
 msgstr ""
 
 msgctxt "#32600"
-msgid "Default 3D"
+msgid ""
 msgstr ""
 
 msgctxt "#32601"
@@ -1439,4 +1438,8 @@ msgstr ""
 
 msgctxt "#32748"
 msgid "This setting can only be changed after the sequence has been saved."
+msgstr ""
+
+msgctxt "#32749"
+msgid "Add aspect ratio to conditions (slows down movie selection)"
 msgstr ""

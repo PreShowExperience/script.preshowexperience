@@ -8,7 +8,6 @@
     "random": true, 
     "count": 1, 
     "vtype": "trivia.intro", 
-    "play3D": true
    }
   }, 
   {
@@ -25,7 +24,6 @@
     "random": true, 
     "count": 1, 
     "vtype": "trivia.outro", 
-    "play3D": true
    }
   }, 
   {
@@ -36,7 +34,6 @@
     "random": true, 
     "count": 1, 
     "vtype": "courtesy", 
-    "play3D": true
    }
   }, 
   {
@@ -47,7 +44,6 @@
     "random": true, 
     "count": 1, 
     "vtype": "theater.intro", 
-    "play3D": true
    }
   }, 
   {
@@ -58,7 +54,6 @@
     "random": true, 
     "count": 1, 
     "vtype": "trailers.intro", 
-    "play3D": true
    }
   }, 
   {
@@ -76,7 +71,6 @@
     "random": true, 
     "count": 1, 
     "vtype": "trailers.outro", 
-    "play3D": true
    }
   }, 
   {
@@ -84,7 +78,6 @@
    "type": "audioformat", 
    "name": "", 
    "settings": {
-    "play3D": true
    }
   }, 
   {
@@ -101,7 +94,6 @@
     "random": true, 
     "count": 1, 
     "vtype": "feature.outro", 
-    "play3D": true
    }
   }, 
   {
@@ -112,7 +104,6 @@
     "random": true, 
     "count": 1, 
     "vtype": "theater.outro", 
-    "play3D": true
    }
   }
  ], 

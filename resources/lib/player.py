@@ -6,7 +6,7 @@ from .kodiutil import T
 from . import experience
 from . import kodigui
 from . import kodiutil
-from . import pseutil
+from . import preshowutil
 
 kodiutil.checkAPILevel()
 
@@ -68,9 +68,9 @@ def begin(movieid=None, episodeid=None, dbtype=None, selection=False, args=None)
         kodiutil.DEBUG_LOG('Loading selected sequence: {0}'.format(repr(seqPath)))
     else:
         feature = e.features[0]
-        seqData = pseutil.getMatchedSequence(feature)
+        seqData = preshowutil.getMatchedSequence(feature)
         seqPath = seqData['path']
-        kodiutil.DEBUG_LOG('Loading sequence for {0}: {1}'.format(feature.is3D and '3D' or '2D', repr(seqPath)))
+        kodiutil.DEBUG_LOG('Loading sequence ... ')
 
     if xbmc.getCondVisibility('Window.IsVisible(MovieInformation)'):
         xbmc.executebuiltin('Dialog.Close(MovieInformation)')
@@ -160,17 +160,11 @@ class PlaylistDialog(kodigui.BaseDialog):
         xbmc.sleep(100)
         self.setFocusId(self.PLAY_BUTTON_ID)
 
-    def queueHas3D(self):
-        for f in self.features:
-            if f.is3D:
-                return True
-        return False
-
     def updateSequenceSelection(self):
         if self.sequencePath:
             return
 
-        seqData = pseutil.getMatchedSequence(self.features[0])
+        seqData = preshowutil.getMatchedSequence(self.features[0])
         if not seqData:
             return
 
@@ -227,7 +221,7 @@ class PlaylistDialog(kodigui.BaseDialog):
             rpc.Playlist.Add(playlistid=xbmc.PLAYLIST_VIDEO, item=item)
 
     def selectSequence(self):
-        selection = pseutil.selectSequence(active=False, for_dialog=True)
+        selection = preshowutil.selectSequence(active=False, for_dialog=True)
         if not selection:
             return
 

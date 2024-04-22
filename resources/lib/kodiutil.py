@@ -64,22 +64,6 @@ def checkAPILevel():
     old = getSetting('API_LEVEL', 0)
     if not old:
         firstRun()
-    elif old == 1:
-        setSetting('from.beta', ADDON.getAddonInfo('version'))
-        
-    elif old < 3:
-        LOG('API LEVEL < 3: Clearing trailers and updating DB')
-        
-        last = os.path.join(PROFILE_PATH, 'imdb.last')
-        watched = os.path.join(PROFILE_PATH, 'watched.db')
-        if os.path.exists(last):
-            os.remove(last)
-        if os.path.exists(watched):
-            os.remove(watched)
-        from . import pseutil
-        pseutil.loadContent()
-        xbmc.sleep(1000)
-
     if old < 4:
         LOG('API LEVEL < 4: Migrating default sequences')
 
@@ -88,20 +72,6 @@ def checkAPILevel():
             from resources.lib import preshowexperience
 
             sequencesPath = preshowexperience.util.pathJoin(contentPath, 'Sequences')
-
-            for stereoType in ['2D', '3D']:
-                default = getSetting('sequence.{0}'.format(stereoType))
-                if default:
-                    path = preshowexperience.util.pathJoin(sequencesPath, '{0}.pseseq'.format(default))
-                    if preshowexperience.util.vfs.exists(path):
-                        LOG('API Migration: Activating sequence for {0}: {1}'.format(stereoType, default))
-                        seqData = preshowexperience.sequence.SequenceData.load(path)
-                        seqData.active = True
-                        seqData.set('type', stereoType)
-                        seqData.save()
-
-    if getSetting('from.beta'):
-        DEBUG_LOG('UPDATED FROM BETA: {0}'.format(getSetting('from.beta')))
 
     setSetting('API_LEVEL', API_LEVEL)
 

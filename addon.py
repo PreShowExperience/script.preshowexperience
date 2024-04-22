@@ -5,7 +5,7 @@ from resources.lib import kodiutil
 from resources.lib import main
 from resources.lib import settings
 from resources.lib import player
-from resources.lib import pseutil
+from resources.lib import preshowutil
 
 if __name__ == '__main__':
     arg = None
@@ -32,11 +32,11 @@ if __name__ == '__main__':
         player.begin(selection=True, args=args)
     elif arg == 'update.database':
         fromSettings = bool(args and args[0] == 'from.settings')
-        pseutil.loadContent(from_settings=fromSettings, bg=not fromSettings)
+        preshowutil.loadContent(from_settings=fromSettings, bg=not fromSettings)
         if fromSettings:
             kodiutil.ADDON.openSettings()
     elif arg == 'feature.setRatingBumperStyle':
-        pseutil.setRatingBumperStyle()
+        preshowutil.setRatingBumperStyle()
     elif arg == 'pastebin.paste.log':
         settings.pasteLog()
         kodiutil.ADDON.openSettings()

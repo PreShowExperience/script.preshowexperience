@@ -2,7 +2,7 @@ import requests
 import threading
 from ... import util
 
-API_KEY = '99ccac3e0d7fd2c7a076beea141c1057'
+API_KEY = '447f77c9172fe4a982a644bbfb0bd13b'
 BASE_URL = 'https://api.themoviedb.org/3/movie/{endpoint}?language=en-US&api_key=' + API_KEY
 UPCOMING_URL = {'endpoint': 'upcoming', 'params': '&page={page}'}
 DETAILS_URL = {'params': '&append_to_response=videos,release_dates'}

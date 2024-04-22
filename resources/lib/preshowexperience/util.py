@@ -3,15 +3,7 @@ import sys
 import re
 
 DEBUG = True
-
 STORAGE_PATH = None
-
-TAGS_3D_REGEX = ''
-
-
-def pathIs3D(path):
-    return bool(re.search(TAGS_3D_REGEX, path))
-
 
 class Progress:
     def __init__(self, title=''):
@@ -34,7 +26,6 @@ class Progress:
         print('{0}% {1}: {2}'.format(self.pct, self.heading, self.message))
         return True
 
-
 def getSep(path):
     if '\\' not in path:
         return '/'
@@ -44,7 +35,6 @@ def getSep(path):
         return '\\'
     return '/'
 
-
 def _getSettingDefault(key):
     defaults = {
         'feature.count': 1,
@@ -52,7 +42,6 @@ def _getSettingDefault(key):
         'feature.ratingStyleSelection': 'random',
         'feature.ratingStyle': 'Classic',
         'feature.volume': 100,
-        'trivia.format': 'slide',
         'trivia.duration': 5,
         'trivia.qDuration': 8,
         'trivia.cDuration': 6,
@@ -74,7 +63,6 @@ def _getSettingDefault(key):
         'trailer.order': 'newest',
         'trailer.count': 1,
         'trailer.limitGenre': True,
-        #'trailer.filter3D': True,
         'trailer.quality': '720p',
         'trailer.dir': '',
         'trailer.file': '',
@@ -86,7 +74,6 @@ def _getSettingDefault(key):
         'audioformat.volume': 100,
         'video.volume': 100,
         # Non-sequence defaults
-        'bumper.fallback2D': False,
         'trivia.music': 'content',
         'trivia.musicVolume': 75,
         'trivia.musicFadeIn': 3.0,
@@ -97,7 +84,7 @@ def _getSettingDefault(key):
         'slideshow.musicFadeOut': 3.0,
         'trailer.ratingMax': 'MPAA.G',
         'trailer.preferUnwatched': True,
-        'rating.system.default': 'MPAA'
+        'rating.system.default': 'MPAA',
     }
 
     return defaults.get(key)
@@ -216,8 +203,6 @@ try:
             return ['none', 'max', 'match'][int(default)]
         elif key == 'trailer.order':
             return ['newest', 'random'][int(default)]
-        elif key == 'trivia.format':
-            return ['slide', 'video'][int(default)]
         elif key == 'trivia.music':
             return ['off', 'content', 'dir', 'file'][int(default)]
         elif key == 'slideshow.format':
@@ -349,9 +334,6 @@ except:
 
     def translatePath(path):
         return path
-
-    def LOG(msg):
-        print('[- CinemaVison -] (API): {0}'.format(msg))
 
     def wait(timeout):
         time.sleep(timeout)

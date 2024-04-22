@@ -7,7 +7,7 @@ import xbmcgui
 
 from . import kodiutil
 from . import preshowexperience
-from . import pseutil
+from . import preshowutil
 from . import pyqrcode
 from . import kodigui
 from .pastebin_python import PastebinPython
@@ -156,7 +156,7 @@ def removeContentDatabase():
     xbmcgui.Dialog().ok(T(32515, 'Done'), T(32584, 'Database reset.'))
 
 def setDefaultSequence(setting):
-    selection = pseutil.selectSequence()
+    selection = preshowutil.selectSequence()
     if not selection:
         return
 
@@ -174,7 +174,7 @@ def setScrapers():
                 options.append(s)
     options.sort(key=lambda i: i[0].lower() in selected and selected.index(i[0].lower())+1 or 99)
 
-    result = pseutil.multiSelect(options, default=True)
+    result = preshowutil.multiSelect(options, default=True)
 
     if result is False or result is None:
         return
@@ -193,9 +193,21 @@ def testEventActions(action):
     elif action == 'ABORT':
         if kodiutil.getSetting('action.onAbort', False):
             path = kodiutil.getSetting('action.onAbort.file', '')
+    elif action == 'LastChapter':
+        if kodiutil.getSetting('action.onLastChapter', False):
+            path = kodiutil.getSetting('action.onLastChapter.file', '')
+    elif action == 'BeforeFeature':
+        if kodiutil.getSetting('action.onBeforeFeature', False):
+            path = kodiutil.getSetting('action.BeforeFeature.file', '')
+    elif action == 'PreshowBeginning':
+        if kodiutil.getSetting('action.PreshowBeginning', False):
+            path = kodiutil.getSetting('action.onPreshowBeginning.file', '')
+    elif action == 'AfterFeature':
+        if kodiutil.getSetting('action.onAfterFeature', False):
+            path = kodiutil.getSetting('action.onAfterFeature.file', '')            
 
     if not path:
         xbmcgui.Dialog().ok(T(32090, 'Not Set'), T(32330, 'This action is not set or not yet applied.'))
         return
 
-    pseutil.evalActionFile(path)
+    preshowutil.evalActionFile(path)

@@ -4,7 +4,7 @@ from resources.lib import kodiutil
 
 
 def getTrailers():
-    skipYouTube = kodiutil.getSetting('scraper.trailers.KodiDB.skipYouTube', False)
+    # skipYouTube = kodiutil.getSetting('scraper.trailers.KodiDB.skipYouTube', False)
     markWatched = kodiutil.getSetting('scraper.trailers.KodiDB.markWatched', False)
 
     for m in rpc.VideoLibrary.GetMovies(properties=['trailer', 'mpaa', 'genre', 'year', 'playcount']).get('movies', []):
@@ -13,8 +13,8 @@ def getTrailers():
         if not trailer:
             continue
 
-        if skipYouTube and trailer.startswith('plugin://'):
-            continue
+        # if skipYouTube and trailer.startswith('plugin://'):
+            # continue
 
         yield {
             'ID': m['movieid'],

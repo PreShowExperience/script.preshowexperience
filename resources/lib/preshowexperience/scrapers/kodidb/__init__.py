@@ -1,5 +1,5 @@
 from . import scraper
-from resources.lib import pseutil
+from resources.lib import preshowutil
 from ... import util
 from ... import ratings
 from .. import _scrapers
@@ -29,7 +29,7 @@ class Trailer(_scrapers.Trailer):
         if not getattr(self, '_rating', None):
             ratingString = self.data.get('rating')
             if ratingString:
-                self._rating = ratings.getRating(pseutil.ratingParser().getActualRatingFromMPAA(ratingString))
+                self._rating = ratings.getRating(preshowutil.ratingParser().getActualRatingFromMPAA(ratingString))
             else:
                 self._rating = None
         return self._rating
@@ -41,10 +41,6 @@ class Trailer(_scrapers.Trailer):
     @property
     def release(self):
         return self.data['release']
-
-    @property
-    def is3D(self):
-        return self._is3D
 
     @property
     def watched(self):

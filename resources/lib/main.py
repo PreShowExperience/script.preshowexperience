@@ -16,7 +16,7 @@ kodiutil.LOG('Version: {0}'.format(kodiutil.ADDON.getAddonInfo('version')))
 
 kodiutil.checkAPILevel()
 
-from . import pseutil  # noqa E402
+from . import preshowutil  # noqa E402
 
 from resources.lib import preshowexperience  # noqa E402
 
@@ -303,7 +303,7 @@ class ItemSettingsWindow(kodigui.BaseDialog):
             if not options:
                 xbmcgui.Dialog().ok(T(32525, 'No Options'), T(32526, 'No options found.'))
                 return False
-            result = pseutil.multiSelect(options)
+            result = preshowutil.multiSelect(options)
             if result is False:
                 return False
             value = result
@@ -319,7 +319,7 @@ class ItemSettingsWindow(kodigui.BaseDialog):
             value = not sItem.getSetting(attr)
         elif options == preshowexperience.sequence.LIMIT_ACTION:
             if self.item.dataSource._type == 'action':
-                pseutil.evalActionFile(self.item.dataSource.file)
+                preshowutil.evalActionFile(self.item.dataSource.file)
             return False
         elif isinstance(options, list):
             idx = xbmcgui.Dialog().select(T(32523, 'Options'), [x[1] for x in options])
@@ -545,7 +545,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         if self.checkForContentDB() and not kodiutil.getSetting('database.autoUpdate', False):
             return
 
-        pseutil.loadContent()
+        preshowutil.loadContent()
 
     def checkForContentDB(self):
         if kodiutil.getPathSetting('content.path'):
@@ -1073,11 +1073,12 @@ class SequenceEditorWindow(kodigui.BaseWindow):
                 self.updateItemSettings(item)
 
         if not self.checkForContentDB():
-            pseutil.loadContent()
+            preshowutil.loadContent()
 
     def test(self):
         from . import experience
 
+        os.environ['isTestOrPreview'] = 'True'
         savePath = os.path.join(kodiutil.PROFILE_PATH, 'temp.pseseq')
         self._save(savePath, temp=True)
 
@@ -1136,7 +1137,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('EDITING', name)
 
     def defaultSavePath(self):
-        return pseutil.defaultSavePath()
+        return preshowutil.defaultSavePath()
 
     def save(self, as_new=False, export=False):
         if export:
@@ -1169,8 +1170,8 @@ class SequenceEditorWindow(kodigui.BaseWindow):
 
         if not preshowexperience.sequence.sequenceHasFeature(items):
             yes = xbmcgui.Dialog().yesno(
-                T(32603, 'No Feature'),
-                T(32604, 'Sequence does not have a feature module, which is required to play items selected in Kodi.  Do you wish to continue?')
+                T(32561, 'No Feature'),
+                T(32561, 'Sequence does not have a feature module, which is required to play items selected in Kodi.  Do you wish to continue?')
             )
             if not yes:
                 return
@@ -1274,7 +1275,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
             if not path:
                 return
         else:
-            selection = pseutil.selectSequence(active=False)
+            selection = preshowutil.selectSequence(active=False)
 
             if not selection:
                 return

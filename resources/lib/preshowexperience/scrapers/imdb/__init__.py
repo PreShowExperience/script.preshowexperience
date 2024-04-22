@@ -1,8 +1,12 @@
 import datetime
 import os
 import re
+import requests
 import time
 import xbmc
+import base64
+import json
+import gzip
 
 from . import scraper
 from .. import _scrapers
@@ -11,16 +15,12 @@ from ... import util
 
 class Trailer(_scrapers.Trailer):
     def __init__(self, data):
-        #util.DEBUG_LOG(data)
         self.data = data
-        if self.data.get('rating', '').lower().startswith('Not'):
-            self.data['rating'] = 'NR'
-        #util.DEBUG_LOG(ratings.getRating('MPAA', self.data.get('mpaa', '')))
         self.data['rating'] = ratings.getRating('MPAA', self.data.get('mpaa', ''))
 
     @property
     def ID(self):
-        return 'imdb:{0}.{1}'.format(self.data['movie_id'], self.data['location'])
+        return 'imdb:{0}'.format(self.data['movie_id'])
 
     @property
     def title(self):
@@ -44,7 +44,7 @@ class Trailer(_scrapers.Trailer):
 
     @property
     def release(self):
-        return self.data.get('releasedatetime', datetime.datetime(1900, 1, 1))
+        return self.data.get('releasedatetime', datetime.datetime(2020, 1, 1))
 
     def getStaticURL(self):
         return None
@@ -59,7 +59,7 @@ class Trailer(_scrapers.Trailer):
         return None
 
     def _getPlayableURL(self, res='720p'):
-        return IMDBTrailerScraper.getPlayableURL(self.data['location'], res)
+        return IMDBTrailerScraper.getPlayableURL()
 
 
 class IMDBTrailerScraper(_scrapers.Scraper):
@@ -69,25 +69,61 @@ class IMDBTrailerScraper(_scrapers.Scraper):
         self.loadTimes()
 
     @staticmethod
-    def getPlayableURL(ID, res=None, url=None):
-        ts = scraper.Scraper()
-        id_location = ID.split('.', 1)
-        all_ = [t for t in ts.get_trailers(id_location[-1], id_location[0]) if t]
+    def get_trailer_url(video_id):
+        vidurl = f"https://www.imdb.com/video/{video_id}"
+        util.DEBUG_LOG('Video URL: {0}'.format(vidurl))
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
+            'Accept-Language': 'en-US,en',
+        }
+        response = requests.get(vidurl, headers=headers)
+        #util.DEBUG_LOG('Response: {0}'.format(response))
 
-        #util.DEBUG_LOG('IMDB trailers : {0}'.format(all_))
-
-        if not all_:
+        if response.status_code != 200:
+            util.DEBUG_LOG('Failed to fetch URL')
+            util.DEBUG_LOG('Status code: {0}'.format(response.status_code))
             return None
 
-        url = None
         try:
-            streams = all_[0]['streams']
-            url = streams.get(res, streams.get('hd720', streams.get('sd')))
-        except:
-            import traceback
-            traceback.print_exc()
+            content = response.content
+            #util.DEBUG_LOG('Content: {0}'.format(content))
+            # Check if the content is compressed
+            content = content.decode('utf-8')
+        except Exception as e:
+            util.DEBUG_LOG(f'Failed to decode content: {e}')
+            return None
 
-        return url
+        # Debug print to check content snippet
+        #util.DEBUG_LOG('Content snippet: {0}'.format(content[:500]))
+
+        # Parsing the video playback URLs from the JSON data embedded within the HTML
+        match = re.search(r'application/json">(.*?)</script>', content)
+        if match:
+            try:
+                data = json.loads(match.group(1))
+            except json.JSONDecodeError as e:
+                util.DEBUG_LOG(f'JSON decode error: {e}')
+                return None
+            video_data = data.get('props', {}).get('pageProps', {}).get('videoPlaybackData', {}).get('video', {})
+            #util.DEBUG_LOG('Video Data: {0}'.format(video_data))
+            streams = {item['displayName']['value']: item['url'] for item in video_data.get('playbackURLs', []) if item['videoMimeType'] == 'MP4'}
+            #util.DEBUG_LOG('Streams: {0}'.format(streams))
+            return streams
+
+        util.DEBUG_LOG("No valid JSON data found in response.")
+        return None
+
+    @staticmethod
+    def getPlayableURL(video_id, res=1080, url=None):
+        #video_id = 'vi3952068121'
+        streams = IMDBTrailerScraper.get_trailer_url(video_id)
+        if streams:
+            # Select the video URL based on desired resolution
+            possible_resolutions = ['1080p', '720p', '480p']
+            for resolution in possible_resolutions:
+                if resolution in streams:
+                    return streams[resolution]
+        return None
 
     def loadTimes(self):
         self.lastAllUpdate = 0
@@ -119,29 +155,19 @@ class IMDBTrailerScraper(_scrapers.Scraper):
         return False
 
     def getTrailers(self):
-        ms = scraper.Scraper()
+        url = base64.b64decode('aHR0cHM6Ly9wcmVzaG93ZXhwZXJpZW5jZS5jb20vcHJlc2hvd2ltZGJ0cmFpbGVycy9wcmVzaG93aW1kYnRyYWlsZXJzLnBocA==').decode()
+        ms = scraper.Scraper(url)
         if self.allIsDue():
-            util.DEBUG_LOG(' - Fetching all trailers')
-            return [Trailer(t) for t in ms.get_all_movies(None)]
+            util.DEBUG_LOG(' - Fetching trailers')
+            return [Trailer(t) for t in ms.get_movies(None)]
 
         return []
 
     def updateTrailers(self):
-        ms = scraper.Scraper()
+        url = base64.b64decode('aHR0cHM6Ly9wcmVzaG93ZXhwZXJpZW5jZS5jb20vcHJlc2hvd2ltZGJ0cmFpbGVycy9wcmVzaG93aW1kYnRyYWlsZXJzLnBocA==').decode()
+        ms = scraper.Scraper(url)
         if self.recentIsDue():
-            util.DEBUG_LOG(' - Fetching recent trailers')
-            return [Trailer(t) for t in ms.get_most_recent_movies(None)]
+            util.DEBUG_LOG(' - Fetching trailers')
+            return [Trailer(t) for t in ms.get_movies(None)]
 
         return []
-
-    def convertURL(self, url, res):
-        # Not currently used
-        repl = None
-        for r in ('h480p', 'h720p', 'h1080p'):
-            if r in url:
-                repl = r
-                break
-        if not repl:
-            return url
-
-        return url.replace(repl, 'h{0}'.format(res))
