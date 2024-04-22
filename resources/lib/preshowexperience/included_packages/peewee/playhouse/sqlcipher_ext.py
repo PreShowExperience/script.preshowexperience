@@ -5,12 +5,8 @@ Project page: https://github.com/leapcode/pysqlcipher/
 
 **WARNING!!! EXPERIMENTAL!!!**
 
-* Although this extention's code is short, it has not been propery
+* Although this extention's code is short, it has not been properly
   peer-reviewed yet and may have introduced vulnerabilities.
-* The code contains minimum values for `passphrase` length and
-  `kdf_iter`, as well as a default value for the later.
-  **Do not** regard these numbers as advice. Consult the docs at
-  http://sqlcipher.net/sqlcipher-api/ and security experts.
 
 Also note that this code relies on pysqlcipher and sqlcipher, and
 the code there might have vulnerabilities as well, but since these
@@ -19,17 +15,15 @@ are widely used crypto modules, we can expect "short zero days" there.
 Example usage:
 
      from peewee.playground.ciphersql_ext import SqlCipherDatabase
-     db = SqlCipherDatabase('/path/to/my.db', passphrase="don'tuseme4real",
-                            kdf_iter=1000000)
+     db = SqlCipherDatabase('/path/to/my.db', passphrase="don'tuseme4real")
 
 * `passphrase`: should be "long enough".
   Note that *length beats vocabulary* (much exponential), and even
   a lowercase-only passphrase like easytorememberyethardforotherstoguess
-  packs more noise than 8 random printable chatacters and *can* be memorized.
-* `kdf_iter`: Should be "as much as the weakest target machine can afford".
+  packs more noise than 8 random printable characters and *can* be memorized.
 
-When opening an existing database, passphrase and kdf_iter should be identical
-to the ones used when creating it.  If they're wrong, an exception will only be
+When opening an existing database, passphrase should be the one used when the
+database was created. If the passphrase is incorrect, an exception will only be
 raised **when you access the database**.
 
 If you need to ask for an interactive passphrase, here's example code you can
@@ -40,7 +34,7 @@ put after the `db = ...` line:
     # We're looking for a DatabaseError with a specific error message.
     except peewee.DatabaseError as e:
         # Check whether the message *means* "passphrase is wrong"
-        if e.message == 'file is encrypted or is not a database':
+        if e.args[0] == 'file is encrypted or is not a database':
             raise Exception('Developer should Prompt user for passphrase '
                             'again.')
         else:
@@ -52,42 +46,56 @@ https://gist.github.com/thedod/11048875
 """
 import datetime
 import decimal
+import sys
 
 from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
-try:
+if sys.version_info[0] != 3:
     from pysqlcipher import dbapi2 as sqlcipher
-except ImportError:
+else:
     try:
-        from pysqlcipher3 import dbapi2 as sqlcipher
+        from sqlcipher3 import dbapi2 as sqlcipher
     except ImportError:
-        raise ImportError('Sqlcipher python bindings not found.')
+        from pysqlcipher3 import dbapi2 as sqlcipher
 
 sqlcipher.register_adapter(decimal.Decimal, str)
 sqlcipher.register_adapter(datetime.date, str)
 sqlcipher.register_adapter(datetime.time, str)
+__sqlcipher_version__ = sqlcipher.sqlite_version_info
 
 
 class _SqlCipherDatabase(object):
-    def _connect(self, database, **kwargs):
-        passphrase = kwargs.pop('passphrase', '')
-        kdf_iter = kwargs.pop('kdf_iter', 64000)
+    server_version = __sqlcipher_version__
 
-        if len(passphrase) < 8:
-            raise ImproperlyConfigured(
-                'SqlCipherDatabase passphrase should be at least eight '
-                'character long.')
+    def _connect(self):
+        params = dict(self.connect_params)
+        passphrase = params.pop('passphrase', '').replace("'", "''")
 
-        if kdf_iter and kdf_iter < 10000:
-            raise ImproperlyConfigured(
-                'SqlCipherDatabase kdf_iter should be at least 10000.')
-
-        conn = sqlcipher.connect(database, **kwargs)
-        self._add_conn_hooks(conn)
-        conn.execute(
-            'PRAGMA key=\'{0}\''.format(passphrase.replace("'", "''")))
-        conn.execute('PRAGMA kdf_iter={0:d}'.format(kdf_iter))
+        conn = sqlcipher.connect(self.database, isolation_level=None, **params)
+        try:
+            if passphrase:
+                conn.execute("PRAGMA key='%s'" % passphrase)
+            self._add_conn_hooks(conn)
+        except:
+            conn.close()
+            raise
         return conn
+
+    def set_passphrase(self, passphrase):
+        if not self.is_closed():
+            raise ImproperlyConfigured('Cannot set passphrase when database '
+                                       'is open. To change passphrase of an '
+                                       'open database use the rekey() method.')
+
+        self.connect_params['passphrase'] = passphrase
+
+    def rekey(self, passphrase):
+        if self.is_closed():
+            self.connect()
+
+        self.execute_sql("PRAGMA rekey='%s'" % passphrase.replace("'", "''"))
+        self.connect_params['passphrase'] = passphrase
+        return True
 
 
 class SqlCipherDatabase(_SqlCipherDatabase, SqliteDatabase):
@@ -95,16 +103,4 @@ class SqlCipherDatabase(_SqlCipherDatabase, SqliteDatabase):
 
 
 class SqlCipherExtDatabase(_SqlCipherDatabase, SqliteExtDatabase):
-    def _connect(self, *args, **kwargs):
-        conn = super(SqlCipherExtDatabase, self)._connect(*args, **kwargs)
-
-        self._load_aggregates(conn)
-        self._load_collations(conn)
-        self._load_functions(conn)
-        if self._row_factory:
-            conn.row_factory = self._row_factory
-        if self._extensions:
-            conn.enable_load_extension(True)
-            for extension in self._extensions:
-                conn.load_extension(extension)
-        return conn
+    pass

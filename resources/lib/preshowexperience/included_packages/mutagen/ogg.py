@@ -167,7 +167,7 @@ class OggPage(object):
         return data
 
     @property
-    def size(self):
+    def size(self) -> int:
         """Total frame size."""
 
         size = 27  # Initial header size
@@ -213,7 +213,7 @@ class OggPage(object):
         to logical stream 'serial'. Other pages will be ignored.
 
         fileobj must point to the start of a valid Ogg page; any
-        occuring after it and part of the specified logical stream
+        occurring after it and part of the specified logical stream
         will be numbered. No adjustment will be made to the data in
         the pages nor the granule position; only the page number, and
         so also the CRC.
@@ -429,7 +429,7 @@ class OggPage(object):
             new_data_end = offset + data_size
             offset_adjust += (data_size - old_page.size)
 
-        # Finally, if there's any discrepency in length, we need to
+        # Finally, if there's any discrepancy in length, we need to
         # renumber the pages for the logical stream.
         if len(old_pages) != len(new_pages):
             fileobj.seek(new_data_end, 0)

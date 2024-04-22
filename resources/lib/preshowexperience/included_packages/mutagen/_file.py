@@ -6,6 +6,7 @@
 # (at your option) any later version.
 
 import warnings
+from typing import List
 
 from mutagen._util import DictMixin, loadfile
 
@@ -91,9 +92,9 @@ class FileType(DictMixin):
         if self.tags is None:
             raise KeyError(key)
         else:
-            del(self.tags[key])
+            del self.tags[key]
 
-    def keys(self):
+    def keys(self) -> list:
         """Return a list of keys in the metadata tag.
 
         If the file has no tags at all, an empty list is returned.
@@ -140,12 +141,13 @@ class FileType(DictMixin):
         if self.tags is not None:
             return self.tags.save(filething, **kwargs)
 
-    def pprint(self):
+    def pprint(self) -> str:
         """
         Returns:
             text: stream information and comment key=value pairs.
         """
 
+        assert self.info is not None
         stream = "%s (%s)" % (self.info.pprint(), self.mime[0])
         try:
             tags = self.tags.pprint()
@@ -154,7 +156,7 @@ class FileType(DictMixin):
         else:
             return stream + ((tags and "\n" + tags) or "")
 
-    def add_tags(self):
+    def add_tags(self) -> None:
         """Adds new tags to the file.
 
         Raises:
@@ -165,7 +167,7 @@ class FileType(DictMixin):
         raise NotImplementedError
 
     @property
-    def mime(self):
+    def mime(self) -> List[str]:
         """A list of mime types (:class:`mutagen.text`)"""
 
         mimes = []
@@ -176,7 +178,7 @@ class FileType(DictMixin):
         return mimes
 
     @staticmethod
-    def score(filename, fileobj, header):
+    def score(filename, fileobj, header) -> int:
         """Returns a score for how likely the file can be parsed by this type.
 
         Args:
@@ -204,7 +206,7 @@ class StreamInfo(object):
 
     __module__ = "mutagen"
 
-    def pprint(self):
+    def pprint(self) -> str:
         """
         Returns:
             text: Print stream information

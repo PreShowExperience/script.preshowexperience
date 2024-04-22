@@ -43,7 +43,7 @@ Trailers = None
 def session(func):
     def inner(*args, **kwargs):
         try:
-            DB.connect()
+            DB.connect(reuse_if_open=True)
             with DB.atomic():
                 return func(*args, **kwargs)
         finally:
@@ -51,7 +51,7 @@ def session(func):
     return inner
 
 def connect():
-    DB.connect()
+    DB.connect(reuse_if_open=True)
 
 def close():
     DB.close()

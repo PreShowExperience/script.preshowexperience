@@ -1,330 +1,19 @@
-from random import randrange
-import re
-import sys
-
-# Conditional standard library imports.
-try:
-    from cStringIO import StringIO
-except ImportError:
-    if sys.version_info[0] == 2:
-        from StringIO import StringIO
-    else:
-        from io import StringIO
-try:
-    import bz2
-except ImportError:
-    bz2 = None
-try:
-    import zlib
-except ImportError:
-    zlib = None
-
-try:
-    from Crypto.Cipher import AES
-    from Crypto import Random
-except ImportError:
-    AES = Random = None
+import threading
 
 from peewee import *
-from peewee import binary_construct
-from peewee import Field
-from peewee import FieldDescriptor
-from peewee import SelectQuery
-
-PY2 = sys.version_info[0] == 2
-
-
-def case(predicate, expression_tuples, default=None):
-    """
-    CASE statement builder.
-
-    Example CASE statements:
-
-        SELECT foo,
-            CASE
-                WHEN foo = 1 THEN "one"
-                WHEN foo = 2 THEN "two"
-                ELSE "?"
-            END -- will be in column named "case" in postgres --
-        FROM bar;
-
-        -- equivalent to above --
-        SELECT foo,
-            CASE foo
-                WHEN 1 THEN "one"
-                WHEN 2 THEN "two"
-                ELSE "?"
-            END
-
-    Corresponding peewee:
-
-        # No predicate, use expressions.
-        Bar.select(Bar.foo, case(None, (
-            (Bar.foo == 1, "one"),
-            (Bar.foo == 2, "two")), "?"))
-
-        # Predicate, will test for equality.
-        Bar.select(Bar.foo, case(Bar.foo, (
-            (1, "one"),
-            (2, "two")), "?"))
-    """
-    clauses = [SQL('CASE')]
-    simple_case = predicate is not None
-    if simple_case:
-        clauses.append(predicate)
-    for expr, value in expression_tuples:
-        # If this is a simple case, each tuple will contain (value, value) pair
-        # since the DB will be performing an equality check automatically.
-        # Otherwise, we will have (expression, value) pairs.
-        clauses.extend((SQL('WHEN'), expr, SQL('THEN'), value))
-    if default is not None:
-        clauses.extend((SQL('ELSE'), default))
-    clauses.append(SQL('END'))
-    return Clause(*clauses)
+from peewee import Alias
+from peewee import CompoundSelectQuery
+from peewee import Metadata
+from peewee import callable_
+from peewee import __deprecated__
 
 
-def cast(node, as_type):
-    return fn.CAST(Clause(node, SQL('AS %s' % as_type)))
+_clone_set = lambda s: set(s) if s else set()
 
-
-class ManyToManyField(Field):
-    def __init__(self, rel_model, related_name=None, through_model=None,
-                 _is_backref=False):
-        self.rel_model = rel_model
-        self._related_name = related_name
-        self._through_model = through_model
-        self._is_backref = _is_backref
-        self.primary_key = False
-        self.verbose_name = None
-
-    def add_to_class(self, model_class, name):
-        if isinstance(self._through_model, Proxy):
-            def callback(through_model):
-                self._through_model = through_model
-                self.add_to_class(model_class, name)
-            self._through_model.attach_callback(callback)
-            return
-
-        self.name = name
-        self.model_class = model_class
-        if not self.verbose_name:
-            self.verbose_name = re.sub('_+', ' ', name).title()
-        setattr(model_class, name, ManyToManyFieldDescriptor(self))
-
-        if not self._is_backref:
-            backref = ManyToManyField(
-                self.model_class,
-                through_model=self._through_model,
-                _is_backref=True)
-            related_name = self._related_name or model_class._meta.name + 's'
-            backref.add_to_class(self.rel_model, related_name)
-
-    def get_models(self):
-        return [model for _, model in sorted((
-            (self._is_backref, self.model_class),
-            (not self._is_backref, self.rel_model)))]
-
-    def get_through_model(self):
-        if not self._through_model:
-            lhs, rhs = self.get_models()
-            tables = [model._meta.db_table for model in (lhs, rhs)]
-
-            class Meta:
-                database = self.model_class._meta.database
-                db_table = '%s_%s_through' % tuple(tables)
-                indexes = (
-                    ((lhs._meta.name, rhs._meta.name),
-                     True),)
-                validate_backrefs = False
-
-            attrs = {
-                lhs._meta.name: ForeignKeyField(rel_model=lhs),
-                rhs._meta.name: ForeignKeyField(rel_model=rhs)}
-            attrs['Meta'] = Meta
-
-            self._through_model = type(
-                '%s%sThrough' % (lhs.__name__, rhs.__name__),
-                (Model,),
-                attrs)
-
-        return self._through_model
-
-
-class ManyToManyFieldDescriptor(FieldDescriptor):
-    def __init__(self, field):
-        super(ManyToManyFieldDescriptor, self).__init__(field)
-        self.model_class = field.model_class
-        self.rel_model = field.rel_model
-        self.through_model = field.get_through_model()
-        self.src_fk = self.through_model._meta.rel_for_model(self.model_class)
-        self.dest_fk = self.through_model._meta.rel_for_model(self.rel_model)
-
-    def __get__(self, instance, instance_type=None):
-        if instance is not None:
-            return (ManyToManyQuery(instance, self, self.rel_model)
-                    .select()
-                    .join(self.through_model)
-                    .join(self.model_class)
-                    .where(self.src_fk == instance))
-        return self.field
-
-    def __set__(self, instance, value):
-        query = self.__get__(instance)
-        query.add(value, clear_existing=True)
-
-
-class ManyToManyQuery(SelectQuery):
-    def __init__(self, instance, field_descriptor, *args, **kwargs):
-        self._instance = instance
-        self._field_descriptor = field_descriptor
-        super(ManyToManyQuery, self).__init__(*args, **kwargs)
-
-    def clone(self):
-        query = ManyToManyQuery(
-            self._instance,
-            self._field_descriptor,
-            self.model_class)
-        query.database = self.database
-        return self._clone_attributes(query)
-
-    def add(self, value, clear_existing=False):
-        if clear_existing:
-            self.clear()
-
-        fd = self._field_descriptor
-        if isinstance(value, SelectQuery):
-            query = value.select(
-                SQL(str(self._instance.get_id())),
-                fd.rel_model._meta.primary_key)
-            fd.through_model.insert_from(
-                fields=[fd.src_fk, fd.dest_fk],
-                query=query).execute()
-        else:
-            if not isinstance(value, (list, tuple)):
-                value = [value]
-            inserts = [{
-                fd.src_fk.name: self._instance.get_id(),
-                fd.dest_fk.name: rel_instance.get_id()}
-                for rel_instance in value]
-            fd.through_model.insert_many(inserts).execute()
-
-    def remove(self, value):
-        fd = self._field_descriptor
-        if isinstance(value, SelectQuery):
-            subquery = value.select(value.model_class._meta.primary_key)
-            return (fd.through_model
-                    .delete()
-                    .where(
-                        (fd.dest_fk << subquery) &
-                        (fd.src_fk == self._instance.get_id()))
-                    .execute())
-        else:
-            if not isinstance(value, (list, tuple)):
-                value = [value]
-            primary_keys = [rel_instance.get_id() for rel_instance in value]
-            return (fd.through_model
-                    .delete()
-                    .where(
-                        (fd.dest_fk << primary_keys) &
-                        (fd.src_fk == self._instance.get_id()))
-                    .execute())
-
-    def clear(self):
-        return (self._field_descriptor.through_model
-                .delete()
-                .where(self._field_descriptor.src_fk == self._instance)
-                .execute())
-
-
-class CompressedField(BlobField):
-    ZLIB = 'zlib'
-    BZ2 = 'bz2'
-    algorithm_to_import = {
-        ZLIB: zlib,
-        BZ2: bz2,
-    }
-
-    def __init__(self, compression_level=6, algorithm=ZLIB, *args,
-                 **kwargs):
-        self.compression_level = compression_level
-        if algorithm not in self.algorithm_to_import:
-            raise ValueError('Unrecognized algorithm %s' % algorithm)
-        compress_module = self.algorithm_to_import[algorithm]
-        if compress_module is None:
-            raise ValueError('Missing library required for %s.' % algorithm)
-
-        self.algorithm = algorithm
-        self.compress = compress_module.compress
-        self.decompress = compress_module.decompress
-        super(CompressedField, self).__init__(*args, **kwargs)
-
-    if PY2:
-        def db_value(self, value):
-            if value is not None:
-                return binary_construct(
-                    self.compress(value, self.compression_level))
-
-        def python_value(self, value):
-            if value is not None:
-                return self.decompress(value)
-    else:
-        def db_value(self, value):
-            if value is not None:
-                return self.compress(
-                    binary_construct(value), self.compression_level)
-
-        def python_value(self, value):
-            if value is not None:
-                return self.decompress(value).decode('utf-8')
-
-
-if AES and Random:
-    class AESEncryptedField(BlobField):
-        def __init__(self, key, *args, **kwargs):
-            self.key = key
-            super(AESEncryptedField, self).__init__(*args, **kwargs)
-
-        def get_cipher(self, key, iv):
-            if len(key) > 32:
-                raise ValueError('Key length cannot exceed 32 bytes.')
-            key = key + ' ' * (32 - len(key))
-            return AES.new(key, AES.MODE_CFB, iv)
-
-        def encrypt(self, value):
-            iv = Random.get_random_bytes(AES.block_size)
-            cipher = self.get_cipher(self.key, iv)
-            return iv + cipher.encrypt(value)
-
-        def decrypt(self, value):
-            iv = value[:AES.block_size]
-            cipher = self.get_cipher(self.key, iv)
-            return cipher.decrypt(value[AES.block_size:])
-
-        if PY2:
-            def db_value(self, value):
-                if value is not None:
-                    return binary_construct(self.encrypt(value))
-
-            def python_value(self, value):
-                if value is not None:
-                    return self.decrypt(value)
-        else:
-            def db_value(self, value):
-                if value is not None:
-                    return self.encrypt(value)
-
-            def python_value(self, value):
-                if value is not None:
-                    return self.decrypt(value)
-
-
-def _clone_set(s):
-    if s:
-        return set(s)
-    return set()
 
 def model_to_dict(model, recurse=True, backrefs=False, only=None,
-                  exclude=None, seen=None):
+                  exclude=None, seen=None, extra_attrs=None,
+                  fields_from_query=None, max_depth=None, manytomany=False):
     """
     Convert a model instance (and any related objects) to a dictionary.
 
@@ -334,21 +23,62 @@ def model_to_dict(model, recurse=True, backrefs=False, only=None,
         should be included.
     :param exclude: A list (or set) of field instances that should be
         excluded from the dictionary.
+    :param list extra_attrs: Names of model instance attributes or methods
+        that should be included.
+    :param SelectQuery fields_from_query: Query that was source of model. Take
+        fields explicitly selected by the query and serialize them.
+    :param int max_depth: Maximum depth to recurse, value <= 0 means no max.
+    :param bool manytomany: Process many-to-many fields.
     """
-    data = {}
+    max_depth = -1 if max_depth is None else max_depth
+    if max_depth == 0:
+        recurse = False
+
     only = _clone_set(only)
+    extra_attrs = _clone_set(extra_attrs)
+    should_skip = lambda n: (n in exclude) or (only and (n not in only))
+
+    if fields_from_query is not None:
+        only.add('__sentinel__')  # Add a placeholder to make non-empty.
+        for item in fields_from_query._returning:
+            if isinstance(item, Field):
+                only.add(item)
+            elif isinstance(item, Alias):
+                extra_attrs.add(item._alias)
+
+    data = {}
     exclude = _clone_set(exclude)
     seen = _clone_set(seen)
     exclude |= seen
     model_class = type(model)
 
-    for field in model._meta.get_fields():
-        if field in exclude or (only and (field not in only)):
+    if manytomany:
+        for name, m2m in model._meta.manytomany.items():
+            if should_skip(name):
+                continue
+
+            exclude.update((m2m, m2m.rel_model._meta.manytomany[m2m.backref]))
+            for fkf in m2m.through_model._meta.refs:
+                exclude.add(fkf)
+
+            accum = []
+            for rel_obj in getattr(model, name):
+                accum.append(model_to_dict(
+                    rel_obj,
+                    recurse=recurse,
+                    backrefs=backrefs,
+                    only=only,
+                    exclude=exclude,
+                    max_depth=max_depth - 1))
+            data[name] = accum
+
+    for field in model._meta.sorted_fields:
+        if should_skip(field):
             continue
 
-        field_data = model._data.get(field.name)
+        field_data = model.__data__.get(field.name)
         if isinstance(field, ForeignKeyField) and recurse:
-            if field_data:
+            if field_data is not None:
                 seen.add(field)
                 rel_obj = getattr(model, field.name)
                 field_data = model_to_dict(
@@ -357,26 +87,33 @@ def model_to_dict(model, recurse=True, backrefs=False, only=None,
                     backrefs=backrefs,
                     only=only,
                     exclude=exclude,
-                    seen=seen)
+                    seen=seen,
+                    max_depth=max_depth - 1)
             else:
-                field_data = {}
+                field_data = None
 
         data[field.name] = field_data
 
-    if backrefs:
-        for related_name, foreign_key in model._meta.reverse_rel.items():
-            descriptor = getattr(model_class, related_name)
+    if extra_attrs:
+        for attr_name in extra_attrs:
+            attr = getattr(model, attr_name)
+            if callable_(attr):
+                data[attr_name] = attr()
+            else:
+                data[attr_name] = attr
+
+    if backrefs and recurse:
+        for foreign_key, rel_model in model._meta.backrefs.items():
+            if foreign_key.backref == '+': continue
+            descriptor = getattr(model_class, foreign_key.backref)
             if descriptor in exclude or foreign_key in exclude:
                 continue
-            if only and (descriptor not in only or foreign_key not in only):
+            if only and (descriptor not in only) and (foreign_key not in only):
                 continue
 
             accum = []
             exclude.add(foreign_key)
-            related_query = getattr(
-                model,
-                related_name + '_prefetch',
-                getattr(model, related_name))
+            related_query = getattr(model, foreign_key.backref)
 
             for rel_obj in related_query:
                 accum.append(model_to_dict(
@@ -384,48 +121,212 @@ def model_to_dict(model, recurse=True, backrefs=False, only=None,
                     recurse=recurse,
                     backrefs=backrefs,
                     only=only,
-                    exclude=exclude))
+                    exclude=exclude,
+                    max_depth=max_depth - 1))
 
-            data[related_name] = accum
+            data[foreign_key.backref] = accum
 
     return data
 
 
-def dict_to_model(model_class, data, ignore_unknown=False):
-    instance = model_class()
-    meta = model_class._meta
+def update_model_from_dict(instance, data, ignore_unknown=False):
+    meta = instance._meta
+    backrefs = dict([(fk.backref, fk) for fk in meta.backrefs])
+
     for key, value in data.items():
-        if key in meta.fields:
-            field = meta.fields[key]
+        if key in meta.combined:
+            field = meta.combined[key]
             is_backref = False
-        elif key in model_class._meta.reverse_rel:
-            field = meta.reverse_rel[key]
+        elif key in backrefs:
+            field = backrefs[key]
             is_backref = True
         elif ignore_unknown:
             setattr(instance, key, value)
             continue
         else:
             raise AttributeError('Unrecognized attribute "%s" for model '
-                                 'class %s.' % (key, model_class))
+                                 'class %s.' % (key, type(instance)))
 
         is_foreign_key = isinstance(field, ForeignKeyField)
 
         if not is_backref and is_foreign_key and isinstance(value, dict):
+            try:
+                rel_instance = instance.__rel__[field.name]
+            except KeyError:
+                rel_instance = field.rel_model()
             setattr(
                 instance,
                 field.name,
-                dict_to_model(field.rel_model, value, ignore_unknown))
+                update_model_from_dict(rel_instance, value, ignore_unknown))
         elif is_backref and isinstance(value, (list, tuple)):
             instances = [
-                dict_to_model(
-                    field.model_class,
-                    row_data,
-                    ignore_unknown)
+                dict_to_model(field.model, row_data, ignore_unknown)
                 for row_data in value]
             for rel_instance in instances:
                 setattr(rel_instance, field.name, instance)
-            setattr(instance, field.related_name, instances)
+            setattr(instance, field.backref, instances)
         else:
             setattr(instance, field.name, value)
 
     return instance
+
+
+def dict_to_model(model_class, data, ignore_unknown=False):
+    return update_model_from_dict(model_class(), data, ignore_unknown)
+
+
+def insert_where(cls, data, where=None):
+    """
+    Helper for generating conditional INSERT queries.
+
+    For example, prevent INSERTing a new tweet if the user has tweeted within
+    the last hour::
+
+        INSERT INTO "tweet" ("user_id", "content", "timestamp")
+        SELECT 234, 'some content', now()
+        WHERE NOT EXISTS (
+            SELECT 1 FROM "tweet"
+            WHERE user_id = 234 AND timestamp > now() - interval '1 hour')
+
+    Using this helper:
+
+        cond = ~fn.EXISTS(Tweet.select().where(
+            Tweet.user == user_obj,
+            Tweet.timestamp > one_hour_ago))
+
+        iq = insert_where(Tweet, {
+            Tweet.user: user_obj,
+            Tweet.content: 'some content'}, where=cond)
+
+        res = iq.execute()
+    """
+    for field, default in cls._meta.defaults.items():
+        if field.name in data or field in data: continue
+        value = default() if callable_(default) else default
+        data[field] = value
+    fields, values = zip(*data.items())
+    sq = Select(columns=values).where(where)
+    return cls.insert_from(sq, fields).as_rowcount()
+
+
+class ReconnectMixin(object):
+    """
+    Mixin class that attempts to automatically reconnect to the database under
+    certain error conditions.
+
+    For example, MySQL servers will typically close connections that are idle
+    for 28800 seconds ("wait_timeout" setting). If your application makes use
+    of long-lived connections, you may find your connections are closed after
+    a period of no activity. This mixin will attempt to reconnect automatically
+    when these errors occur.
+
+    This mixin class probably should not be used with Postgres (unless you
+    REALLY know what you are doing) and definitely has no business being used
+    with Sqlite. If you wish to use with Postgres, you will need to adapt the
+    `reconnect_errors` attribute to something appropriate for Postgres.
+    """
+    reconnect_errors = (
+        # Error class, error message fragment (or empty string for all).
+        (OperationalError, '2006'),  # MySQL server has gone away.
+        (OperationalError, '2013'),  # Lost connection to MySQL server.
+        (OperationalError, '2014'),  # Commands out of sync.
+        (OperationalError, '4031'),  # Client interaction timeout.
+
+        # mysql-connector raises a slightly different error when an idle
+        # connection is terminated by the server. This is equivalent to 2013.
+        (OperationalError, 'MySQL Connection not available.'),
+
+        # Postgres error examples:
+        #(OperationalError, 'terminat'),
+        #(InterfaceError, 'connection already closed'),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(ReconnectMixin, self).__init__(*args, **kwargs)
+
+        # Normalize the reconnect errors to a more efficient data-structure.
+        self._reconnect_errors = {}
+        for exc_class, err_fragment in self.reconnect_errors:
+            self._reconnect_errors.setdefault(exc_class, [])
+            self._reconnect_errors[exc_class].append(err_fragment.lower())
+
+    def execute_sql(self, sql, params=None, commit=None):
+        if commit is not None:
+            __deprecated__('"commit" has been deprecated and is a no-op.')
+        return self._reconnect(super(ReconnectMixin, self).execute_sql, sql, params)
+
+    def begin(self):
+        return self._reconnect(super(ReconnectMixin, self).begin)
+
+    def _reconnect(self, func, *args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as exc:
+            # If we are in a transaction, do not reconnect silently as
+            # any changes could be lost.
+            if self.in_transaction():
+                raise exc
+
+            exc_class = type(exc)
+            if exc_class not in self._reconnect_errors:
+                raise exc
+
+            exc_repr = str(exc).lower()
+            for err_fragment in self._reconnect_errors[exc_class]:
+                if err_fragment in exc_repr:
+                    break
+            else:
+                raise exc
+
+            if not self.is_closed():
+                self.close()
+                self.connect()
+
+            return func(*args, **kwargs)
+
+
+def resolve_multimodel_query(query, key='_model_identifier'):
+    mapping = {}
+    accum = [query]
+    while accum:
+        curr = accum.pop()
+        if isinstance(curr, CompoundSelectQuery):
+            accum.extend((curr.lhs, curr.rhs))
+            continue
+
+        model_class = curr.model
+        name = model_class._meta.table_name
+        mapping[name] = model_class
+        curr._returning.append(Value(name).alias(key))
+
+    def wrapped_iterator():
+        for row in query.dicts().iterator():
+            identifier = row.pop(key)
+            model = mapping[identifier]
+            yield model(**row)
+
+    return wrapped_iterator()
+
+
+class ThreadSafeDatabaseMetadata(Metadata):
+    """
+    Metadata class to allow swapping database at run-time in a multi-threaded
+    application. To use:
+
+    class Base(Model):
+        class Meta:
+            model_metadata_class = ThreadSafeDatabaseMetadata
+    """
+    def __init__(self, *args, **kwargs):
+        # The database attribute is stored in a thread-local.
+        self._database = None
+        self._local = threading.local()
+        super(ThreadSafeDatabaseMetadata, self).__init__(*args, **kwargs)
+
+    def _get_db(self):
+        return getattr(self._local, 'database', self._database)
+    def _set_db(self, db):
+        if self._database is None:
+            self._database = db
+        self._local.database = db
+    database = property(_get_db, _set_db)
