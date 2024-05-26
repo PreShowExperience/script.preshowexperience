@@ -43,10 +43,6 @@ class Trailer:
         return datetime.date(2020, 1, 1)
 
     @property
-    def is3D(self):
-        return False
-
-    @property
     def watched(self):
         return False
 

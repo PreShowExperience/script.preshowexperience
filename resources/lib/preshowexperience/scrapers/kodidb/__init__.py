@@ -8,7 +8,6 @@ from .. import _scrapers
 class Trailer(_scrapers.Trailer):
     def __init__(self, data):
         _scrapers.Trailer.__init__(self, data)
-        self._is3D = util.pathIs3D(self.data.get('url', ''))
         if not self.data.get('rating'):
             self.data['rating'] = 'NR'
 

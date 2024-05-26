@@ -5,6 +5,7 @@ import xbmcgui
 import xbmcvfs
 import os
 import shutil
+import re
 
 try:
     datetime.datetime.strptime('0', '%H')
@@ -26,11 +27,11 @@ from . import util
 from resources.lib import kodiutil
 from . import content
 
-DATABASE_VERSION = 7
+DATABASE_VERSION = 0.2
 
 fn = peewee.fn
 DB = None
-DBVersion = None
+Settings = None
 Song = None
 Trivia = None
 Slideshow = None                
@@ -60,61 +61,77 @@ def close():
 def dummyCallback(*args, **kwargs):
     pass
 
-def migrateDB(DB, version):
-    util.LOG('Migrating database from version {0} to {1}'.format(version, DATABASE_VERSION))
-    from peewee.playhouse import migrate
-    migrator = migrate.SqliteMigrator(DB)
-
-    if 1 < version < 7:    
-        util.LOG('Updating Trivia accessed field')
-        migrate.migrate(
-            migrator.add_column('Trivia', 'accessed_temp', peewee.DateTimeField(default=datetime.date(2020, 1, 1))),
-            migrator.drop_column('Trivia', 'accessed'),
-            migrator.rename_column('Trivia', 'accessed_temp', 'accessed'),
-            migrator.drop_column('AudioFormatBumpers', 'is3d'),
-            migrator.drop_column('Trailers', 'is3D'),
-            migrator.drop_column('RatingsBumpers', 'is3d')            
-        )
-        util.LOG('Removing watched.db & Trivia files')
-        dbDir = util.STORAGE_PATH
-        watched_db_path = util.pathJoin(dbDir, 'watched.db')
-        if util.vfs.exists(watched_db_path):
-            xbmcvfs.delete(watched_db_path)
-        tmdb_path = util.pathJoin(dbDir, 'tmdb.last')
-        if util.vfs.exists(tmdb_path):
-            xbmcvfs.delete(tmdb_path)
-        imdb_path = util.pathJoin(dbDir, 'imdb.last')
-        if util.vfs.exists(imdb_path):
-            xbmcvfs.delete(imdb_path)
-        xbmcgui.Dialog().ok('PreShow Experience Update', 'PreShow has been updated and requires that your trailer content is updated.')
-    return True
-
 def checkDBVersion(DB):
-    vm = DBVersion.get_or_create(id=1, defaults={'version': 0})[0]
-    if vm.version < DATABASE_VERSION:
-        if migrateDB(DB, vm.version):
-            vm.update(version=DATABASE_VERSION).execute()
+    setting = None
+    try:
+        setting = Settings.get(Settings.setting == 'dbversion')
+        if float(setting.detail) < DATABASE_VERSION:
+            raise ValueError("Database version is outdated")
+    except (Settings.DoesNotExist, ValueError):
+        if xbmcgui.Dialog().ok('PreShow Experience Update', 'Your database version is outdated and needs to be updated. This will require removing the old database. Your content will need to be rescanned.  This process will also update your sequences to the new format.'):
+            dbPath = DB.database
+            DB.close()
+            if setting:
+                util.LOG('Migrating database from version {0} to {1}'.format(float(setting.detail), DATABASE_VERSION))
+            dbDir = util.STORAGE_PATH
+            watched_db_path = util.pathJoin(dbDir, 'watched.db')
+            if util.vfs.exists(watched_db_path):
+                util.LOG('Removing watched.db')
+                xbmcvfs.delete(watched_db_path)
+            tmdb_path = util.pathJoin(dbDir, 'tmdb.last')
+            if util.vfs.exists(tmdb_path):
+                xbmcvfs.delete(tmdb_path)
+            imdb_path = util.pathJoin(dbDir, 'imdb.last')
+            if util.vfs.exists(imdb_path):
+                xbmcvfs.delete(imdb_path)
+            
+            os.remove(dbPath)
 
+            # New code to update and rename sequence files
+            from resources.lib import kodiutil
+            contentPath = kodiutil.getPathSetting('content.path')
+            if contentPath:
+                updateAndRenameSequenceFiles(util.pathJoin(contentPath, 'Sequences'))
+            
+def updateAndRenameSequenceFiles(directory):
+    # Loop through all files in the directory
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+
+        # Ensure it's a file with .seq or .pseseq extension
+        if os.path.isfile(file_path):
+            if filename.endswith('.pseseq'):
+                # Change extension from .pseseq to .seq
+                new_filename = filename[:-7] + '.seq'
+                new_file_path = os.path.join(directory, new_filename)
+                os.rename(file_path, new_file_path)
+                file_path = new_file_path  # Update the file path for content modification
+
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+
+                # Only replace if the specific text is found
+                if ', "play3D": true' in content:
+                    new_content = content.replace(', "play3D": true', '')
+
+                    # Write the new content back to the file
+                    with open(file_path, 'w', encoding='utf-8') as file:
+                        file.write(new_content)
+
+            except UnicodeDecodeError:
+                print(f"Skipping file {file_path} due to encoding error.")
+            except Exception as e:
+                print(f"An error occurred while processing file {file_path}: {e}")
+
+    print("Text removal and renaming completed.")
 def initialize(path=None, callback=None):
     callback = callback or dummyCallback
-
     callback(None, 'Creating/updating database...')
 
-    global DB
-    global DBVersion
-    global Song
-    global Trivia
-    global Slideshow                    
-    global AudioFormatBumpers
-    global RatingsBumpers
-    global VideoBumpers
-    global RatingSystem
-    global Rating
-    global Trailers
+    global DB, Settings, Song, Trivia, PreShowTrivia, Slideshow
+    global AudioFormatBumpers, RatingsBumpers, VideoBumpers, RatingSystem, Rating, Trailers
 
-    ###########################################################################################
-    # Version
-    ###########################################################################################
     dbDir = path or util.STORAGE_PATH
     if not util.vfs.exists(dbDir):
         util.vfs.mkdirs(dbDir)
@@ -123,55 +140,53 @@ def initialize(path=None, callback=None):
     dbExists = util.vfs.exists(dbPath)
 
     DB = peewee.SqliteDatabase(dbPath)
-
     DB.connect()
 
-    class DBVersion(peewee.Model):
-        version = peewee.IntegerField(default=0)
+    class Settings(peewee.Model):
+        id = peewee.AutoField()
+        setting = peewee.CharField(unique=True)
+        detail = peewee.CharField()
 
         class Meta:
             database = DB
 
-    DBVersion.create_table(fail_silently=True)
+    Settings.create_table(fail_silently=True)
 
     if dbExists:  # Only check version if we had a DB, otherwise we're creating it fresh
         checkDBVersion(DB)
+    else:
+        Settings.create(setting='dbversion', detail=str(DATABASE_VERSION))
 
     ###########################################################################################
     # Content
     ###########################################################################################
     class ContentBase(peewee.Model):
         name = peewee.CharField()
-        accessed = peewee.DateTimeField(default=datetime.date(2020, 1, 1))
-        pack = peewee.TextField(null=True)
-
+        movieid = peewee.CharField(null=True)
+        accessed = peewee.DateTimeField(default=datetime.date(2024, 1, 1))
+        pack = peewee.CharField(null=True)
+        rating = peewee.CharField(null=True)
+        genre = peewee.CharField(null=True)
+        year = peewee.CharField(null=True)
+        holiday = peewee.CharField(null=True) 
+        tags = peewee.CharField(null=True) 
+        
         class Meta:
             database = DB
 
     callback(' - Music')
 
     class Song(ContentBase):
-        rating = peewee.CharField(null=True)
-        genre = peewee.CharField(null=True)
-        year = peewee.CharField(null=True)
-
         path = peewee.CharField(unique=True)
         duration = peewee.FloatField(default=0)
 
     Song.create_table(fail_silently=True)
 
-    callback(' - Tivia')
+    callback(' - Trivia')
 
     class Trivia(ContentBase):
-        type = peewee.CharField()
-
         TID = peewee.CharField(unique=True)
-
-        rating = peewee.CharField(null=True)
-        genre = peewee.CharField(null=True)
-        year = peewee.CharField(null=True)
-        duration = peewee.FloatField(default=0)
-
+        type = peewee.CharField()
         questionPath = peewee.CharField(unique=True, null=True)
         cluePath0 = peewee.CharField(unique=True, null=True)
         cluePath1 = peewee.CharField(unique=True, null=True)
@@ -186,15 +201,43 @@ def initialize(path=None, callback=None):
         answerPath = peewee.CharField(unique=True, null=True)
 
     Trivia.create_table(fail_silently=True)
+	
+    callback(' - PreShow Trivia')
+
+    class PreShowTrivia(ContentBase):
+        TID = peewee.CharField(unique=True)
+        type = peewee.CharField()
+        setting = peewee.CharField()
+        question = peewee.CharField(null=True)
+        answer1 = peewee.CharField(null=True)
+        answer2 = peewee.CharField(null=True)
+        answer3 = peewee.CharField(null=True)
+        answer4 = peewee.CharField(null=True)
+        correct = peewee.CharField(null=True)
+        image1 = peewee.CharField(null=True)
+        image2 = peewee.CharField(null=True)
+        image3 = peewee.CharField(null=True)
+        image4 = peewee.CharField(null=True)
+        extra0 = peewee.CharField(null=True)
+        extra1 = peewee.CharField(null=True)
+        extra2 = peewee.CharField(null=True)
+        extra3 = peewee.CharField(null=True)
+        extra4 = peewee.CharField(null=True)
+        extra5 = peewee.CharField(null=True)
+        extra6 = peewee.CharField(null=True)
+        extra7 = peewee.CharField(null=True)
+        extra8 = peewee.CharField(null=True)
+        extra9 = peewee.CharField(null=True)
+	
+    PreShowTrivia.create_table(fail_silently=True)	
 
     callback(' - Slideshow')
     
     class Slideshow(ContentBase):
         type = peewee.CharField()
         TID = peewee.CharField(unique=True)
-        duration = peewee.FloatField(default=0)
         slidePath = peewee.CharField(unique=True, null=True)
-        watched = peewee.IntegerField(default=0)
+        watched = peewee.IntegerField(default=0)     
 
     Slideshow.create_table(fail_silently=True)
     
@@ -202,10 +245,11 @@ def initialize(path=None, callback=None):
                               
     class BumperBase(ContentBase):
         isImage = peewee.BooleanField(default=False)
+        isYoutube = peewee.BooleanField(default=False)
         path = peewee.CharField(unique=True)
 
     class AudioFormatBumpers(BumperBase):
-        format = peewee.CharField()
+        format = peewee.CharField()      
 
     AudioFormatBumpers.create_table(fail_silently=True)
 
@@ -221,10 +265,6 @@ def initialize(path=None, callback=None):
 
     class VideoBumpers(BumperBase):
         type = peewee.CharField()
-
-        rating = peewee.CharField(null=True)
-        genre = peewee.CharField(null=True)
-        year = peewee.CharField(null=True)
 
     VideoBumpers.create_table(fail_silently=True)
 
@@ -259,7 +299,7 @@ def initialize(path=None, callback=None):
     class TrailerBase(peewee.Model):
         WID = peewee.CharField(unique=True)
         watched = peewee.BooleanField(default=False)
-        date = peewee.DateTimeField(default=datetime.date(2020, 1, 1))
+        date = peewee.DateTimeField(default=datetime.date(2024, 1, 1))
 
         class Meta:
             database = DB
@@ -269,12 +309,14 @@ def initialize(path=None, callback=None):
         rating = peewee.CharField(null=True)
         genres = peewee.CharField(null=True)
         title = peewee.CharField()
-        release = peewee.DateTimeField(default=datetime.date(2020, 1, 1))
+        release = peewee.DateTimeField(default=datetime.date(2024, 1, 1))
         url = peewee.CharField(null=True)
         userAgent = peewee.CharField(null=True)
         thumb = peewee.CharField(null=True)
         broken = peewee.BooleanField(default=False)
         verified = peewee.BooleanField(default=True)
+        youtubelink = peewee.CharField(default=False)
+        downloadLink = peewee.CharField(null=True)
 
     Trailers.create_table(fail_silently=True)
 

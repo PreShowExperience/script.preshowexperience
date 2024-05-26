@@ -257,7 +257,7 @@ try:
 
         return ret
 
-    videoExtensions = tuple(xbmc.getSupportedMedia('video').split('|') + ['.pseurl'])
+    videoExtensions = tuple(xbmc.getSupportedMedia('video').split('|') + ['.url', '.pseurl'])
     musicExtensions = tuple(xbmc.getSupportedMedia('music').split('|'))
     imageExtensions = tuple(xbmc.getSupportedMedia('picture').split('|'))
 

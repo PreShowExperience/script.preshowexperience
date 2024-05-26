@@ -1,7 +1,6 @@
 import xbmc
 import sys
 
-
 def main():
     if not hasattr(sys, 'listitem'):
         xbmc.log('context.preshowexperience: Not launched as a context menu - aborting')

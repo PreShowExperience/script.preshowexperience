@@ -133,7 +133,7 @@
 			</group>
 			<group id="3" label="32093">
 				<setting id="debug.log" type="boolean" label="32094" help="">
-					<level>0</level>
+					<level>3</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
@@ -147,8 +147,6 @@
 						<close>true</close>
 					</control>
 				</setting>
-			</group>
-			<group id="4" label="32112">
 				<setting id="reset.database" type="action" label="32099" help="">
 					<level>0</level>
 					<data>RunScript(script.preshowexperience,reset.database)</data>
@@ -185,12 +183,12 @@
 					<control type="toggle"/>
 				</setting>
 				<setting id="allow.video.skip" type="boolean" label="32021" help="">
-					<level>0</level>
+					<level>3</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
 				<setting id="video.preDelay" type="integer" label="32022" help="">
-					<level>0</level>
+					<level>3</level>
 					<default>0</default>
 					<constraints>
 						<minimum>0</minimum>
@@ -243,6 +241,22 @@
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="aspect.source" type="string" label="32756" >
+            <level>3</level>
+			<dependencies>
+						<dependency type="visible" setting="true">
+							<condition operator="is" setting="aspect.condition">true</condition>
+						</dependency>
+					</dependencies>
+            <default>1</default>
+					<constraints>
+						<options>
+							<option label="32754">0</option>
+							<option label="32755">1</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+        </setting>
 			</group>			
 		</category>
 		<category id="trivia" label="32026" help="">
@@ -344,9 +358,14 @@
 					</constraints>
 					<control type="spinner" format="string"/>
 				</setting>
-				<setting id="trivia.musicDir" type="path" label="32044" help="">
+				<setting id="trivia.musicDir" type="path" label="32044" help="" parent="trivia.music">
 					<level>0</level>
 					<default/>
+					<dependencies>
+						<dependency type="visible" setting="true">
+							<condition operator="is" setting="trivia.music">2</condition>
+						</dependency>
+					</dependencies>
 					<constraints>
 						<writable>false</writable>
 						<allowempty>true</allowempty>
@@ -355,9 +374,14 @@
 						<heading>32044</heading>
 					</control>
 				</setting>
-				<setting id="trivia.musicFile" type="path" label="32045" help="">
+				<setting id="trivia.musicFile" type="path" label="32045" help="" parent="trivia.music">
 					<level>0</level>
 					<default/>
+					<dependencies>
+						<dependency type="visible" setting="true">
+							<condition operator="is" setting="trivia.music">3</condition>
+						</dependency>
+					</dependencies>
 					<constraints>
 						<writable>false</writable>
 						<allowempty>true</allowempty>
@@ -390,7 +414,7 @@
 					</control>
 				</setting>
 				<setting id="trivia.musicFadeOut" type="number" label="32029" help="">
-					<level>0</level>
+					<level>3</level>
 					<default>3.0</default>
 					<constraints>
 						<minimum>0</minimum>
@@ -410,7 +434,7 @@
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
-				<setting id="scraper.trailers.Content.deleteWatched" type="boolean" label="32066" help="" parent="scraper.trailers.Content">
+<!-- 				<setting id="scraper.trailers.Content.deleteWatched" type="boolean" label="32066" help="" parent="scraper.trailers.Content">
 					<level>3</level>
 					<default>false</default>
 					<dependencies>
@@ -421,13 +445,13 @@
 					<control type="toggle">
 						<heading>32012</heading>
 					</control>
-				</setting>				
+				</setting>	 -->			
 				<setting id="scraper.trailers.IMDB" type="boolean" label="32016" help="">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>	
-				<setting id="trailer.quality" type="string" label="32067" help="">
+				<setting id="trailer.quality" type="string" label="32067" help="" parent="scraper.trailers.IMDB">
 					<level>0</level>
 					<default>720p</default>
 					<dependencies>
@@ -872,19 +896,19 @@
 		<category id="actions" label="32083" help="">
 			<group id="1">
 				<setting id="action.onPause" type="boolean" label="32084" help="">
-					<level>0</level>
+					<level>3</level>
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
 				<setting id="action.onPause.file" type="path" label="32085" help="" parent="action.onPause">
-					<level>0</level>
+					<level>3</level>
 					<default/>
 					<constraints>
 						<writable>false</writable>
 						<allowempty>true</allowempty>
 					</constraints>
 					<dependencies>
-						<dependency type="enable">
+						<dependency type="visible">
 							<condition operator="is" setting="action.onPause">true</condition>
 						</dependency>
 					</dependencies>
@@ -893,13 +917,13 @@
 					</control>
 				</setting>
 				<setting id="action.test.PAUSE" type="action" label="32089" help="" parent="action.onPause">
-					<level>0</level>
+					<level>3</level>
 					<data>RunScript(script.preshowexperience,test.actions,PAUSE)</data>
 					<constraints>
 						<allowempty>true</allowempty>
 					</constraints>
 					<dependencies>
-						<dependency type="enable">
+						<dependency type="visible">
 							<and>
 								<condition operator="is" setting="action.onPause">true</condition>
 								<condition operator="!is" setting="action.onPause.file"/>
@@ -909,7 +933,7 @@
 					<control type="button" format="action"/>
 				</setting>
 				<setting id="action.onResume" type="integer" label="32086" help="">
-					<level>0</level>
+					<level>3</level>
 					<default>0</default>
 					<constraints>
 						<options>
@@ -921,14 +945,14 @@
 					<control type="spinner" format="string"/>
 				</setting>
 				<setting id="action.onResume.file" type="path" label="32085" help="" parent="action.onResume">
-					<level>0</level>
+					<level>3</level>
 					<default/>
 					<constraints>
 						<writable>false</writable>
 						<allowempty>true</allowempty>
 					</constraints>
 					<dependencies>
-						<dependency type="enable">
+						<dependency type="visible">
 							<condition operator="is" setting="action.onResume">2</condition>
 						</dependency>
 					</dependencies>
@@ -937,13 +961,13 @@
 					</control>
 				</setting>
 				<setting id="action.test.RESUME" type="action" label="32089" help="" parent="action.onResume">
-					<level>0</level>
+					<level>3</level>
 					<data>RunScript(script.preshowexperience,test.actions,RESUME)</data>
 					<constraints>
 						<allowempty>true</allowempty>
 					</constraints>
 					<dependencies>
-						<dependency type="enable">
+						<dependency type="visible">
 							<and>
 								<condition operator="is" setting="action.onResume">2</condition>
 								<condition operator="!is" setting="action.onResume.file"/>
@@ -953,19 +977,19 @@
 					<control type="button" format="action"/>
 				</setting>
 				<setting id="action.onAbort" type="boolean" label="32088" help="">
-					<level>0</level>
+					<level>3</level>
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
 				<setting id="action.onAbort.file" type="path" label="32085" help="" parent="action.onAbort">
-					<level>0</level>
+					<level>3</level>
 					<default/>
 					<constraints>
 						<writable>false</writable>
 						<allowempty>true</allowempty>
 					</constraints>
 					<dependencies>
-						<dependency type="enable">
+						<dependency type="visible">
 							<condition operator="is" setting="action.onAbort">true</condition>
 						</dependency>
 					</dependencies>
@@ -974,13 +998,13 @@
 					</control>
 				</setting>
 				<setting id="action.test.ABORT" type="action" label="32089" help="" parent="action.onAbort">
-					<level>0</level>
+					<level>3</level>
 					<data>RunScript(script.preshowexperience,test.actions,ABORT)</data>
 					<constraints>
 						<allowempty>true</allowempty>
 					</constraints>
 					<dependencies>
-						<dependency type="enable">
+						<dependency type="visible">
 							<and>
 								<condition operator="is" setting="action.onAbort">true</condition>
 								<condition operator="!is" setting="action.onAbort.file"/>
@@ -989,8 +1013,157 @@
 					</dependencies>
 					<control type="button" format="action"/>
 				</setting>
+				<setting id="action.PreshowBeginning" type="boolean" label="32751" help="">
+					<level>3</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="action.PreshowBeginning.file" type="path" label="32085" help="" parent="action.PreshowBeginning">
+					<level>3</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="action.PreshowBeginning">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="button" format="file">
+						<heading>32085</heading>
+					</control>
+				</setting>
+				<setting id="action.test.PreshowBeginning" type="action" label="32089" help="" parent="action.PreshowBeginning">
+					<level>3</level>
+					<data>RunScript(script.preshowexperience,test.actions,PreshowBeginning)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<and>
+								<condition operator="is" setting="action.PreshowBeginning">true</condition>
+								<condition operator="!is" setting="action.PreshowBeginning.file"/>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="button" format="action"/>
+				</setting>	
+				<setting id="action.BeforeFeature" type="boolean" label="32752" help="">
+					<level>3</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="action.BeforeFeature.file" type="path" label="32085" help="" parent="action.BeforeFeature">
+					<level>3</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="action.BeforeFeature">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="button" format="file">
+						<heading>32085</heading>
+					</control>
+				</setting>
+				<setting id="action.test.BeforeFeature" type="action" label="32089" help="" parent="action.BeforeFeature">
+					<level>3</level>
+					<data>RunScript(script.preshowexperience,test.actions,BeforeFeature)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<and>
+								<condition operator="is" setting="action.BeforeFeature">true</condition>
+								<condition operator="!is" setting="action.BeforeFeature.file"/>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="button" format="action"/>
+				</setting>					
+				<setting id="action.middleChapter" type="boolean" label="32753" help="">
+					<level>3</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="action.middleChapter.file" type="path" label="32085" help="" parent="action.middleChapter">
+					<level>3</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="action.middleChapter">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="button" format="file">
+						<heading>32085</heading>
+					</control>
+				</setting>
+				<setting id="action.test.middleChapter" type="action" label="32089" help="" parent="action.middleChapter">
+					<level>3</level>
+					<data>RunScript(script.preshowexperience,test.actions,middleChapter)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<and>
+								<condition operator="is" setting="action.middleChapter">true</condition>
+								<condition operator="!is" setting="action.middleChapter.file"/>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="button" format="action"/>
+				</setting>	
+								
+				<setting id="action.lastChapter" type="boolean" label="32750" help="">
+					<level>3</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>		
+<setting id="action.lastChapter.file" type="path" label="32085" help="" parent="action.lastChapter">
+					<level>3</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="action.lastChapter">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="button" format="file">
+						<heading>32085</heading>
+					</control>
+				</setting>				
+				<setting id="action.test.lastChapter" type="action" label="32089" help="" parent="action.lastChapter">
+					<level>3</level>
+					<data>RunScript(script.preshowexperience,test.actions,lastChapter)</data>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<and>
+								<condition operator="is" setting="action.lastChapter">true</condition>
+								<condition operator="!is" setting="action.lastChapter.file"/>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="button" format="action"/>
+				</setting>		
 				<setting id="action.test.runAbort" type="integer" label="32593" help="">
-					<level>0</level>
+					<level>3</level>
 					<default>2</default>
 					<constraints>
 						<options>

@@ -341,7 +341,7 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
         
     def getVideoAspect(self, remove):
         #all_aspects = ['1.00','1.19','1.37','1.66','2.55','2.76']
-        all_aspects = ['1.33','1.77','1.85','2.0','2.2''2.35','2.4']
+        all_aspects = ['1.33','1.78','1.85','2.0','2.2''2.35','2.4']
         remove = remove or []
         return [aspect for aspect in all_aspects if aspect not in remove]        
 
