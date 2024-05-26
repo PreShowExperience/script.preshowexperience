@@ -4,12 +4,12 @@ import xbmcgui
 
 from . import kodigui
 from . import kodiutil
-from . import pseutil
+from . import preshowutil
 from . import preshowexperience
 
 from .kodijsonrpc import rpc
 
-pseutil.ratingParser()
+preshowutil.ratingParser()
 
 
 class SeqAttrEditorDialog(kodigui.BaseDialog):
@@ -35,8 +35,7 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
 
     def fillAttributeList(self, update=False):
         self.options = []
-        # self.options.append(('active', 'Active'))
-        #self.options.append(('type', 'Type'))
+        self.options.append(('featuretitle', 'Feature Title'))
         self.options.append(('ratings', 'Rating(s)'))
         self.options.append(('year', 'Year(s)'))
         self.options.append(('studios', 'Studio(s)'))
@@ -46,6 +45,8 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
         self.options.append(('tags', 'Tag(s)'))
         self.options.append(('dates', 'Date(s)'))
         self.options.append(('times', 'Time(s)'))
+        if kodiutil.getSetting('aspect.condition', True):
+            self.options.append(('videoaspect', 'Aspect Ratio(s)'))
 
         items = []
         for o in self.options:
@@ -76,6 +77,8 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
 
         if option == 'directors':
             val = self.getDBEntry(self.getDirectorList, 'director', 'Director', self.sequenceData.get('directors'))
+        elif option == 'featuretitle':
+            val = self.getDBEntry(self.getTitleList, 'featuretitle', 'Feature Title', self.sequenceData.get('featuretitle'))
         elif option == 'actors':
             val = self.getDBEntry(self.getActorList, 'actor', 'Actor', self.sequenceData.get('actors'))
         elif option == 'studios':
@@ -92,15 +95,8 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
             val = self.getRangedEntry(self.getDate, 'dates', self.sequenceData.get('dates'))
         elif option == 'times':
             val = self.getRangedEntry(self.getTime, 'times', self.sequenceData.get('times'))
-        elif option == 'active':
-            val = not self.sequenceData.active
-            self.sequenceData.active = val
-            kodiutil.setGlobalProperty('ACTIVE', self.sequenceData.active and '1' or '0')
-        elif option == 'type':
-            if not self.sequenceData.get('type'):
-                val = '2D'
-            else:
-                val = self.sequenceData.get('type') == '2D' and '3D' or ''
+        elif option == 'videoaspect':
+            val = self.getDBEntry(self.getVideoAspect, 'videoaspect', 'Video Aspect', self.sequenceData.get('videoaspect'))
         else:
             val = xbmcgui.Dialog().input('Enter {0}'.format(label), self.sequenceData.get(option))
 
@@ -118,9 +114,6 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
         try:
             if o[0] == 'active':
                 label2 = self.sequenceData.active and '[COLOR FF00FF00]YES[/COLOR]' or '[COLOR FFFF0000]NO[/COLOR]'
-            elif o[0] == 'type':
-                if self.sequenceData.get('type'):
-                    label2 = self.sequenceData.get('type') == '3D' and '3D' or '2D'
             elif o[0] in ['year', 'dates', 'times', 'ratings']:
                 data = self.sequenceData.get(o[0], [])
                 if data:
@@ -128,7 +121,7 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
                     for d in data:
                         parts.append(self.getEntryDisplay(o[0], d))
                     label2 = ', '.join(parts)
-            elif o[0] in ('genres', 'studios', 'directors', 'actors', 'tags'):
+            elif o[0] in ('genres', 'featuretitle', 'studios', 'directors', 'actors', 'tags', 'videoaspect'):
                 items = self.sequenceData.get(o[0], [])
                 if items:
                     label2 = ', '.join(items)
@@ -322,19 +315,42 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
         ).get('tags', []) if t.get('title') and (not remove or not t.get('title') in remove)]
 
     def getStudioList(self, remove):
-        # TODO: Get all studios?
         movies = rpc.VideoLibrary.GetMovies(properties=['studio'], limits={'start': 0, 'end': 100000}).get('movies', [])
         movies = [m for m in movies if not remove or not m in remove]
         return sorted(list(set([y for z in movies for y in z['studio']])))
+        
+    # def getTitleList(self, remove):
+        # movies = rpc.VideoLibrary.GetMovies(properties=['title'], limits={'start': 0, 'end': 100000}).get('movies', [])
+        # movies = [t for t in movies if not remove or not t in remove]
+        # return sorted(list(set([y for z in movies for y in z['title']])))        
+        
+    def getTitleList(self, remove):
+        if remove is None:
+            remove = []
+        movies = rpc.VideoLibrary.GetMovies(properties=['title'], limits={'start': 0, 'end': 100000}).get('movies', [])
+        titles = [movie['title'] for movie in movies if movie['title'] not in remove]
+        return sorted(set(titles))
+
+    def getTitleList(self, remove):
+        if remove is None:
+            remove = []
+        movies = rpc.VideoLibrary.GetMovies(properties=['title'], limits={'start': 0, 'end': 100000}).get('movies', [])
+        titles = [movie['title'] for movie in movies if movie['title'] not in remove]
+        return sorted(set(titles))
+        
+        
+    def getVideoAspect(self, remove):
+        #all_aspects = ['1.00','1.19','1.37','1.66','2.55','2.76']
+        all_aspects = ['1.33','1.77','1.85','2.0','2.2''2.35','2.4']
+        remove = remove or []
+        return [aspect for aspect in all_aspects if aspect not in remove]        
 
     def getDirectorList(self, remove):
-        # TODO: Get all directors?
         movies = rpc.VideoLibrary.GetMovies(properties=['director'], limits={'start': 0, 'end': 100000}).get('movies', [])
         movies = [m for m in movies if not remove or not m in remove]
         return sorted(list(set([y for z in movies for y in z['director']])))
 
     def getActorList(self, remove):
-        # TODO: Get all directors?
         movies = rpc.VideoLibrary.GetMovies(properties=['cast'], limits={'start': 0, 'end': 100000}).get('movies', [])
         movies = [m for m in movies if not remove or not m in remove]
         return sorted(list(set([y['name'] for z in movies for y in z['cast']])))
@@ -347,7 +363,7 @@ class SeqAttrEditorDialog(kodigui.BaseDialog):
             options = []
             if allitems:
                 options.append(('list', 'Add From List'))
-            if itype != 'genre':
+            if itype != 'genre' and itype != 'videoaspect':
                 options.append(('manual', 'Add Manually'))
             if len(ret) > 1:
                 options.append(('remove', 'Remove Entry'))

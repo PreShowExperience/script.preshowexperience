@@ -8,11 +8,14 @@ import xbmcgui
 import xbmcvfs
 import xbmcaddon
 
+import requests
+from bs4 import BeautifulSoup
+
 from .kodijsonrpc import rpc
 
 from . import kodigui
 from . import kodiutil
-from . import pseutil  # noqa E402
+from . import preshowutil  # noqa E402
 from . import preshowexperience  # noqa E402
 
 kodiutil.LOG('Version: {0}'.format(kodiutil.ADDON.getAddonInfo('version')))
@@ -65,7 +68,69 @@ def resolveURLFile(path):
         return None
     return vid
 
+def getIMDBAspectRatio(title, imdb_number=None):
+    BASE_URL = "https://www.imdb.com/"
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'}
 
+    if imdb_number and str(imdb_number).startswith("tt"):
+        URL = "{}/title/{}/".format(BASE_URL, imdb_number)
+    else:
+        URL = BASE_URL + "find/?q={}".format(title)
+        search_page = requests.get(URL, headers=HEADERS)
+
+        soup = BeautifulSoup(search_page.text, 'html.parser')
+
+        title_url_tag = soup.select_one('.ipc-metadata-list-summary-item__t')
+        if title_url_tag:
+            title_url = title_url_tag['href']
+            imdb_number = title_url.rsplit(
+                '/title/', 1)[-1].split("/")[0]
+
+            URL = BASE_URL + title_url
+
+    title_page = requests.get(URL, headers=HEADERS)
+    soup = BeautifulSoup(title_page.text, 'html.parser')
+
+    aspect_ratio_tags = soup.find(
+        attrs={"data-testid": "title-techspec_aspectratio"})
+    DEBUG_LOG('Aspect Ratio Tags: {0}'.format(aspect_ratio_tags))
+    
+    if aspect_ratio_tags:
+        aspect_ratio_full = aspect_ratio_tags.select_one(".ipc-metadata-list-item__list-content-item").decode_contents()
+
+        if aspect_ratio_full:
+            aspect_ratio = aspect_ratio_full.split(':')[0].replace('.', '')
+            return aspect_ratio
+    else:
+        # check if video has multiple aspect ratios
+        URL = "{}/title/{}/technical/".format(BASE_URL, imdb_number)
+        tech_specs_page = requests.get(URL, headers=HEADERS)
+        soup = BeautifulSoup(tech_specs_page.text, 'html.parser')
+        aspect_ratio_li = soup.select_one("#aspectratio").find_all("li")
+        DEBUG_LOG('Aspect Ratios: {0}'.format(aspect_ratio_li))
+        if len(aspect_ratio_li) > 1:
+            aspect_ratios = []
+
+            for li in aspect_ratio_li:
+                aspect_ratio_full = li.select_one(".ipc-metadata-list-item__list-content-item").decode_contents()
+                
+                aspect_ratio = aspect_ratio_full.split(':')[0].replace('.', '')
+                DEBUG_LOG('Aspect Ratio Number: {0}'.format(aspect_ratio))
+                sub_text = li.select_one(".ipc-metadata-list-item__list-content-item--subText").decode_contents()
+                DEBUG_LOG('Sub Text: {0}'.format(sub_text))
+                
+                if sub_text == "(US theatrical ratio)":
+                    xbmc.log("using theatrical ratio " + str(aspect_ratio), level=xbmc.LOGINFO)
+                    return aspect_ratio
+                
+                aspect_ratios.append(aspect_ratio)
+
+            return aspect_ratios
+
+    aspect_ratio = '1.85'
+    return aspect_ratio
+    
 class KodiVolumeControl:
     def __init__(self, abort_flag):
         self.saved = None
@@ -220,6 +285,7 @@ class ExperienceWindow(kodigui.BaseWindow):
         self._paused = False
         self._pauseStart = 0
         self._pauseDuration = 0
+        self.inShowImageFromQueue = False
         self.clear()
 
     def onInit(self):
@@ -259,11 +325,6 @@ class ExperienceWindow(kodigui.BaseWindow):
         self.lastImage = url
         kodiutil.setGlobalProperty('image0', url)
 
-    # def fade(self, url):
-    #     kodiutil.setGlobalProperty('image{0}'.format(self.currentImage), url)
-    #     self.currentImage = int(not self.currentImage)
-    #     kodiutil.setGlobalProperty('show1', not self.currentImage and '1' or '')
-
     def change(self, url):
         kodiutil.setGlobalProperty('image0', self.lastImage)
         kodiutil.setGlobalProperty('show1', '')
@@ -289,7 +350,7 @@ class ExperienceWindow(kodigui.BaseWindow):
                 ('Visible', 'effect=fade start=0 end=100 time={duration}'.format(duration=self.duration)),
                 ('Hidden', 'effect=fade start=100 end=0 time=0')
             ])
-        elif self.effect == 'fadesingle':  # Used for single image fade in/out
+        elif self.effect == 'fadesingle':
             self.image[1].setAnimations([
                 ('Visible', 'effect=fade start=0 end=100 time={duration}'.format(duration=self.duration)),
                 ('Hidden', 'effect=fade start=100 end=0 time={duration}'.format(duration=self.duration))
@@ -319,15 +380,19 @@ class ExperienceWindow(kodigui.BaseWindow):
         kodiutil.setGlobalProperty('show1', '')
 
     def onAction(self, action):
-        # print action.getId()
         scriptAddon = xbmcaddon.Addon('script.preshowexperience')
         shieldskipbutton = scriptAddon.getSetting('shieldskip.button')
-        #DEBUG_LOG('Shield skip button: {0}'.format(shieldskipbutton))    
+        #DEBUG_LOG('Shield skip button: {0}'.format(shieldskipbutton)) 
+       
         try:
             if action == xbmcgui.ACTION_PREVIOUS_MENU or action == xbmcgui.ACTION_NAV_BACK or action == xbmcgui.ACTION_STOP:
-                self.volume.stop()
-                self.abortFlag.set()
-                self.doClose()
+                if self.inShowImageFromQueue:
+                    self.action = 'ESCAPE'  # Trigger 'NEXT' action in showImageFromQueue
+                    self.inShowImageFromQueue = False
+                else:
+                    self.volume.stop()
+                    self.abortFlag.set()
+                    self.doClose()
             elif action == xbmcgui.ACTION_MOVE_RIGHT:
                 if self.action != 'SKIP':
                     self.action = 'NEXT'
@@ -361,6 +426,7 @@ class ExperienceWindow(kodigui.BaseWindow):
     def onLastChapter(self):
         self.player.onPlayLastChapter()
         kodiutil.setGlobalProperty('lastChapter', '1')
+        
     def onPause(self):
         self.player.onPlayBackPaused()
         kodiutil.setGlobalProperty('paused', '1')
@@ -377,6 +443,7 @@ class ExperienceWindow(kodigui.BaseWindow):
             return int(xbmc.getInfoLabel('Player.Chapter')) == self.totalchapters
         except ValueError:
             return False
+            
     def pause(self):
         if xbmc.getCondVisibility('Player.HasAudio'):
             if xbmc.getCondVisibility('Player.Paused'):
@@ -492,13 +559,6 @@ class ExperiencePlayer(xbmc.Player):
         self.loadActions()
         self.init()
         return self
-
-    @property
-    def has3D(self):
-        for f in self.features:
-            if f.is3D:
-                return True
-        return False
 
     def setPlayStatus(self, status):
         self.playStatus = status
@@ -653,10 +713,10 @@ class ExperiencePlayer(xbmc.Player):
         self.pauseAction = None
         self.resumeAction = None
         self.abortAction = None
-        # self.beforeFeatureAction = None
-        # self.beginningAction = None
-        # self.lastChapterAction = None
-        # self.endAction = None
+        self.beforeFeatureAction = None
+        self.beginningAction = None
+        self.lastChapterAction = None
+        self.afterFeatureAction = None
 
         if kodiutil.getSetting('action.onPause', False):
             actionFile = kodiutil.getSetting('action.onPause.file')
@@ -672,21 +732,21 @@ class ExperiencePlayer(xbmc.Player):
             actionFile = kodiutil.getSetting('action.onAbort.file')
             self.abortAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
             
-        # if kodiutil.getSetting('action.onBeforeFeature', False):
-            # actionFile = kodiutil.getSetting('action.onBeforeFeature.file')
-            # self.beforeFeatureAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+        if kodiutil.getSetting('action.onBeforeFeature', False):
+            actionFile = kodiutil.getSetting('action.onBeforeFeature.file')
+            self.beforeFeatureAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
             
-        # if kodiutil.getSetting('action.onBeginningAction', False):
-            # actionFile = kodiutil.getSetting('action.onBeginningAction.file')
-            # self.beginningAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+        if kodiutil.getSetting('action.onBeginning', False):
+            actionFile = kodiutil.getSetting('action.onBeginning.file')
+            self.beginningAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
             
-        # if kodiutil.getSetting('action.onLastChapter', False):
-            # actionFile = kodiutil.getSetting('action.onLastChapterAction.file')
-            # self.lastChapterAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+        if kodiutil.getSetting('action.onLastChapter', False):
+            actionFile = kodiutil.getSetting('action.onLastChapter.file')
+            self.lastChapterAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
             
-        # if kodiutil.getSetting('action.oneEnd', False):
-            # actionFile = kodiutil.getSetting('action.onPause.file')
-            # self.endAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
+        if kodiutil.getSetting('action.onAfterFeature', False):
+            actionFile = kodiutil.getSetting('action.onAfterFeature.file')
+            self.afterFeatureAction = actionFile and preshowexperience.actions.ActionFileProcessor(actionFile) or None
 
     def formatStreamDetails(self, jsonstring):
         lines = json.dumps(jsonstring, indent=4, sort_keys=True).splitlines()
@@ -703,13 +763,11 @@ class ExperiencePlayer(xbmc.Player):
             return (streams[0]['codec'], streams[0]['channels'])
         except:
             return ('', '')
-
+    
     def featureFromJSON(self, r):
-        tags3DRegEx = kodiutil.getSetting('3D.tag.regex', pseutil.DEFAULT_3D_RE)
-
         feature = preshowexperience.sequenceprocessor.Feature(r['file'])
         feature.title = r.get('title') or r.get('label', '')
-        ratingString = pseutil.ratingParser().getActualRatingFromMPAA(r.get('mpaa', ''), debug=True)
+        ratingString = preshowutil.ratingParser().getActualRatingFromMPAA(r.get('mpaa', ''), debug=True)
         if ratingString:
             feature.rating = ratingString
         feature.ID = kodiutil.intOrZero(r.get('movieid', r.get('episodeid', r.get('id', 0))))
@@ -722,16 +780,40 @@ class ExperiencePlayer(xbmc.Player):
         feature.thumb = r.get('thumbnail', '')
         feature.runtime = r.get('runtime', 0)
         feature.year = r.get('year', 0)
+        
+        if kodiutil.getSetting('aspect.condition', True):
+            dialog = xbmcgui.Dialog()
+            dialog.notification('Aspect Ratio', 'Retrieving movie aspect ratio.', xbmcgui.NOTIFICATION_INFO, 3000)        
+            
+            imdb_number = kodiutil.infoLabel('ListItem.IMDBNumber')
+            original_aspect_ratio = getIMDBAspectRatio(feature.title, imdb_number=imdb_number)
+            DEBUG_LOG('Original Aspect Ratio: {0}'.format(original_aspect_ratio))
 
-        try:
-            stereomode = r['streamdetails']['video'][0]['stereomode']
-        except:
-            stereomode = ''
+            # Convert the aspect ratio to a float, assuming it's a string like '1.85'
+            original_aspect_ratio = float(original_aspect_ratio) if '.' in original_aspect_ratio else float(original_aspect_ratio) / 100
 
-        if stereomode not in ('mono', ''):
-            feature.is3D = True
-        else:
-            feature.is3D = bool(re.search(tags3DRegEx, r['file']))
+            aspect_ratios = ['1.33','1.77','1.85','2.0','2.2','2.35','2.4']
+            aspect_ratios = [float(ar) for ar in aspect_ratios]
+
+            # Find the closest aspect ratio
+            closest_aspect_ratio = min(aspect_ratios, key=lambda x: abs(x - original_aspect_ratio))
+
+            # Check if the closest aspect ratio is exactly halfway between two values
+            if closest_aspect_ratio not in aspect_ratios:
+                # Find the two closest values
+                lower = max([ar for ar in aspect_ratios if ar < closest_aspect_ratio])
+                upper = min([ar for ar in aspect_ratios if ar > closest_aspect_ratio])
+
+                # Choose the one that is closer to the original aspect ratio
+                closest_aspect_ratio = lower if (original_aspect_ratio - lower) <= (upper - original_aspect_ratio) else upper
+
+            # Format the closest aspect ratio as a string with two decimal places
+            original_aspect_ratio = "{:.2f}".format(closest_aspect_ratio)
+            if original_aspect_ratio == '2.40':
+                original_aspect_ratio = '2.4'
+            feature.videoaspect = original_aspect_ratio
+
+            DEBUG_LOG('Final Aspect Ratio: {0}'.format(original_aspect_ratio))
 
         try:
             codec, channels = self.getCodecAndChannelsFromStreamDetails(r['streamdetails'])
@@ -859,7 +941,7 @@ class ExperiencePlayer(xbmc.Player):
         feature = preshowexperience.sequenceprocessor.Feature(kodiutil.infoLabel('ListItem.FileNameAndPath'))
         feature.title = title
 
-        ratingString = pseutil.ratingParser().getActualRatingFromMPAA(kodiutil.infoLabel('ListItem.Mpaa'), debug=True)
+        ratingString = preshowutil.ratingParser().getActualRatingFromMPAA(kodiutil.infoLabel('ListItem.Mpaa'), debug=True)
         if ratingString:
             feature.rating = ratingString
 
@@ -873,17 +955,30 @@ class ExperiencePlayer(xbmc.Player):
         feature.thumb = kodiutil.infoLabel('ListItem.Thumb')
         feature.year = kodiutil.infoLabel('ListItem.Year')
 
+        if kodiutil.getSetting('aspect.condition', True):
+            dialog = xbmcgui.Dialog()
+            dialog.notification('Aspect Ratio', 'Retrieving movie aspect ratio.', xbmcgui.NOTIFICATION_INFO, 3000)        
+            
+            imdb_number = kodiutil.infoLabel('ListItem.IMDBNumber')
+            original_aspect_ratio = getIMDBAspectRatio(feature.title, imdb_number=imdb_number)
+            DEBUG_LOG('Original Aspect Ratio: {0}'.format(original_aspect_ratio))
+            original_aspect_ratio = float(original_aspect_ratio) if '.' in original_aspect_ratio else float(original_aspect_ratio) / 100
+            aspect_ratios = ['1.33','1.77','1.85','2.0','2.2','2.35','2.4']
+            aspect_ratios = [float(ar) for ar in aspect_ratios]
+            closest_aspect_ratio = min(aspect_ratios, key=lambda x: abs(x - original_aspect_ratio))
+            if closest_aspect_ratio not in aspect_ratios:
+                lower = max([ar for ar in aspect_ratios if ar < closest_aspect_ratio])
+                upper = min([ar for ar in aspect_ratios if ar > closest_aspect_ratio])
+                closest_aspect_ratio = lower if (original_aspect_ratio - lower) <= (upper - original_aspect_ratio) else upper
+            original_aspect_ratio = "{:.2f}".format(closest_aspect_ratio)
+            if original_aspect_ratio == '2.40':
+                original_aspect_ratio = '2.4'
+            feature.videoaspect = original_aspect_ratio
+
         try:
             feature.runtime = kodiutil.intOrZero(xbmc.getInfoLabel('ListItem.Duration')) * 60
         except TypeError:
             pass
-
-        feature.is3D = xbmc.getCondVisibility('ListItem.IsStereoscopic')
-
-        if not feature.is3D:
-            tags3DRegEx = kodiutil.getSetting('3D.tag.regex', pseutil.DEFAULT_3D_RE)
-
-            feature.is3D = bool(re.search(tags3DRegEx, feature.path))
 
         codec = xbmc.getInfoLabel('ListItem.AudioCodec')
         channels = kodiutil.intOrZero(xbmc.getInfoLabel('ListItem.AudioChannels'))
@@ -910,9 +1005,9 @@ class ExperiencePlayer(xbmc.Player):
 
         if isURLFile(path):
             path = resolveURLFile(path)
-        else:
-            if video.userAgent:
-                path += '|User-Agent=' + video.userAgent
+        # else:
+            # if video.userAgent:
+                # path += '|User-Agent=' + video.userAgent
 
         li = xbmcgui.ListItem(video.title, 'PreShow Experience', path=path)
         li.setArt({'thumb': video.thumb, 'icon': video.thumb})
@@ -1013,7 +1108,7 @@ class ExperiencePlayer(xbmc.Player):
 
     def start(self, sequence_path):
         kodiutil.setGlobalProperty('running', '1')
-        xbmcgui.Window(10025).setProperty('CinemaExperienceRunning', 'True')
+        xbmcgui.Window(10025).setProperty('PreShowExperienceRunning', 'True')
         self.initSkinVars()
         self.playGUISounds.disable()
         self.screensaver.disable()
@@ -1025,14 +1120,14 @@ class ExperiencePlayer(xbmc.Player):
             self.screensaver.restore()
             self.visualization.restore()
             kodiutil.setGlobalProperty('running', '')
-            xbmcgui.Window(10025).setProperty('CinemaExperienceRunning', '')
+            xbmcgui.Window(10025).setProperty('PreShowExperienceRunning', '')
             self.initSkinVars()
 
     def _start(self, sequence_path):
-        from . import pseutil
+        from . import preshowutil
 
         self.processor = preshowexperience.sequenceprocessor.SequenceProcessor(sequence_path,
-                                                                          content_path=pseutil.getContentPath())
+                                                                          content_path=preshowutil.getContentPath())
         [self.processor.addFeature(f) for f in self.features]
 
         kodiutil.DEBUG_LOG('\n.')
@@ -1183,35 +1278,40 @@ class ExperiencePlayer(xbmc.Player):
     def showImageFromQueue(self, image, info, first=None):
         kodiutil.DEBUG_LOG(f"Displaying image: {image.path}, Duration: {image.duration}")
         self.window.setImage(image.path)
+        self.inShowImageFromQueue = True
 
         stop = time.time() + image.duration
+        try:
+            while not kodiutil.wait(0.1) and (time.time() < stop or self.window.paused()):
+                if not self.window.isOpen:
+                    return False
 
-        while not kodiutil.wait(0.1) and (time.time() < stop or self.window.paused()):
-            if not self.window.isOpen:
-                return False
+                if info.musicEnd and time.time() >= info.musicEnd and not self.window.paused():
+                    info.musicEnd = None
+                    self.stopMusic(info.imageQueue)
+                elif self.window.action:
+                    if self.window.next():
+                        return 'NEXT'
+                    elif self.window.action == 'ESCAPE':
+                        return 'ESCAPE'
+                    elif self.window.prev():
+                        return 'PREV'
+                    elif self.window.bigNext():
+                        return 'BIG_NEXT'
+                    elif self.window.bigPrev():
+                        return 'BIG_PREV'
+                    elif self.window.skip():
+                        return 'SKIP'
+                    elif self.window.back():
+                        return 'BACK'
+                    elif self.window.resume():
+                        stop += self.window.pauseDuration()
+                        self.window.finishPause()
 
-            if info.musicEnd and time.time() >= info.musicEnd and not self.window.paused():
-                info.musicEnd = None
-                self.stopMusic(info.imageQueue)
-            elif self.window.action:
-                if self.window.next():
-                    return 'NEXT'
-                elif self.window.prev():
-                    return 'PREV'
-                if self.window.bigNext():
-                    return 'BIG_NEXT'
-                elif self.window.bigPrev():
-                    return 'BIG_PREV'
-                elif self.window.skip():
-                    return 'SKIP'
-                elif self.window.back():
-                    return 'BACK'
-                elif self.window.resume():
-                    stop += self.window.pauseDuration()
-                    self.window.finishPause()
-
-            if xbmcgui.getCurrentWindowId() != self.window._winID:  # Prevent switching to another window as it's not a good idea
-                self.window.show()
+                if xbmcgui.getCurrentWindowId() != self.window._winID:  # Prevent switching to another window as it's not a good idea
+                    self.window.show()
+        finally:
+            info.musicEnd = None
 
         return True
 
@@ -1360,10 +1460,15 @@ class ExperiencePlayer(xbmc.Player):
                 self.next()
 
         elif playable.type == 'IMAGE.QUEUE':
-            if not self.showImageQueue(playable):
-                self.next(prev=True)
-            else:
-                self.next()
+            result = self.showImageQueue(playable)
+            if result == 'ESCAPE':
+                # Handle the escape action here, e.g., break out of the current process
+                return
+            elif not result:
+                if not self.showImageQueue(playable):
+                    self.next(prev=True)
+                else:
+                    self.next()
 
         elif playable.type == 'VIDEO.QUEUE':
             self.showVideoQueue(playable)

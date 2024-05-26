@@ -116,11 +116,6 @@ class ModuleCommand(ActionCommand):
             if self.importPath not in sys.path:
                 sys.path.append(self.importPath)
 
-            import cinema_vision_command_module
-            importlib.reload(cinema_vision_command_module)
-
-            result = cinema_vision_command_module.main(*self.args)
-            self.log('Action (Module) Succeded: {0} ({1}) - Result: {2}'.format(self.commandData, ', '.join(self.args), result))
         except:
             util.ERROR()
             self._addOutput(traceback.format_exc())
@@ -195,13 +190,13 @@ class PythonCommand(ActionCommand):
         except:
             return False
 
-        _PSE_COMMAND_RESULT_ = None
+        _PRESHOW_COMMAND_RESULT_ = None
 
         if self.commandData:
             with open(self._absolutizeCommand(), 'r') as f:
                 code_content = f.read()
                 exec(code_content)
-            self.log('Action (Python) Executed: {0} Result: {1}'.format(self.commandData, _PSE_COMMAND_RESULT_))
+            self.log('Action (Python) Executed: {0} Result: {1}'.format(self.commandData, _PRESHOW_COMMAND_RESULT_))
             return True
 
         if len(self.args) == 1:
@@ -210,7 +205,7 @@ class PythonCommand(ActionCommand):
         else:
             code = '\n'.join(self.args)
             exec(code)
-            self.log('Action (Python) Executed: {0} Lines - Result: {1}'.format(len(self.args), _PSE_COMMAND_RESULT_))
+            self.log('Action (Python) Executed: {0} Lines - Result: {1}'.format(len(self.args), _PRESHOW_COMMAND_RESULT_))
 
         return True
 

@@ -3,15 +3,14 @@ from . import scraper
 from .. import _scrapers
 from ... import util
 from ... import ratings
-from .... import pseutil
+from .... import preshowutil
 
-pseutil.ratingParser()
+preshowutil.ratingParser()
 
 class Trailer(_scrapers.Trailer):
     def __init__(self, data):
         _scrapers.Trailer.__init__(self, data)
         self._genres = []
-        self._is3D = util.pathIs3D(self.data.get('url', ''))
         self.parseNFO(self.data.get('nfo'))
 
     def parseNFO(self, path):
@@ -41,20 +40,14 @@ class Trailer(_scrapers.Trailer):
         return self.data.get('title', 'ERROR_NO_TITLE')
 
     @property
-    def is3D(self):
-        return self._is3D
-
-    @property
     def genres(self):
         return self._genres
 
     def getStaticURL(self):
         return self.data.get('url')
 
-    def getPlayableURL(self, res='720p'):
+    def getPlayableURL(self, res='1080p'):
         return self.getStaticURL()
-
-
 
 class ContentTrailerScraper(_scrapers.Scraper):
     def getTrailers(self):

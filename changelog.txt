@@ -1,22 +1,31 @@
 Changelog for PreShow Experience
 
+[- 0.3.0a -]
+- fix:            IMDB trailers
+- fix:            Slideshow timing issue
+- add:         YouTube default videos for content that doesn't exist in PreShow content folders
+
+[- 0.2.8 -]
+- add:         Aspect Ratio conditional filter
+- remove:   Everything related to 3D
+
 [- 0.2.7 -]
-- change:   Miscelaneous backend code updated and improvements
+- change:   Updated significant amount of backend code
 
 [- 0.2.6 -]
-- change:   Removed watched database.  Requires trailers to be updated.
+- change:   Moved watched status into content database and removed watched database.  Requires trailers to be updated.
 
 [- 0.2.5 -]
 - change:   New sequences include feature module and only additional feature modules can be deleted
-- add:      Added option for alternate next button on nVidia Shield
+- add:         Added option for alternate next button on nVidia Shield
 - change:   Bumper file and directory browse starts in PreShow content folder
 
 [- 0.2.4 -]
 - add:      Slideshow Module
 
 [- 0.2.3 -]
-- add:      Added pastebin log posting
-- add:      Added new options for the command module, including number of loops, duration and time of day
+- add:    Pastebin log posting
+- add:    New options for the command module, including number of loops, duration and time of day
 - fix:      Added genres, rating and resolution data for imdb trailers (Note this takes a while to retrieve the trailer information)
 - fix:      Updated code to make sequences filter by date properly
 - fix:      Modified code to make linked python scripts work in action files

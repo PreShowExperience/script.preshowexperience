@@ -12,13 +12,10 @@ from . import kodiutil
 from . import preshowexperience
 from . import kodigui
 
-DEFAULT_3D_RE = '(?i)3DSBS|3D.SBS|HSBS|H.SBS|H-SBS|[\. _]SBS[\. _]|FULL-SBS|FULL.SBS|FULLSBS|FSBS|HALF-SBS|' +\
-    '3DTAB|3D.TAB|HTAB|H.TAB|3DOU|3D.OU|3D.HOU|[\. _]HOU[\. _]|[\. _]OU[\. _]|HALF-TAB|[\. _]TAB[\. _]'
+preshowexperience.init(kodiutil.DEBUG(), kodiutil.Progress, kodiutil.T)
 
-preshowexperience.init(kodiutil.DEBUG(), kodiutil.Progress, kodiutil.T, kodiutil.getSetting('3D.tag.regex', DEFAULT_3D_RE))
-
-def defaultSavePath(for_3D=False):
-    return os.path.join(kodiutil.ADDON_PATH, 'resources', 'preshowexperience.default{0}.pseseq'.format(for_3D and '3D' or '2D'))
+def defaultSavePath():
+    return os.path.join(kodiutil.ADDON_PATH, 'resources', 'preshow-default.pseseq')
 
 
 def lastSavePath():
@@ -33,24 +30,11 @@ def getSavePath(name):
 
     return preshowexperience.util.pathJoin(contentPath, 'Sequences', name + '.pseseq')
 
-
 def getSequenceName(path):
-    if 'preshowexperience.default2D.pseseq' in path:
+    if 'preshow-default.pseseq' in path:
         return '[ {0} ]'.format(T(32599, 'Default'))
-    elif 'preshowexperience.default3D.pseseq' in path:
-        return '[ {0} ]'.format(T(32600, 'Default 3D'))
 
     return re.split(r'[/\\]', path)[-1][:-7]
-
-
-def getSequencePath(for_3D=False, with_name=False):
-    path = defaultSavePath(for_3D)
-
-    if with_name:
-        return (path, getSequenceName(path))
-
-    return path
-
 
 def selectSequence(active=True, for_dialog=False):
 
@@ -59,9 +43,6 @@ def selectSequence(active=True, for_dialog=False):
         return None
 
     sequencesPath = preshowexperience.util.pathJoin(contentPath, 'Sequences')
-
-    default2D = 2
-    default3D = 3
 
     if not contentPath:
         xbmcgui.Dialog().ok(T(32500, 'Not Found'), T(32501, 'No sequences found.'))
@@ -77,7 +58,7 @@ def selectSequence(active=True, for_dialog=False):
             dupNames[s.name] = False
 
     options = [('{0}.pseseq'.format(s.pathName), '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name) for s in sequences]
-    options.append((default2D, '[ {0} ]'.format(T(32599, 'Default 2D'))))
+    options.append(('[ {0} ]'.format(T(32599, 'Default'))))
 
     if not options:
         xbmcgui.Dialog().ok(T(32500, 'Not Found'), T(32501, 'No sequences found.'))
@@ -88,16 +69,10 @@ def selectSequence(active=True, for_dialog=False):
         return None
 
     result = options[idx][0]
-
-    if result == default2D:
-        path = defaultSavePath()
-    elif result == default3D:
-        path = defaultSavePath(for_3D=True)
-    else:
-        path = preshowexperience.util.pathJoin(sequencesPath, result)
+    #path = defaultSavePath()
+    path = preshowexperience.util.pathJoin(sequencesPath, result)
 
     return {'path': path, 'name': options[idx][1]}
-
 
 def getSequencesContentPath():
     contentPath = kodiutil.getPathSetting('content.path')
@@ -106,7 +81,6 @@ def getSequencesContentPath():
         return None
 
     return contentPath
-
 
 def getActiveSequences(active=True, for_dialog=False):
     contentPath = getSequencesContentPath()
@@ -130,7 +104,7 @@ def getActiveSequences(active=True, for_dialog=False):
 
 
 def getMatchedSequence(feature):
-    priority = ['type', 'ratings', 'tags', 'year', 'studio', 'director', 'actor', 'genre', 'dates', 'times']
+    priority = ['featuretitle', 'ratings', 'videoaspect', 'tags', 'year', 'studio', 'director', 'actor', 'genre', 'dates', 'times']
 
     contentPath = getSequencesContentPath()
     if not contentPath:
@@ -183,9 +157,9 @@ def getMatchedSequence(feature):
     return {'path': path, 'sequence': seqData}
 
 def getDefaultSequenceData(feature):
-    path = defaultSavePath(for_3D=feature.is3D)
+    path = defaultSavePath()
     seqData = preshowexperience.sequence.SequenceData.load(path)
-    seqData.name = '[ {0} ]'.format(T(32600, 'Default 3D') if feature.is3D else T(32599, 'Default 2D'))
+    seqData.name = '[ {0} ]'.format(T(32599, 'Default'))
 
     return {'path': path, 'sequence': seqData}
 

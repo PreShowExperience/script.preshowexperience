@@ -38,7 +38,7 @@
                 <posx>-5</posx>
                 <posy>-5</posy>
                 <width>1330</width>
-                <height>870</height>
+                <height>970</height>
                 <texture>script.preshow-white_square.png</texture>
                 <colordiffuse>FFA0A0A0</colordiffuse>
                 <aspectratio>stretch</aspectratio>
@@ -47,7 +47,7 @@
                 <posx>0</posx>
                 <posy>0</posy>
                 <width>1320</width>
-                <height>860</height>
+                <height>960</height>
                 <texture>script.preshow-white_square.png</texture>
                 <colordiffuse>FF2D3139</colordiffuse>
                 <aspectratio>stretch</aspectratio>

@@ -40,7 +40,7 @@ class Trailer:
 
     @property
     def release(self):
-        return datetime.date(1900, 1, 1)
+        return datetime.date(2020, 1, 1)
 
     @property
     def is3D(self):
