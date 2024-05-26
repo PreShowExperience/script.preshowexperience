@@ -43,6 +43,16 @@ def getBumperDir(ID):
 
     return ('Video Bumpers', dirname)
 
+#New section    
+def list_all_directories(root_path):
+    directories = [root_path]  
+    for dirpath, dirnames, filenames in os.walk(root_path):
+        # Append all directories found at current level to the list
+        for dirname in dirnames:
+            full_path = os.path.join(dirpath, dirname)
+            directories.append(full_path)
+    return directories    
+
 class UserContent:
     _tree = (
         ('Audio Format Bumpers', (
@@ -67,7 +77,6 @@ class UserContent:
             'DEJUS',
             'FSK'
         )),
-        'Themes',
         'Trailers',
         'Trivia',
         'Slideshow',
@@ -226,45 +235,56 @@ class UserContent:
         self.logHeading('LOADING MUSIC')
 
         self.musicHandler(util.pathJoin(self._contentDirectory, 'Music'))
-
+    
     def loadTrivia(self):
         self.logHeading('LOADING TRIVIA')
 
         basePath = util.pathJoin(self._contentDirectory, 'Trivia')
-        paths = util.vfs.listdir(basePath)
-
-        total = float(len(paths))
-        for ct, sub in enumerate(paths):
-            pct = 20 + int((ct / total) * 20)
+        all_directories = list_all_directories(basePath)
+        util.DEBUG_LOG('all_directories: {}'.format(all_directories))
+        
+        total = float(len(all_directories))
+        for ct, dir_path in enumerate(all_directories):
+            pct = 20 + int((ct / total) * 80)
+            if dir_path.startswith('_Exclude'):
+                util.DEBUG_LOG('SKIPPING EXCLUDED DIR: {0}'.format(util.strRepr(dir_path)))
+                continue
             if not self._callback(pct=pct):
                 break
-            path = os.path.join(basePath, sub)
-            if util.isDir(path):
-                if sub.startswith('_Exclude'):
-                    util.DEBUG_LOG('SKIPPING EXCLUDED DIR: {0}'.format(util.strRepr(sub)))
-                    continue
+            self.log('Processing trivia directory: {}'.format(util.strRepr(os.path.basename(dir_path))))
+            self.triviaDirectoryHandler(dir_path, prefix=os.path.relpath(dir_path, basePath))
 
-            self.log('Processing trivia: {0}'.format(util.strRepr(os.path.basename(path))))
-            self.triviaDirectoryHandler(path, prefix=sub)
+        util.DEBUG_LOG('Completed loading trivia directories.')
+    
 
     def loadSlideshow(self):
         self.logHeading('LOADING SLIDESHOW')
 
         basePath = util.pathJoin(self._contentDirectory, 'Slideshow')
         paths = util.vfs.listdir(basePath)
+        util.DEBUG_LOG('paths: {}'.format(paths))
+
+        full_paths = [util.pathJoin(basePath, p) for p in paths]
+        util.DEBUG_LOG('full paths: {}'.format(full_paths))
+
+        files = [os.path.relpath(p, basePath) for p in full_paths if os.path.isfile(p)]
+        directories = [os.path.relpath(p, basePath) for p in full_paths if os.path.isdir(p)]
+        util.DEBUG_LOG('files: {}'.format(files))
+        util.DEBUG_LOG('directories: {}'.format(directories))
+        
+        paths = directories
 
         total = float(len(paths))
+        util.DEBUG_LOG('total: {}'.format(total))
         for ct, sub in enumerate(paths):
             pct = 20 + int((ct / total) * 20)
             if not self._callback(pct=pct):
                 break
             path = os.path.join(basePath, sub)
-            if util.isDir(path):
-                if sub.startswith('_Exclude'):
-                    util.DEBUG_LOG('SKIPPING EXCLUDED DIR: {0}'.format(util.strRepr(sub)))
-                    continue
+            util.DEBUG_LOG('path: {}'.format(path))
 
             self.log('Processing Slideshow: {0}'.format(util.strRepr(os.path.basename(path))))
+            util.DEBUG_LOG('sub: {}'.format(sub))
             self.slideshowDirectoryHandler(path, prefix=sub)
     
     def loadAudioFormatBumpers(self):
@@ -535,7 +555,6 @@ class MusicHandler:
         return cleaned
 
 class TriviaDirectoryHandler:
-    _formatXML = 'slides.xml'
     _ratingNA = ('slide', 'rating')
     _questionNA = ('question', 'format')
     _clueNA = ('clue', 'format')
@@ -553,54 +572,24 @@ class TriviaDirectoryHandler:
         self.doCall(basePath, prefix)
 
     def doCall(self, basePath, prefix=None):
-        hasSlidesXML = False
-        slideXML = util.pathJoin(basePath, self._formatXML)
-        # util.DEBUG_LOG(basePath)
-        if util.vfs.exists(slideXML):
-            hasSlidesXML = True
+        util.DEBUG_LOG('Prefix: {}'.format(prefix))
 
-        # pack = os.path.basename(basePath.rstrip('\\/'))
-
-        xml = None
-        slide = None
-
-        if hasSlidesXML:
-            try:
-                f = util.vfs.File(slideXML, 'r')
-                xml = f.read()
-            finally:
-                f.close()
-
-            try:
-                slides = ET.fromstring(xml)
-                slide = slides.find('slide')
-            except ET.ParseError:
-                util.DEBUG_LOG('Bad slides.xml')
-            except:
-                util.ERROR()
-                slide = None
-
-        if slide:
-            rating = self.getNodeAttribute(slide, self._ratingNA[0], self._ratingNA[1]) or ''
-            questionRE = (self.getNodeAttribute(slide, self._questionNA[0], self._questionNA[1]) or '').replace('N/A', '')
-            clueRE = self.getNodeAttribute(slide, self._clueNA[0], self._clueNA[1]) or ''.replace('N/A', '')
-            answerRE = self.getNodeAttribute(slide, self._answerNA[0], self._answerNA[1]) or ''.replace('N/A', '')
-        else:
-            rating = ''
-            questionRE = self._defaultQRegEx
-            clueRE = self._defaultCRegEx
-            answerRE = self._defaultARegEx
+        rating = ''
+        questionRE = self._defaultQRegEx
+        clueRE = self._defaultCRegEx
+        answerRE = self._defaultARegEx
 
         contents = util.vfs.listdir(basePath)
-
+        
         trivia = {}
 
         for c in contents:
             path = util.pathJoin(basePath, c)
+            #util.DEBUG_LOG('Path: {}'.format(path))
 
-            if util.isDir(path):
-                self.doCall(path, prefix=prefix and (prefix + ':' + c) or c)
-                continue
+            # if util.isDir(path):
+                # self.doCall(path, prefix=prefix and (prefix + ':' + c) or c)
+                # continue
 
             base, ext = os.path.splitext(c)
 
@@ -747,9 +736,11 @@ class SlideshowDirectoryHandler:
 
     def doCall(self, basePath, prefix=None):
         contents = util.vfs.listdir(basePath)
+        util.DEBUG_LOG('contents: {}'.format(contents))
 
         for c in contents:
             path = util.pathJoin(basePath, c)
+            util.DEBUG_LOG('Path: {}'.format(path))
 
             if util.isDir(path):
                 self.doCall(path, prefix=prefix and (prefix + ':' + c) or c)

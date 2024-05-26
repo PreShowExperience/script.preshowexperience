@@ -193,18 +193,21 @@ def testEventActions(action):
     elif action == 'ABORT':
         if kodiutil.getSetting('action.onAbort', False):
             path = kodiutil.getSetting('action.onAbort.file', '')
-    elif action == 'LastChapter':
-        if kodiutil.getSetting('action.onLastChapter', False):
-            path = kodiutil.getSetting('action.onLastChapter.file', '')
-    elif action == 'BeforeFeature':
-        if kodiutil.getSetting('action.onBeforeFeature', False):
-            path = kodiutil.getSetting('action.BeforeFeature.file', '')
+    elif action == 'lastChapter':
+        if kodiutil.getSetting('action.lastChapter', False):
+            path = kodiutil.getSetting('action.lastChapter.file', '')
+    elif action == 'middleChapter':
+        if kodiutil.getSetting('action.middleChapter', False):
+            path = kodiutil.getSetting('action.middleChapter.file', '')            
     elif action == 'PreshowBeginning':
         if kodiutil.getSetting('action.PreshowBeginning', False):
-            path = kodiutil.getSetting('action.onPreshowBeginning.file', '')
+            path = kodiutil.getSetting('action.PreshowBeginning.file', '')            
+    elif action == 'BeforeFeature':
+        if kodiutil.getSetting('action.BeforeFeature', False):
+            path = kodiutil.getSetting('action.BeforeFeature.file', '')
     elif action == 'AfterFeature':
-        if kodiutil.getSetting('action.onAfterFeature', False):
-            path = kodiutil.getSetting('action.onAfterFeature.file', '')            
+        if kodiutil.getSetting('action.AfterFeature', False):
+            path = kodiutil.getSetting('action.AfterFeature.file', '')            
 
     if not path:
         xbmcgui.Dialog().ok(T(32090, 'Not Set'), T(32330, 'This action is not set or not yet applied.'))

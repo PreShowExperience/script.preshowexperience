@@ -489,7 +489,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         elif controlID == self.MENU_SHOW_OPTION_BUTTON_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Show In Dialog[/B]: Set whether this sequence will be shown on the sequence selection dialog')
         elif controlID == self.MENU_EDIT_BUTTON_ID:
-            kodiutil.setGlobalProperty('option.hint', '[B]Edit[/B]: Bring up the sequence editor for the current sequence')
+            kodiutil.setGlobalProperty('option.hint', '[B]Edit[/B]: Bring up the sequence editor for the current PreShow')
         elif controlID == self.MENU_EDIT_SEQ_NAME_ID:
             kodiutil.setGlobalProperty('option.hint', '[B]Name[/B]: Name or rename this sequence')
 
@@ -1079,7 +1079,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
         from . import experience
 
         os.environ['isTestOrPreview'] = 'True'
-        savePath = os.path.join(kodiutil.PROFILE_PATH, 'temp.pseseq')
+        savePath = os.path.join(kodiutil.PROFILE_PATH, 'temp.seq')
         self._save(savePath, temp=True)
 
         e = experience.ExperiencePlayer().create(from_editor=True)
@@ -1128,9 +1128,11 @@ class SequenceEditorWindow(kodigui.BaseWindow):
 
         if not pathName or not path:
             return None
-        if pathName.endswith('.pseseq'):
-            pathName = pathName[:-7]
-        return preshowexperience.util.pathJoin(path, pathName) + '.pseseq'
+        if pathName.endswith('.seq'):
+            pathName = pathName[:-4]
+        elif pathName.endswith('.pseseq'):
+            pathName = pathName[:-7]            
+        return preshowexperience.util.pathJoin(path, pathName) + '.seq'
 
     def setName(self, name):
         self.name = name
@@ -1271,7 +1273,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
             return
 
         if import_:
-            path = xbmcgui.Dialog().browse(1, T(32521, 'Select File'), 'files', '*.pseseq|*.cvseq', False, False)
+            path = xbmcgui.Dialog().browse(1, T(32521, 'Select File'), 'files', '*.seq|*.pseseq|*.cvseq', False, False)
             if not path:
                 return
         else:
@@ -1281,6 +1283,7 @@ class SequenceEditorWindow(kodigui.BaseWindow):
                 return
 
             path = selection['path']
+            kodiutil.DEBUG_LOG('Sequence Selected: {0}'.format(path))
 
         self._load(path)
 

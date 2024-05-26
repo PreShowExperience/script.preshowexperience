@@ -15,39 +15,39 @@ from . import kodigui
 preshowexperience.init(kodiutil.DEBUG(), kodiutil.Progress, kodiutil.T)
 
 def defaultSavePath():
-    return os.path.join(kodiutil.ADDON_PATH, 'resources', 'preshow-default.pseseq')
+    return os.path.join(kodiutil.ADDON_PATH, 'resources/sequences', 'Default.seq')
 
-
+def defaultFolder():
+    return os.path.join(kodiutil.ADDON_PATH, 'resources/sequences')
+    
 def lastSavePath():
     name = kodiutil.getSetting('save.name', '')
     return getSavePath(name)
-
 
 def getSavePath(name):
     contentPath = kodiutil.getPathSetting('content.path')
     if not name or not contentPath:
         return
 
-    return preshowexperience.util.pathJoin(contentPath, 'Sequences', name + '.pseseq')
+    return preshowexperience.util.pathJoin(contentPath, 'Sequences', name + '.seq')
 
 def getSequenceName(path):
-    if 'preshow-default.pseseq' in path:
+    if 'Default.seq' in path:
         return '[ {0} ]'.format(T(32599, 'Default'))
+    if path.endswith('.seq'):
+        return re.split(r'[/\\]', path)[-1][:-4]
+    elif path.endswith('.pseseq'):
+        return re.split(r'[/\\]', path)[-1][:-7]
 
-    return re.split(r'[/\\]', path)[-1][:-7]
+import os
 
 def selectSequence(active=True, for_dialog=False):
-
     contentPath = getSequencesContentPath()
-    if not contentPath:
-        return None
-
-    sequencesPath = preshowexperience.util.pathJoin(contentPath, 'Sequences')
-
     if not contentPath:
         xbmcgui.Dialog().ok(T(32500, 'Not Found'), T(32501, 'No sequences found.'))
         return None
 
+    sequencesPath = preshowexperience.util.pathJoin(contentPath, 'Sequences')
     sequences = getActiveSequences(active=active, for_dialog=for_dialog)
 
     dupNames = {}
@@ -57,22 +57,44 @@ def selectSequence(active=True, for_dialog=False):
         else:
             dupNames[s.name] = False
 
-    options = [('{0}.pseseq'.format(s.pathName), '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name) for s in sequences]
-    options.append(('[ {0} ]'.format(T(32599, 'Default'))))
+    # Generate the list of options from active sequences
+    # options = [('{0}.seq'.format(preshowexperience.util.pathJoin(sequencesPath, s.pathName)), '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name) for s in sequences]
+    options = []
+    for s in sequences:
+        seq_path = preshowexperience.util.pathJoin(sequencesPath, '{0}.seq'.format(s.pathName))
+        pseseq_path = preshowexperience.util.pathJoin(sequencesPath, '{0}.pseseq'.format(s.pathName))
+        
+        if os.path.exists(seq_path):
+            options.append((seq_path, '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name))
+        if os.path.exists(pseseq_path):
+            options.append((pseseq_path, '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name))
+
+
+    # Add files from the default save path
+    default_path = defaultFolder()
+    if os.path.exists(default_path):
+        for file in os.listdir(default_path):
+            if file.endswith('.seq') or file.endswith('.pseseq'):
+                filepath = os.path.join(default_path, file)
+                filename = os.path.splitext(file)[0]  # Remove the extension
+                options.append((filepath, '[ {0} ]'.format(filename)))
 
     if not options:
         xbmcgui.Dialog().ok(T(32500, 'Not Found'), T(32501, 'No sequences found.'))
         return None
 
+    # Let user select a sequence
     idx = xbmcgui.Dialog().select(T(32502, 'Choose Sequence'), [o[1] for o in options])
     if idx < 0:
         return None
 
-    result = options[idx][0]
-    #path = defaultSavePath()
-    path = preshowexperience.util.pathJoin(sequencesPath, result)
+    # Extract the selected path and name from the options list
+    selected_option = options[idx]
+    selected_path = selected_option[0]
+    selected_name = selected_option[1]
 
-    return {'path': path, 'name': options[idx][1]}
+    return {'path': selected_path, 'name': selected_name}
+
 
 def getSequencesContentPath():
     contentPath = kodiutil.getPathSetting('content.path')
@@ -101,7 +123,6 @@ def getActiveSequences(active=True, for_dialog=False):
             kodiutil.ERROR('Failed to load: {0}'.format(kodiutil.strRepr(p)))
 
     return sequences
-
 
 def getMatchedSequence(feature):
     priority = ['featuretitle', 'ratings', 'videoaspect', 'tags', 'year', 'studio', 'director', 'actor', 'genre', 'dates', 'times']
@@ -153,7 +174,9 @@ def getMatchedSequence(feature):
     if not seqData:
         return getDefaultSequenceData(feature)
 
-    path = preshowexperience.util.pathJoin(sequencesPath, '{0}.pseseq'.format(seqData.name))
+    path = preshowexperience.util.pathJoin(sequencesPath, '{0}.seq'.format(seqData.name))
+    if not os.path.exists(path):
+        path = preshowexperience.util.pathJoin(sequencesPath, '{0}.pseseq'.format(seqData.name))
     return {'path': path, 'sequence': seqData}
 
 def getDefaultSequenceData(feature):
@@ -259,13 +282,11 @@ def downloadDemoContent():
 
     return True
 
-
 def copyDemoContent():
     source = os.path.join(kodiutil.ADDON_PATH, 'resources', 'demo')
     dest = os.path.join(kodiutil.PROFILE_PATH, 'demo')
     
     shutil.copytree(source, dest)
-
 
 def setRatingBumperStyle():
     styles = preshowexperience.sequence.Feature.DBChoices('ratingStyle')
@@ -281,7 +302,6 @@ def setRatingBumperStyle():
 
     kodiutil.setSetting('feature.ratingStyle', styles[idx][0])
 
-
 def evalActionFile(paths, test=True):
     if not paths:
         xbmcgui.Dialog().ok(T(32511, 'None found'), T(32512, 'No action file(s) set'))
@@ -295,10 +315,6 @@ def evalActionFile(paths, test=True):
     abortPath = kodiutil.getSetting('action.onAbort.file')
     if not kodiutil.getSetting('action.onAbort', False):
         abortPath = None
-
-    # if not abortPath:
-    #     yes = xbmcgui.Dialog().yesno('No Abort', 'Abort action not set.', '')
-    #     Test = False
 
     for path in paths:
         processor = preshowexperience.actions.ActionFileProcessor(path, test=True)
@@ -354,13 +370,11 @@ def evalActionFile(paths, test=True):
 
 _RATING_PARSER = None
 
-
 def ratingParser():
     global _RATING_PARSER
     if not _RATING_PARSER:
         _RATING_PARSER = RatingParser()
     return _RATING_PARSER
-
 
 class RatingParser:
     SYSTEM_RATING_REs = {
@@ -432,7 +446,6 @@ class RatingParser:
         # Just return what we have
         return rating
 
-
 def multiSelect(options, default=False):
     class ModuleMultiSelectDialog(kodigui.MultiSelectDialog):
         xmlFile = 'script.preshowexperience-multi-select-dialog.xml'
@@ -455,7 +468,6 @@ def multiSelect(options, default=False):
         return ','.join(result)
 
     return result
-
 
 def showText(heading, text):
     class TextView(kodigui.BaseDialog):

@@ -17,8 +17,8 @@
                 <posy>0</posy>
                 <width>1920</width>
                 <height>1080</height>
-                <texture>script.preshow-background.png</texture>
-                <aspectratio aligny="bottom">stretch</aspectratio>
+				<texture colordiffuse="FF191d23">script.preshow-white_square.png</texture>
+                <aspectratio>stretch</aspectratio>
             </control>
 
             <control type="image">
@@ -28,7 +28,7 @@
                 <width>640</width>
                 <height>101</height>
                 <texture>script.preshow-sequence-editor-back.png</texture>
-                <colordiffuse>18FFFFFF</colordiffuse>
+                <colordiffuse>75FFFFFF</colordiffuse>
                 <aspectratio>stretch</aspectratio>
             </control>
 <!-- Sequence File Name Section in top right corner -->
@@ -42,7 +42,7 @@
                     <width>620</width>
                     <height>80</height>
                     <font>font30</font>
-                    <textcolor>20FFFFFF</textcolor>
+                    <textcolor>75FFFFFF</textcolor>
                     <align>right</align>
                     <label>[B]$INFO[Window(10000).Property(script.preshowexperience.EDITING)][/B]</label>
                 </control>
@@ -54,11 +54,11 @@
                 <width>200</width>
                 <height>30</height>
                 <font>font10</font>
-                <textcolor>20FFFFFF</textcolor>
+                <textcolor>75FFFFFF</textcolor>
                 <align>left</align>
                 <label>[B]v$INFO[Window(10000).Property(script.preshowexperience.VERSION)][/B]</label>
             </control>
-<!-- Edit Info Text Displauy Border Section -->
+<!-- Edit Info Text Display Border Section -->
 			<control type="image">
 			<visible>!String.IsEmpty(Container(201).ListItem.Label)</visible>
                 <posx>30</posx>
@@ -1306,23 +1306,11 @@
                 <animation effect="fade" start="0" end="100" time="200" condition="String.IsEmpty(Window.Property(editing))">Conditional</animation>
                 <control type="image">
                     <posx>0</posx>
-                    <posy>0</posy>
+                    <posy>-575</posy>
                     <width>1920</width>
-                    <height>1080</height>
-                    <texture>script.preshow-white_square.png</texture>
-                    <colordiffuse>B0000000</colordiffuse>
-                    <aspectratio>stretch</aspectratio>
-                </control>
-                <control type="image">
-                    <animation effect="fade" start="100" end="0" time="200" condition="!String.IsEmpty(Window.Property(editing))">Conditional</animation>
-                    <animation effect="fade" start="0" end="100" time="200" condition="String.IsEmpty(Window.Property(editing))">Conditional</animation>
-                    <posx>0</posx>
-                    <posy>0</posy>
-                    <width>1920</width>
-                    <height>1080</height>
-                    <texture>script.preshow-overlay.png</texture>
-                    <colordiffuse>FF000000</colordiffuse>
-                    <aspectratio>stretch</aspectratio>
+                    <height>1080</height>                    
+					<texture colordiffuse="FF191d23">script.preshow-white_square.png</texture>
+					<aspectratio>stretch</aspectratio>
                 </control>
             </control>
 
@@ -1355,15 +1343,6 @@
                     <control type="group">
                         <posx>20</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <posx>0</posx>
-                            <posy>0</posy>
-                            <width>80</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="411">
                             <posx>5</posx>
                             <posy>5</posy>
@@ -1393,15 +1372,6 @@
                     <control type="group">
                         <posx>120</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <posx>0</posx>
-                            <posy>0</posy>
-                            <width>80</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="432">
                             <posx>5</posx>
                             <posy>5</posy>
@@ -1431,15 +1401,6 @@
                     <control type="group">
                         <posx>220</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <posx>0</posx>
-                            <posy>0</posy>
-                            <width>80</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="433">
                             <posx>5</posx>
                             <posy>5</posy>
@@ -1472,7 +1433,7 @@
                         <width>1080</width>
                         <height>80</height>
                         <texture>script.preshow-white_square.png</texture>
-                        <colordiffuse>FF151515</colordiffuse>
+                        <colordiffuse>FF191d23</colordiffuse>
                         <aspectratio>stretch</aspectratio>
                     </control>
                     <control type="l" id="434">
@@ -1518,15 +1479,6 @@
 				<control type="group">
                         <posx>1420</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <posx>0</posx>
-                            <posy>0</posy>
-                            <width>80</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="424">
                             <posx>5</posx>
                             <posy>5</posy>
@@ -1556,15 +1508,6 @@
                     <control type="group">
                         <posx>1520</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <posx>0</posx>
-                            <posy>0</posy>
-                            <width>80</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="425">
                             <posx>5</posx>
                             <posy>5</posy>
@@ -1609,13 +1552,6 @@
                     <control type="group">
                         <posx>20</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <width>312</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="401">
                             <posx>5</posx>
                             <posy>5</posy>					
@@ -1639,15 +1575,6 @@
                     <control type="group">
                         <posx>352</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <posx>0</posx>
-                            <posy>0</posy>
-                            <width>285</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="402">
                             <posx>5</posx>
                             <posy>5</posy>						
@@ -1680,15 +1607,6 @@
                     <control type="group">
                         <posx>657</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <posx>0</posx>
-                            <posy>0</posy>
-                            <width>333</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="404">
                             <posx>5</posx>
                             <posy>5</posy>						
@@ -1712,13 +1630,6 @@
                     <control type="group">
                         <posx>1010</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <width>335</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="405">
                             <posx>5</posx>
                             <posy>5</posy>						
@@ -1751,13 +1662,6 @@
                     <control type="group">
                         <posx>1365</posx>
                         <posy>10</posy>
-                        <control type="image">
-                            <width>169</width>
-                            <height>80</height>
-                            <texture>script.preshow-white_square.png</texture>
-                            <colordiffuse>FF151515</colordiffuse>
-                            <aspectratio>stretch</aspectratio>
-                        </control>
                         <control type="button" id="403">
                             <posx>5</posx>
                             <posy>5</posy>
@@ -1795,7 +1699,7 @@
                         <colordiffuse>FF2D3139</colordiffuse>
                         <aspectratio>stretch</aspectratio>
                     </control>
-                    <control type="image">
+<!--                     <control type="image">
                         <posx>130</posx>
                         <posy>15</posy>
                         <width>1600</width>
@@ -1803,14 +1707,14 @@
                         <texture>script.preshow-white_square.png</texture>
                         <colordiffuse>FF000000</colordiffuse>
                         <aspectratio>stretch</aspectratio>
-                    </control>
+                    </control> -->
                     <control type="label">
                         <posx>150</posx>
                         <posy>15</posy>
                         <width>1600</width>
                         <height>80</height>
                         <font>font30</font>
-                        <textcolor>FF606060</textcolor>
+                        <textcolor>95FFFFFF</textcolor>
                         <align>center</align>
                         <aligny>center</aligny>
                         <label>$INFO[Window(10000).Property(script.preshowexperience.option.hint)]</label>

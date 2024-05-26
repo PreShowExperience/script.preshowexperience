@@ -3,6 +3,9 @@ import random
 import re
 import time
 import datetime
+import xbmc
+import xbmcaddon
+import xbmcgui
 from . import database as DB
 from . import sequence
 from . import scrapers
@@ -601,9 +604,8 @@ class FeatureHandler:
                 if bumper:
                     playables.append(Image(bumper.path, duration=8, fade=1000).fromModule(sItem))
                     util.DEBUG_LOG('    - Image Rating: {0}'.format(repr(bumper.path)))
-
             playables.append(f)
-
+            
         return playables
 
 class TriviaHandler:
@@ -1453,6 +1455,7 @@ class ActionHandler:
         processor = actions.ActionFileProcessor(sItem.file)
         return [Action(processor)]
 
+
 class SequenceProcessor:
     def __init__(self, sequence_path, db_path=None, content_path=None):
         DB.initialize(db_path)
@@ -1469,6 +1472,22 @@ class SequenceProcessor:
         self.loadSequence(sequence_path)
         self.createDefaultFeature()
 
+        self.beginningAction = None
+        self.PreshowBeginningAction = None
+        self.initialize_beginning_action()        
+   
+    def initialize_beginning_action(self):
+        addon = xbmcaddon.Addon()
+        PreshowBeginning = addon.getSetting('action.PreshowBeginning')
+        #util.DEBUG_LOG('PreshowBeginning Status: {0}'.format(repr(PreshowBeginning)))
+        if PreshowBeginning == 'true':
+            actionFile = addon.getSetting('action.PreshowBeginning.file')
+            if actionFile:
+                self.PreshowBeginningAction = actions.ActionFileProcessor(actionFile) 
+                self.PreshowBeginningAction.run()                
+                util.DEBUG_LOG(f"Start of PreShow Action loaded from file: {actionFile}")
+                #xbmc.sleep(5000)
+      
     def atEnd(self, pos=None):
         if pos is None:
             pos = self.pos

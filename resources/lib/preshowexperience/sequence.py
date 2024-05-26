@@ -45,7 +45,6 @@ SETTINGS_DISPLAY = {
     'feature.duration': T(32727, 'Duration'),
     'feature.timeofday': T(32726, 'Time of day'),
     'imdb': 'IMDB',
-    'preshowtrailers': 'PreShow Trailers',
     'kodidb': T(32318, 'Kodi Database'),
     'scrapers': T(32319, 'Scrapers'),
     'dir': T(32047, 'Directory'),
@@ -231,7 +230,16 @@ class SequenceData(object):
         if not dstring:
             raise exceptions.EmptySequenceFileException()
 
-        obj = cls(dstring, path_name=re.split(r'[/\\]', path)[-1][:-7])
+        filename = re.split(r'[/\\]', path)[-1]
+        if filename.endswith('.seq'):
+            path_name = filename[:-4]
+        elif filename.endswith('.pseseq'):
+            path_name = filename[:-7]
+        else:
+            path_name = filename
+
+        obj = cls(dstring, path_name=path_name)
+
         obj._loadPath = path
         return obj
 
@@ -257,7 +265,11 @@ class SequenceData(object):
         except:
             raise exceptions.SequenceWriteReadUnknownException()
 
-        self.pathName = self.pathName or re.split(r'[/\\]', path)[-1][:-7]
+        filename = re.split(r'[/\\]', path)[-1]
+        if filename.endswith('.seq'):
+            self.pathName = self.pathName or filename[:-4]
+        elif filename.endswith('.pseseq'):
+            self.pathName = self.pathName or filename[:-7]
         self.name = self.name or self.pathName
 
         return success

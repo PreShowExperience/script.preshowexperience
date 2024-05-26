@@ -53,7 +53,6 @@ class ActionCommand:
         util.DEBUG_LOG(msg)
         self._addOutput(msg)
 
-
 class SleepCommand(ActionCommand):
     type = 'SLEEP'
 
@@ -94,7 +93,21 @@ class SleepCommand(ActionCommand):
 
         self._threadedExecute()
 
+class ImageCommand(ActionCommand):
+    type = 'IMAGE'
 
+    def execute(self):
+        try:
+            # This assumes the image path is directly usable by Kodi
+            image_path = self._absolutizeCommand()
+            xbmcgui.Dialog().show_picture(image_path)
+            self.log('Displaying image: {0}'.format(image_path))
+        except Exception as e:
+            util.ERROR()
+            self._addOutput('ERROR displaying image: ' + str(e))
+            return False
+        return True
+        
 class ModuleCommand(ActionCommand):
     type = 'MODULE'
     importPath = os.path.join(util.STORAGE_PATH, 'import')
@@ -146,7 +159,6 @@ class ScriptCommand(SubprocessActionCommand):
         self.log('Action (Script) Command: {0}'.format(repr(' '.join(command)).lstrip('u').strip("'")))
 
         subprocess.Popen(command, startupinfo=self.getStartupInfo())
-
 
 class CommandCommand(SubprocessActionCommand):
     type = 'COMMAND'
@@ -271,7 +283,8 @@ class ActionFileProcessor:
         'python': PythonCommand,
         'addon': AddonCommand,
         'module': ModuleCommand,
-        'command': CommandCommand,
+        'command': CommandCommand, 
+        'image': ImageCommand,        
         'sleep': SleepCommand
     }
 
@@ -286,7 +299,7 @@ class ActionFileProcessor:
     def __repr__(self):
         return 'AFP ({0})'.format(','.join([a.type for a in self.commands]))
 
-    def setPSERunning(self, running=True):
+    def setPreShowRunning(self, running=True):
         try:
             from resources.lib import kodiutil
             kodiutil.setGlobalProperty('running', running and '1' or '')
@@ -326,13 +339,13 @@ class ActionFileProcessor:
             c._threadedExecute()
 
     def _testRun(self):
-        self.setPSERunning()
+        self.setPreShowRunning()
 
         try:
             for c in self.commands:
                 c._test()
         finally:
-            self.setPSERunning(False)
+            self.setPreShowRunning(False)
 
     def test(self):
         self._testRun()

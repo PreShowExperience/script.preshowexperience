@@ -7,7 +7,7 @@
    "settings": {
     "random": true, 
     "count": 1, 
-    "vtype": "trivia.intro", 
+    "vtype": "trivia.intro"
    }
   }, 
   {
@@ -23,7 +23,7 @@
    "settings": {
     "random": true, 
     "count": 1, 
-    "vtype": "trivia.outro", 
+    "vtype": "trivia.outro" 
    }
   }, 
   {
@@ -33,7 +33,7 @@
    "settings": {
     "random": true, 
     "count": 1, 
-    "vtype": "courtesy", 
+    "vtype": "courtesy"
    }
   }, 
   {
@@ -43,7 +43,7 @@
    "settings": {
     "random": true, 
     "count": 1, 
-    "vtype": "theater.intro", 
+    "vtype": "theater.intro"
    }
   }, 
   {
@@ -53,7 +53,7 @@
    "settings": {
     "random": true, 
     "count": 1, 
-    "vtype": "trailers.intro", 
+    "vtype": "trailers.intro"
    }
   }, 
   {
@@ -70,15 +70,14 @@
    "settings": {
     "random": true, 
     "count": 1, 
-    "vtype": "trailers.outro", 
+    "vtype": "trailers.outro"
    }
   }, 
   {
    "enabled": true, 
    "type": "audioformat", 
    "name": "", 
-   "settings": {
-   }
+   "settings": {}
   }, 
   {
    "enabled": true, 
@@ -93,7 +92,7 @@
    "settings": {
     "random": true, 
     "count": 1, 
-    "vtype": "feature.outro", 
+    "vtype": "feature.outro"
    }
   }, 
   {
@@ -103,7 +102,7 @@
    "settings": {
     "random": true, 
     "count": 1, 
-    "vtype": "theater.outro", 
+    "vtype": "theater.outro"
    }
   }
  ], 

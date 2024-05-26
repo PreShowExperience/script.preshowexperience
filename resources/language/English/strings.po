@@ -54,7 +54,7 @@ msgid "Update content"
 msgstr ""
 
 msgctxt "#32010"
-msgid "Update when editor starts"
+msgid "Update content when editor starts"
 msgstr ""
 
 msgctxt "#32011"
@@ -190,11 +190,11 @@ msgid "Transition: Duration (milliseconds)"
 msgstr ""
 
 msgctxt "#32044"
-msgid "Music: Path"
+msgid "Music Directory"
 msgstr ""
 
 msgctxt "#32045"
-msgid "Music: File"
+msgid "Music File"
 msgstr ""
 
 msgctxt "#32046"
@@ -346,19 +346,19 @@ msgid "Rating style (needs Content path set and updated)"
 msgstr ""
 
 msgctxt "#32083"
-msgid "Actions"
+msgid "Event Actions"
 msgstr ""
 
 msgctxt "#32084"
-msgid "Execute action on sequence pause"
+msgid "Sequence pause"
 msgstr ""
 
 msgctxt "#32085"
-msgid "Action file path"
+msgid "Action file"
 msgstr ""
 
 msgctxt "#32086"
-msgid "Execute action on sequence resume"
+msgid "Sequence resume"
 msgstr ""
 
 msgctxt "#32087"
@@ -366,7 +366,7 @@ msgid "Last"
 msgstr ""
 
 msgctxt "#32088"
-msgid "Execute action on sequence abort"
+msgid "Sequence abort"
 msgstr ""
 
 msgctxt "#32089"
@@ -386,7 +386,7 @@ msgid "Scope (requires add-on restart)"
 msgstr ""
 
 msgctxt "#32093"
-msgid "Logging"
+msgid "Support & Maintenance"
 msgstr ""
 
 msgctxt "#32094"
@@ -421,36 +421,16 @@ msgctxt "#32101"
 msgid "Extras"
 msgstr ""
 
-msgctxt "#32102"
-msgid "Install context menu add-on"
-msgstr ""
-
-msgctxt "#32103"
-msgid "Context menu add-on installed"
-msgstr ""
-
 msgctxt "#32105"
-msgid "Update when Kodi starts"
+msgid "Update content when Kodi starts"
 msgstr ""
 
 msgctxt "#32106"
-msgid "Update after library scan"
+msgid "Update content after library scan"
 msgstr ""
 
 msgctxt "#32107"
-msgid "Update every... (hours)"
-msgstr ""
-
-msgctxt "#32108"
-msgid "Update when Kodi starts (requires service add-on)"
-msgstr ""
-
-msgctxt "#32109"
-msgid "Update after library scan (requires service add-on)"
-msgstr ""
-
-msgctxt "#32110"
-msgid "Update every... (hours) (requires service add-on)"
+msgid "Update content every... (hours)"
 msgstr ""
 
 msgctxt "#32111"
@@ -469,41 +449,16 @@ msgctxt "#32114"
 msgid "Import"
 msgstr ""
 
-msgctxt "#32115"
-msgid "Filter for 3D in feature filename"
-msgstr ""
-
-msgctxt "#32116"
+msgctxt "#32118"
 msgid ""
 msgstr ""
 
-msgctxt "#32117"
-msgid "You must hit cancel on the settings window in order for the settings file to not be overwritten!  Hitting OK will overwrite the imported settings file."
-msgstr ""
-
-msgctxt "#32118"
-msgid "Database Location"
-msgstr ""
-
 msgctxt "#32119"
-msgid "Local"
+msgid ""
 msgstr ""
 
 msgctxt "#32120"
 msgid "Content Path"
-msgstr ""
-
-msgctxt "#32121"
-msgid "Move DB to Content Directory"
-msgstr ""
-
-#Sequence
-msgctxt "#32300"
-msgid ""
-msgstr ""
-
-msgctxt "#32301"
-msgid ""
 msgstr ""
 
 msgctxt "#32302"
@@ -844,10 +799,6 @@ msgctxt "#32550"
 msgid "This will delete all changes."
 msgstr ""
 
-msgctxt "#32551"
-msgid "Do you really want to do this?"
-msgstr ""
-
 msgctxt "#32552"
 msgid "Select Save Directory"
 msgstr ""
@@ -868,10 +819,6 @@ msgctxt "#32556"
 msgid "Would you like to set this as the default for playback?"
 msgstr ""
 
-msgctxt "#32557"
-msgid ""
-msgstr ""
-
 msgctxt "#32558"
 msgid "Missing"
 msgstr ""
@@ -880,22 +827,12 @@ msgctxt "#32559"
 msgid "Previous save not found.  Load the default or start a new sequence?"
 msgstr ""
 
-# Merged with line 32559 for Kodi 19 - Matrix
-msgctxt "#32560"
-msgid "Load the default or start a new sequence?"
-msgstr ""
-
 msgctxt "#32561"
 msgid "No Feature"
 msgstr ""
 
 msgctxt "#32562"
 msgid "No movies are in the Queue.  Please queue a feature and try again."
-msgstr ""
-
-# Merged with line 32562 for Kodi 19 - Matrix
-msgctxt "#32563"
-msgid "Please queue a feature and try again."
 msgstr ""
 
 msgctxt "#32564"
@@ -908,11 +845,6 @@ msgstr ""
 
 msgctxt "#32566"
 msgid "Would you like to paste the current old log?  Paste the old log if you are in a new session, ie. after a Kodi crash."
-msgstr ""
-
-# # Merged with line 32566 for Kodi 19 - Matrix
-msgctxt "#32567"
-msgid "Paste the old log if you are in a new session, ie. after a Kodi crash."
 msgstr ""
 
 msgctxt "#32568"
@@ -1063,18 +995,8 @@ msgctxt "#32604"
 msgid "Sequence does not have a feature module, which is required to play items selected in Kodi.  Do you wish to continue?"
 msgstr ""
 
-# Merged with line 32604 for Kodi 19 - Matrix
-msgctxt "#32605"
-msgid "Continue?"
-msgstr ""
-
 msgctxt "#32606"
 msgid "Failed to write sequence file!  Kodi may be unable to save to this location."
-msgstr ""
-
-# Merged with line 32606 for Kodi 19 - Matrix
-msgctxt "#32607"
-msgid "Kodi may be unable to write to this location."
 msgstr ""
 
 msgctxt "#32608"
@@ -1289,11 +1211,11 @@ msgid "PreShow"
 msgstr ""
 
 msgctxt "#32711"
-msgid "PSE Database has been moved!"
+msgid ""
 msgstr ""
 
 msgctxt "#32712"
-msgid "Your PSE databases are now stored in your content folder.  You can share this with any other install of Kodi that you configure to use the same content folder."
+msgid ""
 msgstr ""
 
 msgctxt "#32713"
@@ -1441,5 +1363,33 @@ msgid "This setting can only be changed after the sequence has been saved."
 msgstr ""
 
 msgctxt "#32749"
-msgid "Add aspect ratio to conditions (slows down movie selection)"
+msgid "Add aspect ratio to conditions"
+msgstr ""
+
+msgctxt "#32750"
+msgid "Last chapter - Credits"
+msgstr ""
+
+msgctxt "#32751"
+msgid "Beginning of PreShow"
+msgstr ""
+
+msgctxt "#32752"
+msgid "Before feature"
+msgstr ""
+
+msgctxt "#32753"
+msgid "Middle chapter - Intermission"
+msgstr ""
+
+msgctxt "#32754"
+msgid "IMDB (Slows queue editor)"
+msgstr ""
+
+msgctxt "#32755"
+msgid "Kodi (TMM)"
+msgstr ""
+
+msgctxt "#32756"
+msgid "Aspect Source"
 msgstr ""
