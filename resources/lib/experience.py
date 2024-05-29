@@ -602,6 +602,7 @@ class ExperiencePlayer(xbmc.Player):
             
         if self.track_chapters:
             self.start_chapter_tracking()
+            self.is_tracking_chapters = True
             DEBUG_LOG("Resuming chapter tracking.")
 
     def start_chapter_tracking(self):
