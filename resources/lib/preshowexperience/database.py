@@ -68,7 +68,7 @@ def checkDBVersion(DB):
         if float(setting.detail) < DATABASE_VERSION:
             raise ValueError("Database version is outdated")
     except (Settings.DoesNotExist, ValueError):
-        if xbmcgui.Dialog().ok('PreShow Experience Update', 'Your database version is outdated and needs to be updated. This will require removing the old database. Your content will need to be rescanned.  This process will also update your sequences to the new format.'):
+        if xbmcgui.Dialog().ok('PreShow Experience Update', 'Your database version is outdated and needs to be updated. This will require you to rescan your content.  If you see this message multiple times, please go into your PreShow settings and click "Reset content database.'):
             dbPath = DB.database
             DB.close()
             if setting:
@@ -84,6 +84,9 @@ def checkDBVersion(DB):
             imdb_path = util.pathJoin(dbDir, 'imdb.last')
             if util.vfs.exists(imdb_path):
                 xbmcvfs.delete(imdb_path)
+            tempseq_path = util.pathJoin(dbDir, 'temp.pseseq')
+            if util.vfs.exists(tempseq_path):
+                xbmcvfs.delete(tempseq_path)                
             
             os.remove(dbPath)
 
@@ -92,7 +95,7 @@ def checkDBVersion(DB):
             contentPath = kodiutil.getPathSetting('content.path')
             if contentPath:
                 updateAndRenameSequenceFiles(util.pathJoin(contentPath, 'Sequences'))
-            
+
 def updateAndRenameSequenceFiles(directory):
     # Loop through all files in the directory
     for filename in os.listdir(directory):
@@ -100,14 +103,15 @@ def updateAndRenameSequenceFiles(directory):
 
         # Ensure it's a file with .seq or .pseseq extension
         if os.path.isfile(file_path):
-            if filename.endswith('.pseseq'):
-                # Change extension from .pseseq to .seq
-                new_filename = filename[:-7] + '.seq'
-                new_file_path = os.path.join(directory, new_filename)
-                os.rename(file_path, new_file_path)
-                file_path = new_file_path  # Update the file path for content modification
-
             try:
+                if filename.endswith('.pseseq'):
+                    # Change extension from .pseseq to .seq
+                    new_filename = filename[:-7] + '.seq'
+                    new_file_path = os.path.join(directory, new_filename)
+                    os.rename(file_path, new_file_path)
+                    file_path = new_file_path  # Update the file path for content modification
+
+                
                 with open(file_path, 'r', encoding='utf-8') as file:
                     content = file.read()
 
@@ -125,6 +129,7 @@ def updateAndRenameSequenceFiles(directory):
                 print(f"An error occurred while processing file {file_path}: {e}")
 
     print("Text removal and renaming completed.")
+    
 def initialize(path=None, callback=None):
     callback = callback or dummyCallback
     callback(None, 'Creating/updating database...')
