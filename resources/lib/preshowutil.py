@@ -32,14 +32,6 @@ def getSavePath(name):
 
     return preshowexperience.util.pathJoin(contentPath, 'Sequences', name + '.seq')
 
-def getSequenceName(path):
-    if 'Default.seq' in path:
-        return '[ {0} ]'.format(T(32599, 'Default'))
-    if path.endswith('.seq'):
-        return re.split(r'[/\\]', path)[-1][:-4]
-    elif path.endswith('.pseseq'):
-        return re.split(r'[/\\]', path)[-1][:-7]
-
 import os
 
 def selectSequence(active=True, for_dialog=False):
@@ -49,33 +41,15 @@ def selectSequence(active=True, for_dialog=False):
         return None
 
     sequencesPath = preshowexperience.util.pathJoin(contentPath, 'Sequences')
-    kodiutil.DEBUG_LOG('Sequence path: {0}'.format(sequencesPath))
     sequences = getActiveSequences(active=active, for_dialog=for_dialog)
-    kodiutil.DEBUG_LOG('Active sSequences: {0}'.format(sequences))
+    kodiutil.DEBUG_LOG('Active sequences: {0}'.format(sequences))
 
-    dupNames = {}
-    for s in sequences:
-        if s.name in dupNames:
-            kodiutil.DEBUG_LOG('True dup names: {0}'.format(s.name))
-            dupNames[s.name] = True
-        else:
-            kodiutil.DEBUG_LOG('False dup names: {0}'.format(s.name))
-            dupNames[s.name] = False
-
-    # Generate the list of options from active sequences
-    # options = [('{0}.seq'.format(preshowexperience.util.pathJoin(sequencesPath, s.pathName)), '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name) for s in sequences]
     options = []
     for s in sequences:
-        seq_path = preshowexperience.util.pathJoin(sequencesPath, '{0}.seq'.format(s.pathName))
-        pseseq_path = preshowexperience.util.pathJoin(sequencesPath, '{0}.pseseq'.format(s.pathName))
-        
-        if os.path.exists(seq_path):
-            kodiutil.DEBUG_LOG('.seq files: {0}'.format(seq_path))
-            options.append((seq_path, '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name))
-        if os.path.exists(pseseq_path):
-            kodiutil.DEBUG_LOG('.pseseq files: {0}'.format(pseseq_path))
-            options.append((pseseq_path, '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name))
-
+        seq_path = preshowexperience.util.pathJoin(sequencesPath, s.pathName)
+        seqname = os.path.splitext(s.name)[0]
+        options.append((seq_path, seqname))
+        kodiutil.DEBUG_LOG('Sequence name: {0}'.format(seqname))
 
     # Add files from the default save path
     default_path = defaultFolder()
@@ -103,7 +77,6 @@ def selectSequence(active=True, for_dialog=False):
     kodiutil.DEBUG_LOG('Selected name: {0}'.format(selected_name))
 
     return {'path': selected_path, 'name': selected_name}
-
 
 def getSequencesContentPath():
     contentPath = kodiutil.getPathSetting('content.path')
@@ -183,9 +156,7 @@ def getMatchedSequence(feature):
     if not seqData:
         return getDefaultSequenceData(feature)
 
-    path = preshowexperience.util.pathJoin(sequencesPath, '{0}.seq'.format(seqData.name))
-    if not os.path.exists(path):
-        path = preshowexperience.util.pathJoin(sequencesPath, '{0}.pseseq'.format(seqData.name))
+    path = preshowexperience.util.pathJoin(sequencesPath, '{0}'.format(seqData.name))
     return {'path': path, 'sequence': seqData}
 
 def getDefaultSequenceData(feature):
@@ -251,7 +222,7 @@ def createSettingsRSDirs():
         for path in systemPaths:
             if not os.path.exists(path):
                 os.makedirs(path)
-
+ 
             for rating in system.ratings:
                 with open(os.path.join(path, str(rating).replace(':', '.', 1)), 'w'):
                     pass
