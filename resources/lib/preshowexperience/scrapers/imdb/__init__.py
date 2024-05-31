@@ -114,16 +114,27 @@ class IMDBTrailerScraper(_scrapers.Scraper):
         return None
 
     @staticmethod
-    def getPlayableURL(video_id, res=1080, url=None):
-        #video_id = 'vi3952068121'
+    def getPlayableURL(video_id, res='720p', url=None):
         streams = IMDBTrailerScraper.get_trailer_url(video_id)
         if streams:
-            # Select the video URL based on desired resolution
-            possible_resolutions = ['1080p', '720p', '480p']
-            for resolution in possible_resolutions:
-                if resolution in streams:
-                    return streams[resolution]
+            # Check if the desired resolution is available and one of the allowed resolutions
+            allowed_resolutions = ['1080p', '720p']  # Only allow these resolutions
+            streams = {key: value for key, value in streams.items() if key in allowed_resolutions}
+            
+            if res in streams:
+                util.DEBUG_LOG(f'Resolution {res} found.')
+                return streams[res]
+            else:
+                # Sort the streams by resolution descending (only consider allowed resolutions)
+                sorted_resolutions = sorted(streams.keys(), key=lambda x: int(x[:-1]), reverse=True)
+                highest_available = sorted_resolutions[0] if sorted_resolutions else None
+                if highest_available:
+                    util.DEBUG_log(f'Resolution {res} not found. Using highest available {highest_available}: {streams[highest_available]}')
+                    return streams[highest_available]
+                else:
+                    util.DEBUG_LOG('No compatible streams available.')
         return None
+
 
     def loadTimes(self):
         self.lastAllUpdate = 0
@@ -155,7 +166,7 @@ class IMDBTrailerScraper(_scrapers.Scraper):
         return False
 
     def getTrailers(self):
-        url = base64.b64decode('aHR0cHM6Ly9wcmVzaG93ZXhwZXJpZW5jZS5jb20vcHJlc2hvd2ltZGJ0cmFpbGVycy9wcmVzaG93aW1kYnRyYWlsZXJzLnBocA==').decode()
+        url = base64.b64decode('aHR0cHM6Ly9wcmVzaG93bWVkaWEuY29tL3ByZXNob3dpbWRidHJhaWxlcnMvcHJlc2hvd2ltZGJ0cmFpbGVycy5waHA=').decode()
         ms = scraper.Scraper(url)
         if self.allIsDue():
             util.DEBUG_LOG(' - Fetching trailers')
@@ -164,7 +175,7 @@ class IMDBTrailerScraper(_scrapers.Scraper):
         return []
 
     def updateTrailers(self):
-        url = base64.b64decode('aHR0cHM6Ly9wcmVzaG93ZXhwZXJpZW5jZS5jb20vcHJlc2hvd2ltZGJ0cmFpbGVycy9wcmVzaG93aW1kYnRyYWlsZXJzLnBocA==').decode()
+        url = base64.b64decode('aHR0cHM6Ly9wcmVzaG93bWVkaWEuY29tL3ByZXNob3dpbWRidHJhaWxlcnMvcHJlc2hvd2ltZGJ0cmFpbGVycy5waHA=').decode()
         ms = scraper.Scraper(url)
         if self.recentIsDue():
             util.DEBUG_LOG(' - Fetching trailers')
