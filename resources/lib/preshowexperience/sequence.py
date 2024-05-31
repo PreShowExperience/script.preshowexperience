@@ -231,12 +231,8 @@ class SequenceData(object):
             raise exceptions.EmptySequenceFileException()
 
         filename = re.split(r'[/\\]', path)[-1]
-        if filename.endswith('.seq'):
-            path_name = filename[:-4]
-        elif filename.endswith('.pseseq'):
-            path_name = filename[:-7]
-        else:
-            path_name = filename
+        #filename = os.path.splitext(filename)[0]
+        path_name = filename
 
         obj = cls(dstring, path_name=path_name)
 
@@ -266,10 +262,8 @@ class SequenceData(object):
             raise exceptions.SequenceWriteReadUnknownException()
 
         filename = re.split(r'[/\\]', path)[-1]
-        if filename.endswith('.seq'):
-            self.pathName = self.pathName or filename[:-4]
-        elif filename.endswith('.pseseq'):
-            self.pathName = self.pathName or filename[:-7]
+        #filename = os.path.splitext(filename)[0]
+        self.pathName = self.pathName or filename
         self.name = self.name or self.pathName
 
         return success
