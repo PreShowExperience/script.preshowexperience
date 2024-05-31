@@ -1,6 +1,6 @@
 Changelog for PreShow Experience
 
-[- 0.3.0a3 -]
+[- 0.3.0a5 -]
 - fix:      IMDB trailers
 - fix:      Slideshow timing issue
 - add:      YouTube default videos for content that doesn't exist in PreShow content folders
