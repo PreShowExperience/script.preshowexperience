@@ -658,13 +658,24 @@ class ExperiencePlayer(xbmc.Player):
         self.current_chapter = int(xbmc.getInfoLabel('Player.Chapter'))
         self.last_chapter_triggered = False
         self.middle_chapter_triggered = False
-        self.track_chapters = bool(self.lastChapterAction or self.middleChapterAction)
-        
-        if self.total_chapters > 1 and self.track_chapters and self.is_feature_playing:
-            self.is_tracking_chapters = True
-            self.start_chapter_tracking()
+        self.track_chapters = bool(self.lastChapterAction or self.middleChapterAction)  
+
+        if self.is_feature_playing:
+            if self.total_chapters > 1 and self.track_chapters:
+                self.is_tracking_chapters = True
+                self.start_chapter_tracking()
+                DEBUG_LOG('Playback started with chapter tracking of {0} chapters'.format(self.total_chapters))
+            else:
+                DEBUG_LOG("Playback started without chapter tracking.")
+                if self.total_chapters < 2:
+                    DEBUG_LOG('This movie has {0} chapters.'.format(self.total_chapters))                 
+                if not self.lastChapterAction:
+                    DEBUG_LOG("A last chapter action is not set.")
+                if not self.middleChapter_tabAction:
+                    DEBUG_LOG("A middle chapter action is not set.")
         else:
-            DEBUG_LOG("Playback started without chapter tracking.")            
+            DEBUG_LOG("Playback not started or feature not playing.")
+          
 
         if self.playStatus == self.PLAYING_MUSIC:
             DEBUG_LOG('MUSIC STARTED')
