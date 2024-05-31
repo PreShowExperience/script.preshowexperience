@@ -1,6 +1,6 @@
 import xbmc
 import xbmcgui
-
+import os
 from .kodiutil import T
 
 from . import experience
@@ -169,7 +169,10 @@ class PlaylistDialog(kodigui.BaseDialog):
             return
 
         self.sequencePath = seqData['path']
-        selectionpthformat = '[B][UPPERCASE]Sequence: ' + seqData['sequence'].pathName + '[/UPPERCASE][/B]'
+        seqName = seqData['sequence'].pathName
+        kodiutil.DEBUG_LOG('Selected sequence: {0}'.format(repr(seqName)))
+        seqName = os.path.splitext(seqName)[0]
+        selectionpthformat = '[B][UPPERCASE]Sequence: ' + seqName + '[/UPPERCASE][/B]'
         self.getControl(self.SEQUENCE_SELECT_ID).setLabel(selectionpthformat)
 
     def delete(self):
@@ -224,7 +227,10 @@ class PlaylistDialog(kodigui.BaseDialog):
         selection = preshowutil.selectSequence(active=False, for_dialog=True)
         if not selection:
             return
-
-        self.sequencePath = selection['path']
-        selectionnameformat = '[B][UPPERCASE]Sequence: ' + selection['name'] + '[/UPPERCASE][/B]'
-        self.getControl(self.SEQUENCE_SELECT_ID).setLabel(selectionnameformat)
+        
+        self.sequencePath = seqData['path']
+        seqName = seqData['sequence'].pathName
+        kodiutil.DEBUG_LOG('Selected sequence: {0}'.format(repr(seqName)))
+        seqName = os.path.splitext(seqName)[0]
+        selectionpthformat = '[B][UPPERCASE]Sequence: ' + seqName + '[/UPPERCASE][/B]'
+        self.getControl(self.SEQUENCE_SELECT_ID).setLabel(selectionpthformat)        
