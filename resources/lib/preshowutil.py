@@ -28,6 +28,7 @@ def getSavePath(name):
     contentPath = kodiutil.getPathSetting('content.path')
     if not name or not contentPath:
         return
+    kodiutil.DEBUG_LOG('Save Path: {0}'.format(preshowexperience.util.pathJoin(contentPath, 'Sequences', name + '.seq')))
 
     return preshowexperience.util.pathJoin(contentPath, 'Sequences', name + '.seq')
 
@@ -48,13 +49,17 @@ def selectSequence(active=True, for_dialog=False):
         return None
 
     sequencesPath = preshowexperience.util.pathJoin(contentPath, 'Sequences')
+    kodiutil.DEBUG_LOG('Sequence path: {0}'.format(sequencesPath))
     sequences = getActiveSequences(active=active, for_dialog=for_dialog)
+    kodiutil.DEBUG_LOG('Active sSequences: {0}'.format(sequences))
 
     dupNames = {}
     for s in sequences:
         if s.name in dupNames:
+            kodiutil.DEBUG_LOG('True dup names: {0}'.format(s.name))
             dupNames[s.name] = True
         else:
+            kodiutil.DEBUG_LOG('False dup names: {0}'.format(s.name))
             dupNames[s.name] = False
 
     # Generate the list of options from active sequences
@@ -65,8 +70,10 @@ def selectSequence(active=True, for_dialog=False):
         pseseq_path = preshowexperience.util.pathJoin(sequencesPath, '{0}.pseseq'.format(s.pathName))
         
         if os.path.exists(seq_path):
+            kodiutil.DEBUG_LOG('.seq files: {0}'.format(seq_path))
             options.append((seq_path, '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name))
         if os.path.exists(pseseq_path):
+            kodiutil.DEBUG_LOG('.pseseq files: {0}'.format(pseseq_path))
             options.append((pseseq_path, '{1}'.format(s.name, s.pathName) if dupNames[s.name] else s.name))
 
 
@@ -91,7 +98,9 @@ def selectSequence(active=True, for_dialog=False):
     # Extract the selected path and name from the options list
     selected_option = options[idx]
     selected_path = selected_option[0]
+    kodiutil.DEBUG_LOG('Selected path: {0}'.format(selected_path))
     selected_name = selected_option[1]
+    kodiutil.DEBUG_LOG('Selected name: {0}'.format(selected_name))
 
     return {'path': selected_path, 'name': selected_name}
 
