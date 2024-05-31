@@ -1010,13 +1010,6 @@ class Trailer(Item):
             'default': None
         },
         {
-            'attr': 'order',
-            'type': None,
-            'limits': [None, 'newest', 'random'],
-            'name': '- {0}'.format(T(32324, 'Content order')),
-            'default': None
-        },
-        {
             'attr': 'file',
             'type': None,
             'limits': LIMIT_FILE_DEFAULT,
