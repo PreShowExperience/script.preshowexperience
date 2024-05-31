@@ -1127,16 +1127,12 @@ class SequenceEditorWindow(kodigui.BaseWindow):
             path = preshowexperience.util.pathJoin(contentPath, 'Sequences')
 
         if not pathName or not path:
-            return None
-        if pathName.endswith('.seq'):
-            pathName = pathName[:-4]
-        elif pathName.endswith('.pseseq'):
-            pathName = pathName[:-7]            
+            return None         
         return preshowexperience.util.pathJoin(path, pathName) + '.seq'
 
     def setName(self, name):
-        self.name = name
-        kodiutil.setGlobalProperty('EDITING', name)
+        self.name = os.path.splitext(name)[0]
+        kodiutil.setGlobalProperty('EDITING', self.name)
 
     def defaultSavePath(self):
         return preshowutil.defaultSavePath()
