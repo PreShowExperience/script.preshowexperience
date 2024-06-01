@@ -43,15 +43,15 @@ def getBumperDir(ID):
 
     return ('Video Bumpers', dirname)
 
-#New section    
-def list_all_directories(root_path):
-    directories = [root_path]  
-    for dirpath, dirnames, filenames in os.walk(root_path):
-        # Append all directories found at current level to the list
-        for dirname in dirnames:
-            full_path = os.path.join(dirpath, dirname)
-            directories.append(full_path)
-    return directories    
+                
+                                    
+                               
+                                                           
+                                                                   
+                                
+                                                      
+                                         
+                          
 
 class UserContent:
     _tree = (
@@ -235,56 +235,62 @@ class UserContent:
         self.logHeading('LOADING MUSIC')
 
         self.musicHandler(util.pathJoin(self._contentDirectory, 'Music'))
-    
+
     def loadTrivia(self):
         self.logHeading('LOADING TRIVIA')
 
         basePath = util.pathJoin(self._contentDirectory, 'Trivia')
-        all_directories = list_all_directories(basePath)
-        util.DEBUG_LOG('all_directories: {}'.format(all_directories))
-        
-        total = float(len(all_directories))
-        for ct, dir_path in enumerate(all_directories):
-            pct = 20 + int((ct / total) * 80)
-            if dir_path.startswith('_Exclude'):
-                util.DEBUG_LOG('SKIPPING EXCLUDED DIR: {0}'.format(util.strRepr(dir_path)))
-                continue
+        paths = util.vfs.listdir(basePath)
+                                                                                                                                                          
+
+        total = float(len(paths))
+        for ct, sub in enumerate(paths):
+            pct = 20 + int((ct / total) * 20)
+                                               
+                                                                                                                                        
+                        
             if not self._callback(pct=pct):
                 break
-            self.log('Processing trivia directory: {}'.format(util.strRepr(os.path.basename(dir_path))))
-            self.triviaDirectoryHandler(dir_path, prefix=os.path.relpath(dir_path, basePath))
+            path = os.path.join(basePath, sub)
+            if util.isDir(path):
+                if sub.startswith('_Exclude'):
+                    util.DEBUG_LOG('SKIPPING EXCLUDED DIR: {0}'.format(util.strRepr(sub)))
+                    continue
 
-        util.DEBUG_LOG('Completed loading trivia directories.')
-    
+            self.log('Processing trivia: {0}'.format(util.strRepr(os.path.basename(path))))
+            self.triviaDirectoryHandler(path, prefix=sub)
 
     def loadSlideshow(self):
         self.logHeading('LOADING SLIDESHOW')
 
         basePath = util.pathJoin(self._contentDirectory, 'Slideshow')
         paths = util.vfs.listdir(basePath)
-        util.DEBUG_LOG('paths: {}'.format(paths))
+                                                 
 
-        full_paths = [util.pathJoin(basePath, p) for p in paths]
-        util.DEBUG_LOG('full paths: {}'.format(full_paths))
+                                                                
+                                                           
 
-        files = [os.path.relpath(p, basePath) for p in full_paths if os.path.isfile(p)]
-        directories = [os.path.relpath(p, basePath) for p in full_paths if os.path.isdir(p)]
-        util.DEBUG_LOG('files: {}'.format(files))
-        util.DEBUG_LOG('directories: {}'.format(directories))
+                                                                                                                                  
+                                                                                                                                          
+                                                 
+                                                             
         
-        paths = directories
+                           
 
         total = float(len(paths))
-        util.DEBUG_LOG('total: {}'.format(total))
+                                                 
         for ct, sub in enumerate(paths):
             pct = 20 + int((ct / total) * 20)
             if not self._callback(pct=pct):
                 break
             path = os.path.join(basePath, sub)
-            util.DEBUG_LOG('path: {}'.format(path))
+            if util.isDir(path):
+                if sub.startswith('_Exclude'):
+                    util.DEBUG_LOG('SKIPPING EXCLUDED DIR: {0}'.format(util.strRepr(sub)))
+                    continue
 
             self.log('Processing Slideshow: {0}'.format(util.strRepr(os.path.basename(path))))
-            util.DEBUG_LOG('sub: {}'.format(sub))
+                                                 
             self.slideshowDirectoryHandler(path, prefix=sub)
     
     def loadAudioFormatBumpers(self):
@@ -346,6 +352,7 @@ class UserContent:
                 continue
 
             name, ext = os.path.splitext(v)
+
             isImage = False
             if ext in util.videoExtensions:
                 isImage = False
@@ -372,7 +379,7 @@ class UserContent:
             model.get_or_create(
                 path=vpath,
                 defaults=defaults
-            )
+            )            
 
     def loadRatingSystem(self, path):
         from . import ratings
@@ -425,28 +432,28 @@ class UserContent:
 
                     for t in trailers:
                         allct += 1
-                        # Check if the trailer source is 'Content' and watched is True
-                        file_path = t.getStaticURL()  # Assuming this gets the file path
+                                                                                                                                 
+                                                                                                                                    
 
-                        util.DEBUG_LOG('Checking trailer: ID={0}, Source={1}, Watched={2}, File Path={3}'.format(t.ID, source, t.watched, file_path))
+                                                                                                                                                                                                                                                                                                                                                                                                                                
                         
-                        is_watched = t.watched
+                                              
                         
-                        util.DEBUG_LOG('The watched status is: {0}'.format(is_watched))
+                                                                                                                                  
 
-                        if source == 'Content' and is_watched:
-                            if os.path.exists(file_path):
-                                try:
-                                    os.remove(file_path)
-                                    util.DEBUG_LOG('Deleted watched trailer file: {}'.format(file_path))
-
-                                    # Remove the entry from the database
-                                    DB.Trailers.delete().where(DB.Trailers.WID == t.ID).execute()
-                                    util.DEBUG_LOG('Removed database entry for watched trailer: {}'.format(t.ID))
-
-                                except OSError as e:
-                                    util.DEBUG_LOG('Error deleting file: {} - {}'.format(file_path, e))
+                                                              
+                                                         
                         try:
+                                                        
+                                                                                                                                                                                                                                                                                                                 
+
+                                                                                                                                                                  
+                                                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                         
+
+                                                    
+                                                                                                                                                                                                                                                                                                                
+                            
                             dt = DB.Trailers.get(DB.Trailers.WID == t.ID)
                             dt.verified = True
                             dt.watched = t.watched or dt.watched
@@ -467,7 +474,7 @@ class UserContent:
                                 rating=str(t.rating),
                                 genres=','.join(t.genres),
                                 thumb=t.thumb,
-                                release=release_date,                                         
+                                release=release_date,  # Using the computed release_date
                                 verified=True
                             )
                         pct = int((allct / total) * 100)
@@ -485,11 +492,12 @@ class UserContent:
                             DB.Trailers.release < datetime.datetime.now() - datetime.timedelta(days=scraper.REMOVE_DAYS_OLD),
                             DB.Trailers.source == source
                         ).execute()
-                        
+
                     util.DEBUG_LOG(' - {0} new {1} trailers added to database'.format(ct, source))
                     util.DEBUG_LOG(' - {0} {1} trailers removed from database'.format(removed, source))
                 else:
                     util.DEBUG_LOG(' - No new {0} trailers added to database'.format(source))
+
 
 class MusicHandler:
     def __init__(self, owner=None):
@@ -554,7 +562,9 @@ class MusicHandler:
 
         return cleaned
 
+
 class TriviaDirectoryHandler:
+    _formatXML = 'slides.xml'
     _ratingNA = ('slide', 'rating')
     _questionNA = ('question', 'format')
     _clueNA = ('clue', 'format')
@@ -572,24 +582,55 @@ class TriviaDirectoryHandler:
         self.doCall(basePath, prefix)
 
     def doCall(self, basePath, prefix=None):
-        util.DEBUG_LOG('Prefix: {}'.format(prefix))
+        hasSlidesXML = False
+        slideXML = util.pathJoin(basePath, self._formatXML)
+        # util.DEBUG_LOG(basePath)
+        if util.vfs.exists(slideXML):
+            hasSlidesXML = True
 
-        rating = ''
-        questionRE = self._defaultQRegEx
-        clueRE = self._defaultCRegEx
-        answerRE = self._defaultARegEx
+        # pack = os.path.basename(basePath.rstrip('\\/'))
+
+        xml = None
+        slide = None
+
+        if hasSlidesXML:
+            try:
+                f = util.vfs.File(slideXML, 'r')
+                xml = f.read()
+            finally:
+                f.close()
+
+            try:
+                slides = ET.fromstring(xml)
+                slide = slides.find('slide')
+            except ET.ParseError:
+                util.DEBUG_LOG('Bad slides.xml')
+            except:
+                util.ERROR()
+                slide = None
+
+        if slide:
+            rating = self.getNodeAttribute(slide, self._ratingNA[0], self._ratingNA[1]) or ''
+            questionRE = (self.getNodeAttribute(slide, self._questionNA[0], self._questionNA[1]) or '').replace('N/A', '')
+            clueRE = self.getNodeAttribute(slide, self._clueNA[0], self._clueNA[1]) or ''.replace('N/A', '')
+            answerRE = self.getNodeAttribute(slide, self._answerNA[0], self._answerNA[1]) or ''.replace('N/A', '')
+        else:
+            rating = ''
+            questionRE = self._defaultQRegEx
+            clueRE = self._defaultCRegEx
+            answerRE = self._defaultARegEx
 
         contents = util.vfs.listdir(basePath)
-        
+
         trivia = {}
 
         for c in contents:
             path = util.pathJoin(basePath, c)
-            #util.DEBUG_LOG('Path: {}'.format(path))
+                                                    
 
-            # if util.isDir(path):
-                # self.doCall(path, prefix=prefix and (prefix + ':' + c) or c)
-                # continue
+            if util.isDir(path):
+                self.doCall(path, prefix=prefix and (prefix + ':' + c) or c)
+                continue
 
             base, ext = os.path.splitext(c)
 
@@ -736,11 +777,11 @@ class SlideshowDirectoryHandler:
 
     def doCall(self, basePath, prefix=None):
         contents = util.vfs.listdir(basePath)
-        util.DEBUG_LOG('contents: {}'.format(contents))
+                                                       
 
         for c in contents:
             path = util.pathJoin(basePath, c)
-            util.DEBUG_LOG('Path: {}'.format(path))
+                                                   
 
             if util.isDir(path):
                 self.doCall(path, prefix=prefix and (prefix + ':' + c) or c)
