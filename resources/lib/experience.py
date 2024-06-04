@@ -522,6 +522,7 @@ class ExperiencePlayer(xbmc.Player):
         self.middle_chapter_triggered = False
         self.is_tracking_chapters = False
         self.track_chapters = False
+        self.is_feature_playing = False
         self.monitor = xbmc.Monitor()
         self.tracking_thread = None
         
@@ -1212,6 +1213,7 @@ class ExperiencePlayer(xbmc.Player):
         self.playGUISounds.disable()
         self.screensaver.disable()
         self.visualization.disable()
+        #kodiutil.DEBUG_LOG('Experience Start Sequence Path: {0}'.format(sequence_path))
         try:
             return self._start(sequence_path)
         finally:
