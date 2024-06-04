@@ -42,14 +42,16 @@ def selectSequence(active=True, for_dialog=False):
 
     sequencesPath = preshowexperience.util.pathJoin(contentPath, 'Sequences')
     sequences = getActiveSequences(active=active, for_dialog=for_dialog)
-    kodiutil.DEBUG_LOG('Active sequences: {0}'.format(sequences))
+    #kodiutil.DEBUG_LOG('Active sequences: {0}'.format(sequences))
 
     options = []
     for s in sequences:
         seq_path = preshowexperience.util.pathJoin(sequencesPath, s.pathName)
-        seqname = os.path.splitext(s.name)[0]
-        options.append((seq_path, seqname))
-        kodiutil.DEBUG_LOG('Sequence name: {0}'.format(seqname))
+        seqname = s.pathName
+        display_name = os.path.splitext(seqname)[0]  # Remove the extension for display
+        #kodiutil.DEBUG_LOG('Sequence Path: {0}'.format(seq_path))
+        #kodiutil.DEBUG_LOG('Display name: {0}'.format(display_name))
+        options.append((seq_path, display_name))
 
     # Add files from the default save path
     default_path = defaultFolder()
@@ -64,7 +66,7 @@ def selectSequence(active=True, for_dialog=False):
         xbmcgui.Dialog().ok(T(32500, 'Not Found'), T(32501, 'No sequences found.'))
         return None
 
-    # Let user select a sequence
+                                
     idx = xbmcgui.Dialog().select(T(32502, 'Choose Sequence'), [o[1] for o in options])
     if idx < 0:
         return None
@@ -72,9 +74,9 @@ def selectSequence(active=True, for_dialog=False):
     # Extract the selected path and name from the options list
     selected_option = options[idx]
     selected_path = selected_option[0]
-    kodiutil.DEBUG_LOG('Selected path: {0}'.format(selected_path))
+                                                                  
     selected_name = selected_option[1]
-    kodiutil.DEBUG_LOG('Selected name: {0}'.format(selected_name))
+                                                                  
 
     return {'path': selected_path, 'name': selected_name}
 
@@ -156,7 +158,8 @@ def getMatchedSequence(feature):
     if not seqData:
         return getDefaultSequenceData(feature)
 
-    path = preshowexperience.util.pathJoin(sequencesPath, '{0}'.format(seqData.name))
+    path = preshowexperience.util.pathJoin(sequencesPath, '{0}'.format(seqData.pathName))
+    #kodiutil.DEBUG_LOG('getMatchedSequence Sequence Path: {0}'.format(repr(path)))
     return {'path': path, 'sequence': seqData}
 
 def getDefaultSequenceData(feature):
