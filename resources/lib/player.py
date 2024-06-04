@@ -169,8 +169,9 @@ class PlaylistDialog(kodigui.BaseDialog):
             return
 
         self.sequencePath = seqData['path']
+        #kodiutil.DEBUG_LOG('Sequence Path: {0}'.format(repr(self.sequencePath)))
         seqName = seqData['sequence'].pathName
-        kodiutil.DEBUG_LOG('Selected sequence: {0}'.format(repr(seqName)))
+        #kodiutil.DEBUG_LOG('Selected sequence: {0}'.format(repr(seqName)))
         seqName = os.path.splitext(seqName)[0]
         selectionpthformat = '[B][UPPERCASE]Sequence: ' + seqName + '[/UPPERCASE][/B]'
         self.getControl(self.SEQUENCE_SELECT_ID).setLabel(selectionpthformat)
@@ -228,9 +229,9 @@ class PlaylistDialog(kodigui.BaseDialog):
         if not selection:
             return
         
-        self.sequencePath = seqData['path']
-        seqName = seqData['sequence'].pathName
+        self.sequencePath = selection['path']
+        seqName = selection['name']
         kodiutil.DEBUG_LOG('Selected sequence: {0}'.format(repr(seqName)))
         seqName = os.path.splitext(seqName)[0]
         selectionpthformat = '[B][UPPERCASE]Sequence: ' + seqName + '[/UPPERCASE][/B]'
-        self.getControl(self.SEQUENCE_SELECT_ID).setLabel(selectionpthformat)        
+        self.getControl(self.SEQUENCE_SELECT_ID).setLabel(selectionpthformat)
