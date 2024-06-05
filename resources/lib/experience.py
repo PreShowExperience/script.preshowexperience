@@ -672,7 +672,7 @@ class ExperiencePlayer(xbmc.Player):
                     DEBUG_LOG('This movie has {0} chapters.'.format(self.total_chapters))                 
                 if not self.lastChapterAction:
                     DEBUG_LOG("A last chapter action is not set.")
-                if not self.middleChapter_tabAction:
+                if not self.middleChapterAction:
                     DEBUG_LOG("A middle chapter action is not set.")
         else:
             DEBUG_LOG("Playback not started or feature not playing.")
