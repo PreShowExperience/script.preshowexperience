@@ -618,7 +618,7 @@ class ExperiencePlayer(xbmc.Player):
  
     def track_chapters_loop(self):
         middle_chapter = self.total_chapters // 2
-        while not self.monitor.waitForAbort(5) and self.is_tracking_chapters:
+        while not self.monitor.waitForAbort(3) and self.is_tracking_chapters:
             new_chapter = int(xbmc.getInfoLabel('Player.Chapter'))
             if new_chapter != self.current_chapter:
                 DEBUG_LOG(f"Chapter changed from {self.current_chapter} to {new_chapter}")
@@ -628,7 +628,7 @@ class ExperiencePlayer(xbmc.Player):
     def stop_chapter_tracking(self):
         self.is_tracking_chapters = False
         if self.tracking_thread:
-            self.tracking_thread.join()  # Ensure the thread is cleanly stopped
+            self.tracking_thread.join()
         DEBUG_LOG("Chapter tracking stopped.")
                 
     def handle_chapter_actions(self, new_chapter, middle_chapter):
@@ -648,20 +648,18 @@ class ExperiencePlayer(xbmc.Player):
         self.middleChapterAction.run()
         self.middle_chapter_triggered = True
         DEBUG_LOG("Intermission action triggered.")            
-
-    def stop_chapter_tracking(self):
-        self.is_tracking_chapters = False
-        DEBUG_LOG("Chapter tracking stopped.")      
+    
         
     @requiresStart
     def onPlayBackStarted(self):
-        self.total_chapters = int(xbmc.getInfoLabel('Player.ChapterCount'))
-        self.current_chapter = int(xbmc.getInfoLabel('Player.Chapter'))
-        self.last_chapter_triggered = False
-        self.middle_chapter_triggered = False
-        self.track_chapters = bool(self.lastChapterAction or self.middleChapterAction)  
-
         if self.is_feature_playing:
+            xbmc.sleep(3000)
+            self.total_chapters = int(xbmc.getInfoLabel('Player.ChapterCount'))
+            self.current_chapter = int(xbmc.getInfoLabel('Player.Chapter'))
+            self.last_chapter_triggered = False
+            self.middle_chapter_triggered = False
+            self.track_chapters = bool(self.lastChapterAction or self.middleChapterAction)  
+
             if self.total_chapters > 1 and self.track_chapters:
                 self.is_tracking_chapters = True
                 self.start_chapter_tracking()
