@@ -1,17 +1,13 @@
 Changelog for PreShow Experience
 
-[- 0.3.0a5 -]
+[- 0.3.0 -]
 - fix:      IMDB trailers
 - fix:      Slideshow timing issue
 - add:      YouTube default videos for content that doesn't exist in PreShow content folders
 - add:      New Action Locations (beginning of PreShow, before feature, middle & last chapter)
-
-[- 0.2.8 -]
 - add:      Aspect Ratio conditional filter
-- remove:   3D filters
-
-[- 0.2.7 -]
 - change:   Updated significant amount of backend code
+- remove:   3D filters
 
 [- 0.2.6 -]
 - change:   Moved watched status into content database and removed watched database.  Requires trailers to be updated.
